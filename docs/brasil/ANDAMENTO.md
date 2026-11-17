@@ -79,3 +79,19 @@ A compilação está sendo atualizada para os backends oficiais com seleção au
 por instruções da CPU, preservando uma variante genérica para máquinas antigas.
 O modelo 14B ainda precisa de teste em computador com memória suficiente; não há
 benchmark de um i3 físico de 8 GB. Mapas brasileiros por região continuam pendentes.
+
+### Resultado do motor com seleção automática de CPU
+
+O novo motor concluiu a pergunta “Qual é a capital do Brasil?” usando os artigos
+Capital e Brasil da Wikipedia PT mini instalada. Nesta máquina de teste (i5 de
+13ª geração, cerca de 16 GB instalados), o perfil Leve levou 5,81 s e o Moderado
+24,22 s. São amostras de uma pergunta, com carga de compilação concomitante; não
+são previsões de velocidade nem benchmark do i3 alvo. Ambos retornaram Brasília e
+metadados das referências que o leitor consegue abrir. O rastreamento de uma
+execução curta do motor atualizado não registrou chamadas socket/connect/bind/listen.
+O diagnóstico confirmou AVX2/AVX_VNNI no backend escolhido automaticamente.
+
+Foram aprovados 18 testes Python, quatro testes DOM do site (incluindo o plano
+exportado aceito pelo validador do aplicativo) e o teste de interações na janela
+Linux. O teste visual completo do site e o benchmark de hardware alvo permanecem
+pendentes. Nenhum modelo ou arquivo de enciclopédia foi enviado ao Git.
