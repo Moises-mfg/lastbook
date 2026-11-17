@@ -16,7 +16,7 @@
     window.ULMapas?.close();
     const page = location.hash.slice(1) || 'biblioteca';
     document.querySelectorAll('nav a').forEach(a => { a.removeAttribute('aria-current'); if (a.hash === '#' + page) a.setAttribute('aria-current','page'); });
-    if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'ia') ia(); else biblioteca();
+    if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'fontes') fontes(); else if (page === 'ia') ia(); else biblioteca();
   }
   function biblioteca() {
     $('#conteudo').innerHTML = '<p class="tag">Sua base de conhecimento</p><h1>O essencial, mesmo<br>sem conexão.</h1><p class="intro">Guias curtos para começar a preparação da sua casa. Consulte a fonte e adapte o plano às necessidades da sua família.</p><label for="busca">Buscar nos guias locais</label><input id="busca" type="search" placeholder="Água, energia, comunicação…"><div class="cards" id="guias"></div>';
@@ -32,6 +32,17 @@
     const g = S.guias.find(x => x.id === id); if (!g) return;
     $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button><p class="tag">${esc(g.categoria)}</p><h1>${esc(g.titulo)}</h1><article><p>${esc(g.texto)}</p><p class="fonte">Referência: ${esc(g.fonte)}<br>Endereço para consultar enquanto houver internet:<code>${esc(g.url)}</code></p></article>`;
     $('#voltar').onclick = biblioteca;
+  }
+  function fontes(){
+    const resources=S.recursos||[],categories=[...new Set(resources.map(r=>r.categoria))];
+    $('#conteudo').innerHTML=`<p class="tag">Aprenda enquanto há conexão</p><h1>Fontes para estudar.<br>Pessoas para conhecer.</h1><p class="intro">O diretório e seus endereços ficam neste computador. Abrir as páginas usa seu navegador e requer internet. Não há cópia de vídeos, assinatura de canais ou participação automática em grupos.</p><div class="painel"><h2>Antes de ficar offline</h2><p>Baixe sua biblioteca e mapas; abra os arquivos e teste a consulta sem conexão. Carregue seus aparelhos, confira cópias e mantenha contatos essenciais também em papel. Conheça grupos locais e teste seus equipamentos com outras pessoas.</p></div><label for="categoriaFonte">Tema</label><select id="categoriaFonte"><option value="">Todos os temas</option>${categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><label for="buscaFonte">Buscar fonte ou comunidade</label><input id="buscaFonte" type="search" placeholder="LoRa, água, canais…"><div class="cards" id="listaFontes"></div><p>Fontes oficiais, comunidades e criadores têm papéis distintos. A inclusão no diretório não aprova todos os conteúdos publicados nem estabelece parceria comercial.</p>`;
+    function draw(){
+      const fold=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),query=fold($('#buscaFonte').value),category=$('#categoriaFonte').value;
+      const hits=resources.filter(r=>(!category||r.categoria===category)&&fold(r.nome+' '+r.resumo+' '+r.categoria).includes(query));
+      $('#listaFontes').innerHTML=hits.length?hits.map(r=>`<article data-resource="${esc(r.id)}"><p class="tag">${esc(r.tipo)}</p><h2>${esc(r.nome)}</h2><p>${esc(r.resumo)}</p><p>${esc(r.observacao)}</p><p class="fonte">Verificado em ${esc(r.revisado)}<br><code>${esc(r.url)}</code></p><button data-open-resource="${esc(r.id)}">Abrir no navegador · internet</button></article>`).join(''):'<p>Nenhuma referência encontrada.</p>';
+      document.querySelectorAll('[data-open-resource]').forEach(b=>b.onclick=()=>api('open-resource',{id:b.dataset.openResource}).then(r=>notice(r.mensagem)).catch(failure));
+    }
+    $('#buscaFonte').oninput=draw;$('#categoriaFonte').onchange=draw;draw();
   }
   function compras() {
     $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><p class="aviso">Sem anúncios ou links de afiliado nesta versão. A prioridade é a utilidade para sua casa.</p>`;

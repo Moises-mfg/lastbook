@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION=0.2.0~alpha2
-FILE_VERSION=0.2.0-alpha2
+VERSION=0.3.0~alpha3
+FILE_VERSION=0.3.0-alpha3
 OUT="$ROOT/derived/brasil-build"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT

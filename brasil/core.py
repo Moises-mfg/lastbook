@@ -14,6 +14,7 @@ from engine.setup import hardware, download
 from .arquivos import read_zim, map_info
 from . import pacotes, mapa_vetor
 from .mapas import MapSupport
+from .fontes import RECURSOS
 from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 
 GiB = 2**30
@@ -100,12 +101,12 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.2.0-alpha.2', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.3.0-alpha.3', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
                 'modelo': self.model_path().is_file(), 'download_bytes': self.model_spec()['size'], 'nome': self.model_spec()['file']},
-                'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
+                'recursos': RECURSOS, 'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
 
     def files(self):
         with self.db() as db:

@@ -46,6 +46,9 @@ def build(self, app):
         ("({canvas:!!document.querySelector('#mapaCanvas'),local:document.querySelector('#mapaEstado')?.textContent})",lambda d:d['canvas'] and 'consulta local' in (d['local'] or ''),f"document.querySelector('#mapaTermo').value={json.dumps(search)};document.querySelector('#mapaBusca').requestSubmit()"),
         ("({place:document.querySelector('#mapaResultados button')?.textContent})",lambda d:d['place']==place,"document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()"),
         ("({zoom:document.querySelector('#mapaEstado')?.textContent})",lambda d:zoom in (d['zoom'] or ''),"document.querySelector('[data-map-layer=water]').click();document.querySelector('#mapaCanvas').scrollIntoView({block:'center'})"),
+        ("({local:document.querySelector('#mapaEstado')?.textContent})",lambda d:'consulta local' in (d['local'] or ''),"location.hash='fontes'"),
+        ("({sources:document.querySelectorAll('[data-resource]').length})",lambda d:d['sources']==11,"document.querySelector('#categoriaFonte').value='LoRa e redes mesh';document.querySelector('#categoriaFonte').dispatchEvent(new Event('change'));document.querySelector('#buscaFonte').value='MeshCore';document.querySelector('#buscaFonte').dispatchEvent(new Event('input'))"),
+        ("({source:document.querySelector('[data-resource]')?.dataset.resource})",lambda d:d['source']=='meshcore-docs',"document.querySelector('#listaFontes').scrollIntoView({block:'center'})"),
     ]
     state={'index':0,'attempts':0}
     def tick():

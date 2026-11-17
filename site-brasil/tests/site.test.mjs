@@ -47,6 +47,17 @@ test('exportação gera o plano escolhido, sem conta nem requisição externa',a
   dom.window.close();
 });
 
+test('município escolhido entra no plano aceito pelo aplicativo',async()=>{
+  const dom=start(),w=dom.window,d=w.document;let blob;
+  w.Blob=globalThis.Blob;w.URL.createObjectURL=b=>{blob=b;return 'blob:teste';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){};
+  assert.equal(Object.values(w.ULTIMO_LIVRO_MAPAS).filter(p=>p.scope==='municipio').length,5571);
+  d.querySelector('#estado').value='MT';d.querySelector('#estado').dispatchEvent(new w.Event('change'));
+  const city=d.querySelector('#municipio-site');city.value='5101837';city.dispatchEvent(new w.Event('change'));d.querySelector('#exportar').click();
+  const plan=JSON.parse(await blob.text());assert.deepEqual(plan.municipios,['5101837']);assert.equal(plan.mapa,'municipio');
+  const accepted=JSON.parse(execFileSync('python3',['-c','import json,sys;from brasil.core import validate_choices;print(json.dumps(validate_choices(json.load(sys.stdin))))'],{cwd:fileURLToPath(new URL('../../',import.meta.url)),input:JSON.stringify(plan),encoding:'utf8'}));
+  assert.deepEqual(accepted.municipios,['5101837']);assert.match(d.querySelector('#resumo').textContent,/incluem os mapas/);dom.window.close();
+});
+
 test('navegação local encontra seções e scripts não carregam terceiros',()=>{
   const dom=start(),d=dom.window.document;
   for(const a of d.querySelectorAll('a[href^="#"]'))assert.ok(d.querySelector(a.getAttribute('href')),a.outerHTML);

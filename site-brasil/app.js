@@ -32,4 +32,15 @@
   let saved=[];try{const v=JSON.parse(localStorage.getItem('ul-checklist')||'[]');if(Array.isArray(v))saved=v.filter(x=>Number.isInteger(x)&&x>=0&&x<items.length);}catch{}
   function checks(){ $('#checklist').innerHTML=items.map((name,i)=>`<label class="linha"><input type="checkbox" value="${i}"${saved.includes(i)?' checked':''}>${name}</label>`).join('');document.querySelectorAll('#checklist input').forEach(c=>c.onchange=()=>{saved=[...document.querySelectorAll('#checklist input:checked')].map(x=>Number(x.value));try{localStorage.setItem('ul-checklist',JSON.stringify(saved));}catch{}});}
   $('#limpar').onclick=()=>{saved=[];try{localStorage.removeItem('ul-checklist');}catch{}checks();};checks();
+  const resources=window.ULTIMO_LIVRO_FONTES||[],theme=$('#tema-fonte');
+  for(const category of [...new Set(resources.map(r=>r.categoria))]){const option=document.createElement('option');option.value=option.textContent=category;theme.append(option);}
+  function drawSources(){
+    const list=$('#fontes-lista');list.replaceChildren();
+    for(const item of resources.filter(r=>!theme.value||r.categoria===theme.value)){
+      const article=document.createElement('article');article.dataset.resource=item.id;
+      for(const [tag,value] of [['small',item.tipo],['h3',item.nome],['p',item.resumo],['p',item.observacao],['small','Verificado em '+item.revisado]]){const e=document.createElement(tag);e.textContent=value;article.append(e);}
+      const a=document.createElement('a');a.href=item.url;a.textContent='Consultar fonte externa ↗';a.rel='noopener noreferrer';article.append(document.createElement('br'),a);list.append(article);
+    }
+  }
+  theme.onchange=drawSources;drawSources();
 })();

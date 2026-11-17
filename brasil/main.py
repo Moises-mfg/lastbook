@@ -18,6 +18,7 @@ from engine.setup.api import SetupHandler, _send_json
 WEB = Path(__file__).parent / 'web'
 STORE = None
 PICK_FILE = None
+OPEN_RESOURCE = None
 
 
 class Handler(SetupHandler):
@@ -66,7 +67,7 @@ class Handler(SetupHandler):
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError('Pedido inválido.')
-            routes = {'/api/brasil/map-catalog': STORE.map_catalog_search, '/api/brasil/select-map': STORE.select_map, '/api/brasil/map-search': STORE.search_map, '/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
+            routes = {'/api/brasil/open-resource':lambda b:OPEN_RESOURCE(b.get('id')), '/api/brasil/map-catalog': STORE.map_catalog_search, '/api/brasil/select-map': STORE.select_map, '/api/brasil/map-search': STORE.search_map, '/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
                       '/api/brasil/ask': STORE.ask, '/api/brasil/download-model': lambda b: STORE.download_model()}
             fn = routes.get(self._path())
             if not fn:
@@ -81,7 +82,7 @@ class Handler(SetupHandler):
 
 
 def main():
-    global STORE, PICK_FILE
+    global STORE, PICK_FILE, OPEN_RESOURCE
     base = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'ultimo-livro'
     STORE = Store(base)
     if '--diagnostico' in sys.argv:
@@ -105,6 +106,18 @@ def main():
         if not out.get('path'): return {'cancelado':True}
         return STORE.import_plan(out['path']) if kind=='plano' else STORE.import_file(kind,out['path'])
     PICK_FILE=pick_file
+    def open_resource(ident):
+        from brasil.fontes import resource_url
+        url=resource_url(ident);event=threading.Event();result={}
+        def launch():
+            try:Gtk.show_uri_on_window(shell_linux.SHELL.window,url,0)
+            except GLib.Error:result['error']=True
+            finally:event.set()
+            return False
+        GLib.idle_add(launch)
+        if not event.wait(15) or result.get('error'):raise ValueError('Não foi possível abrir o navegador. Copie o endereço exibido.')
+        return {'mensagem':'Endereço enviado ao navegador. A página externa precisa de conexão.'}
+    OPEN_RESOURCE=open_resource
     original_quit = shell_linux.quit_app
     def quit_app():
         STORE.close()

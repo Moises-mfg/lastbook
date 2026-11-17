@@ -49,7 +49,7 @@ mapa mantém tamanho e SHA-256 próprios. Mapas maiores que um volume são divid
 verificados por parte e montados com verificação final. A montagem nacional
 precisa de espaço temporário adicional, mostrado antes do download.
 
-Não publicar um manifesto que aponte para arquivos indisponíveis. A entrega só
+Não lançar uma versão do aplicativo que aponte para arquivos indisponíveis. O ramo de desenvolvimento e seu PR de rascunho podem conter o catálogo para executar o CI enquanto os volumes sobem. A entrega só
 pode ser considerada concluída após upload, teste HTTP Range no GitHub e
 instalação real de ao menos um recorte com busca e desenho offline.
 
@@ -74,3 +74,16 @@ reais; o teste de download por GitHub ainda será feito após publicar os volume
 A suíte brasileira passou 27 testes; o instalador original passou 86 testes
 (com dois específicos de macOS ignorados no Linux); o site passou quatro testes
 DOM. O primeiro CI do PR #6 passou nos testes e na compilação/teste do pacote.
+
+### Distribuição
+
+Os recortes foram concluídos: 5.600 entradas e sete volumes, somando
+11.750.383.616 bytes de transporte. O catálogo confere com os 5.571 códigos
+municipais oficiais. O envio para a release de dados está em andamento; o app
+0.3 ainda não foi lançado. O ramo de desenvolvimento inclui o catálogo para
+validar a integração completa pelo CI.
+
+O diretório de fontes acrescenta 11 referências revisadas, com descrições locais
+e abertura da página original somente por ação explícita. Inclui fontes oficiais,
+projetos LoRa, grupos regionais, LABRE e criadores, com identificação comercial.
+Nenhum vídeo, página completa ou conversa foi redistribuído.
