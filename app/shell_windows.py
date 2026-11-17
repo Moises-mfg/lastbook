@@ -19,6 +19,7 @@ import traceback
 from pathlib import Path
 
 import bridge as B
+from process_tree import window_processes
 
 # Audit W6: in the packaged app, nothing outside may steer WebView2 or pythonnet. WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS could open a
 # debugging port on this no-port app, WEBVIEW2_BROWSER_EXECUTABLE_FOLDER could swap the runtime, PYTHONNET_* the .NET runtime.
@@ -52,6 +53,7 @@ RESTART_GAP = 10    # seconds. A page that crashes its renderer gets the app rel
 # A page holds its memory in those processes, and only ending its renderer makes them give it back. Over the limit that renderer is ended
 # and the app starts again at home. This samples and then acts, so a page allocating very fast goes over by what it takes in that time.
 # Counted with them: this program's .NET heap, where what a page asks for passes on its way to the runtime. Not counted: the engine's own Python memory, which no page sets.
+AI_PROCESS_NAMES = frozenset({'lastbook-llm.exe'})
 MEMORY_LIMIT_MOST = 3 * 1024 ** 3
 MEMORY_EVERY = 0.1
 MEMORY_QUIET = 10   # seconds after ending a renderer before ending another: the system needs a moment to give the memory back
@@ -69,6 +71,9 @@ BROWSER_ARGS = ('--disable-features=ElasticOverscroll,msOneAuthWAM,msForceOneAut
                 '--webrtc-ip-handling-policy=disable_non_proxied_udp --force-webrtc-ip-handling-policy=disable_non_proxied_udp')   # both layers' spelling
 NO_RUNTIME = ('Lastbook needs the Microsoft Edge WebView2 Runtime, and it was not found on this computer.\n\n'
               'Windows 11 normally includes it. Install "WebView2 Runtime" from Microsoft, then start Lastbook again.')
+WINDOW_FILES_ERROR = 'Lastbook could not load the files it needs to show its window.\n\nThey should be in {folder}.'
+WINDOW_OPEN_ERROR = 'Lastbook could not open its window.\n\n{detail}'
+WINDOW_STOPPED = 'The window part of Lastbook stopped working, so Lastbook will close. Your library is not affected.'
 BLOCKED_SCHEMES = ('http', 'https', 'ws', 'wss', 'ftp')
 # All a right-click offers. Anything else in the runtime's menu, now or after an update, goes: its Share panel posts to other programs and makes the runtime write a crash report.
 MENU_KEEP = {'cut', 'copy', 'paste', 'pasteAndMatchStyle', 'selectAll', 'undo', 'redo', 'copyImage'}
@@ -562,7 +567,7 @@ def preflight():
         n = net()
     except Exception:
         traceback.print_exc()
-        return f'Lastbook could not load the files it needs to show its window.\n\nThey should be in {_lib_dir()}.'
+        return WINDOW_FILES_ERROR.format(folder=_lib_dir())
     try:
         version = n.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()
     except Exception as e:
@@ -651,14 +656,8 @@ class _Processes:
                 ok = self.k.Process32NextW(snap, ctypes.byref(e))
         finally:
             self.k.CloseHandle(snap)
-        mine = {os.getpid()}
-        grew = True
-        while grew:
-            # The local AI's runner is not the web view's: its memory is the model's (about 19 GB of commit with a GPU), which
-            # llm_local fits to this computer before it starts. Counted here, it ended the page over and over once the model loaded.
-            more = {pid for pid, parent in parents.items() if parent in mine and pid not in mine and names.get(pid) != 'lastbook-llm.exe'}
-            mine |= more
-            grew = bool(more)
+        # A memória do modelo tem sua própria verificação; não é memória da janela.
+        mine=window_processes(os.getpid(),parents,names,AI_PROCESS_NAMES)
         for pid in list(self.handles):
             if pid not in mine:
                 self.k.CloseHandle(self.handles.pop(pid))
@@ -825,7 +824,7 @@ class Shell:
     def on_ready(self, sender, args):
         if not args.IsSuccess:
             print('WebView2 did not start:', args.InitializationException, flush=True)
-            message(NO_RUNTIME if 'NotFound' in str(type(args.InitializationException)) else f'Lastbook could not open its window.\n\n{args.InitializationException.Message}')
+            message(NO_RUNTIME if 'NotFound' in str(type(args.InitializationException)) else WINDOW_OPEN_ERROR.format(detail=args.InitializationException.Message))
             self.form.Close()
             return
         Core = self.n.Core
@@ -1113,7 +1112,7 @@ class Shell:
         print('web view process failed:', kind, args.Reason, flush=True)
         note(kind='process-failed', what=str(kind), reason=str(args.Reason))
         if kind == Kind.BrowserProcessExited:
-            message('The window part of Lastbook stopped working, so Lastbook will close. Your library is not affected.')
+            message(WINDOW_STOPPED)
             self.ui(self.form.Close)
         elif self.ended_why and kind in (Kind.RenderProcessExited, Kind.FrameRenderProcessExited):
             why, self.ended_why = self.ended_why, None

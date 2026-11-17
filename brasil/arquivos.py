@@ -4,6 +4,7 @@ from pathlib import Path
 import sqlite3
 import math
 import re
+from .sqlite_local import Connection
 
 class TextOnly(HTMLParser):
     def __init__(self):
@@ -67,7 +68,7 @@ def read_zim(path, query=None, entry=None):
 
 def map_info(path):
     try:
-        with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True) as db:
+        with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True,factory=Connection) as db:
             metadata=dict(db.execute('SELECT name,value FROM metadata'))
             if metadata.get('format','').lower() not in ('png','jpg','jpeg','webp'):
                 raise ValueError('Escolha MBTiles com imagens PNG, JPEG ou WebP. MBTiles vetorial não é suportado; use os mapas .ulmap do catálogo.')
@@ -94,7 +95,7 @@ def map_info(path):
 def map_tile(path,z,x,y):
     if not all(type(n) is int for n in (z,x,y)) or not 0<=z<=22 or not 0<=x<2**z or not 0<=y<2**z:
         raise ValueError('Coordenada de mapa inválida.')
-    with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True) as db:
+    with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True,factory=Connection) as db:
         row=db.execute('SELECT tile_data FROM tiles WHERE zoom_level=? AND tile_column=? AND tile_row=?',(z,x,2**z-1-y)).fetchone()
     if not row: return None
     data=bytes(row[0])

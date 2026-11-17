@@ -70,9 +70,10 @@ Sources and permissions page with the publisher and terms of every item. The off
 
 A edição em `brasil/` reutiliza a bridge e o shell Linux do LastBook (MIT).
 Os guias iniciais são resumos editoriais com referências e não cópias das páginas.
-O pacote completo inclui python-libzim 3.13.1 e seus componentes GPL indicados na
-lista acima. O código da adaptação está disponível no mesmo repositório, e as
-licenças do wheel são preservadas em `/opt/ultimo-livro/lib/`.
+O pacote Linux inclui python-libzim 3.13.1 e seus componentes GPL indicados na
+lista acima. Na edição 0.4, o macOS usa python-libzim 3.13.1 e o Windows usa
+3.13.0. O código da adaptação está disponível no mesmo repositório. No Linux,
+as licenças do wheel são preservadas em `/opt/ultimo-livro/lib/`.
 
 O motor opcional usa llama.cpp (MIT), revisão
 `dde879bc4f954b809892fd0d660515f42536394a`, compilável com `brasil/build_runtime.sh`.
@@ -84,6 +85,39 @@ Model card e licença: https://huggingface.co/Qwen/Qwen3-0.6B-GGUF
 Enciclopédias e mapas importados permanecem sob as licenças de seus fornecedores.
 O aplicativo mostra as atribuições do mapa MBTiles e não redistribui os arquivos
 importados. A extração de artigos em texto é uma limitação da versão alpha.
+
+### Aplicativos brasileiros 0.4 para macOS e Windows
+
+A tabela inicial deste arquivo descreve o produto upstream. Os pacotes de
+`brasil/` têm um conjunto menor de componentes: não incluem NumPy, onnxruntime,
+tokenizers, pypdfium2 nem os pacotes de conteúdo do produto original.
+
+- Python 3.14, com o patch fornecido pelo `actions/setup-python`, é empacotado por
+  PyInstaller 6.22.3. No Linux, Python é dependência do sistema, não incorporado.
+  A licença PSF e os avisos dos componentes do interpretador devem acompanhar os
+  pacotes autocontidos. Termos: https://docs.python.org/3/license.html
+- macOS usa PyObjC 13.0 (core, Cocoa e WebKit, MIT) e o WebKit do próprio sistema.
+- Windows usa pythonnet 3.2.1 e clr_loader 0.3.1 (MIT), com suas dependências
+  efetivamente coletadas pelo PyInstaller. Fontes:
+  https://github.com/pythonnet/pythonnet/tree/v3.2.1 e
+  https://github.com/pythonnet/clr-loader/tree/v0.3.1 .
+- O SDK Microsoft.Web.WebView2 é **1.0.4314.35**, obtido do NuGet oficial.
+  Seu `LICENSE.txt` contém BSD-3-Clause, com copyright Microsoft. Isso é
+  distinto dos termos do **Runtime Evergreen**, cujo instalador standalone
+  oficial acompanha o instalador Windows. O ZIP portátil usa o Runtime que já
+  estiver instalado. Fonte SDK:
+  https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4314.35
+- O motor Windows usa o CRT Microsoft compartilhado. As DLLs de redistribuição
+  coletadas no build são copiadas para junto do motor após conferência da
+  assinatura Microsoft. Origem, versão e avisos de redistribuição precisam ser
+  preservados; assinatura não substitui licença. Referência:
+  https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files
+- `llama-completion` e suas bibliotecas usam a revisão llama.cpp indicada acima.
+  O código nlohmann/json incorporado ao motor mantém seu próprio aviso MIT.
+
+A licença MIT do código original e da adaptação não substitui as licenças dos
+componentes incorporados. Esta relação de componentes também não substitui os
+textos de licença e os avisos de copyright que acompanham cada pacote.
 
 ## Mapas vetoriais brasileiros (download separado)
 

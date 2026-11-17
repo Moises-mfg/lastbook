@@ -1,6 +1,7 @@
 import base64
 from pathlib import Path
 import sqlite3
+import shutil
 import tempfile
 import unittest
 from brasil.arquivos import map_info,map_tile,TextOnly,read_zim
@@ -16,6 +17,7 @@ class Maps(unittest.TestCase):
                 db.executemany('INSERT INTO metadata VALUES (?,?)',[('format','png'),('name','Mapa de teste'),('attribution','OpenStreetMap contributors')])
                 db.execute('CREATE TABLE tiles(zoom_level INTEGER,tile_column INTEGER,tile_row INTEGER,tile_data BLOB)')
                 db.execute('INSERT INTO tiles VALUES (1,0,0,?)',(image,))
+            db.close()
             info=map_info(path)
             self.assertEqual((info['z'],info['x'],info['y']),(1,0,1))
             self.assertEqual(map_tile(path,1,0,1),(image,'image/png'))
@@ -50,6 +52,12 @@ class Encyclopedia(unittest.TestCase):
             creator=Creator(path).config_indexing(True,'por')
             with creator as c:
                 c.add_item(Article());c.set_mainpath('A/Energia')
+            # O leitor deve funcionar no caminho real de usuários brasileiros,
+            # inclusive no Windows onde o escritor de amostras exige ASCII.
+            accented=Path(tmp)/'Coleção ação com espaços';accented.mkdir()
+            unicode_path=accented/'enciclopédia.zim';shutil.copyfile(path,unicode_path)
+            self.assertIn('Iluminação',read_zim(unicode_path,entry='A/Energia')['texto'])
+            self.assertEqual(read_zim(unicode_path,query='lanternas')[0]['entrada'],'A/Energia')
             found=read_zim(path,query='lanternas')
             self.assertEqual(found[0]['entrada'],'A/Energia')
             article=read_zim(path,entry=found[0]['entrada'])

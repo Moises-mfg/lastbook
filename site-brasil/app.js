@@ -1,6 +1,35 @@
 'use strict';
 (() => {
   const $ = s => document.querySelector(s);
+  for (const platform of window.ULTIMO_LIVRO_DOWNLOADS || []) {
+    const card = document.createElement('article');
+    card.dataset.platform = platform.id;
+    const heading = document.createElement('h3');
+    heading.id = 'download-' + platform.id;
+    heading.textContent = platform.name;
+    card.setAttribute('aria-labelledby', heading.id);
+    card.append(heading);
+    const href = platform.available && (platform.downloadUrl || platform.releaseUrl);
+    for (const [className, value] of [
+      ['download-status', `${platform.version} · ${href ? 'Alpha disponível' : 'Em validação · download indisponível'}`],
+      ['download-arquitetura', platform.architecture],
+      ['download-requisitos', platform.requirements],
+      ['download-instrucoes', platform.instructions]
+    ]) {
+      const paragraph = document.createElement('p');
+      paragraph.className = className;
+      paragraph.textContent = value;
+      card.append(paragraph);
+    }
+    if (href) {
+      const link = document.createElement('a');
+      link.className = 'btn';
+      link.href = href;
+      link.textContent = platform.downloadUrl ? `Baixar para ${platform.name} ↗` : `Ver pacotes para ${platform.name} no GitHub ↗`;
+      card.append(link);
+    }
+    $('#downloads-lista').append(card);
+  }
   const profiles = {leve:{nome:'Leve',modelo:'Qwen3 0.6B experimental',wiki:'Português mini',ram:8},moderada:{nome:'Moderada',modelo:'Qwen3 4B',wiki:'Português sem imagens',ram:16},parruda:{nome:'Parruda',modelo:'Qwen3 14B',wiki:'Português completo',ram:32},personalizada:{nome:'Personalizada',modelo:'Você escolhe',wiki:'Você escolhe',ram:0}};
   let selected='leve';
   const estados={AC:'Acre',AL:'Alagoas',AP:'Amapá',AM:'Amazonas',BA:'Bahia',CE:'Ceará',DF:'Distrito Federal',ES:'Espírito Santo',GO:'Goiás',MA:'Maranhão',MT:'Mato Grosso',MS:'Mato Grosso do Sul',MG:'Minas Gerais',PA:'Pará',PB:'Paraíba',PR:'Paraná',PE:'Pernambuco',PI:'Piauí',RJ:'Rio de Janeiro',RN:'Rio Grande do Norte',RS:'Rio Grande do Sul',RO:'Rondônia',RR:'Roraima',SC:'Santa Catarina',SP:'São Paulo',SE:'Sergipe',TO:'Tocantins'};

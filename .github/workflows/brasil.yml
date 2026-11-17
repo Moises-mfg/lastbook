@@ -2,7 +2,7 @@ name: Brasil · testes e pacote Linux
 on:
   push:
     branches: [main]
-    paths: ['brasil/**', 'app/bridge.py', 'app/shell_linux.py', 'engine/setup/**', 'site-brasil/**', '.github/workflows/brasil.yml']
+    paths: ['brasil/**', 'app/bridge.py', 'app/shell_linux.py', 'engine/setup/**', 'site-brasil/**', 'tools/testar_linux.py', 'tools/modelo_teste_desktop.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/workflows/brasil.yml']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -54,11 +54,40 @@ jobs:
       - if: steps.motor.outputs.cache-hit != 'true'
         run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
-      - run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq python3-gi python3-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+      - name: Instalar dependências gráficas do teste Linux
+        # O WebKit e suas dependências podem levar vários minutos no espelho do runner.
+        timeout-minutes: 18
+        run: |
+          apt_options=(-o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          sudo apt-get "${apt_options[@]}" -q update
+          sudo apt-get "${apt_options[@]}" -qy install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+      - name: Abrir a janela do pacote Linux extraído
+        timeout-minutes: 3
+        run: |
           dpkg-deb --extract derived/brasil-build/*.deb /tmp/ultimo-livro-pacote
           ULTIMO_LIVRO_TEST_ROOT=/tmp/ultimo-livro-pacote/opt/ultimo-livro WEBKIT_DISABLE_DMABUF_RENDERER=1 xvfb-run -a /usr/bin/python3 -B brasil/tests/smoke_gtk.py
+      - uses: actions/cache/restore@v4
+        id: modelo
+        with:
+          path: derived/desktop-model.gguf
+          key: desktop-modelo-${{ runner.os }}-x64-qwen3-06b-q8-v1
+      - run: python3 -B tools/modelo_teste_desktop.py
+      - uses: actions/cache/save@v4
+        if: steps.modelo.outputs.cache-hit != 'true'
+        with:
+          path: derived/desktop-model.gguf
+          key: desktop-modelo-${{ runner.os }}-x64-qwen3-06b-q8-v1
+      - name: Validar janela e IA do pacote Linux extraído
+        timeout-minutes: 8
+        run: |
+          WEBKIT_DISABLE_DMABUF_RENDERER=1 xvfb-run -a /usr/bin/python3 -I -B tools/testar_linux.py --raiz /tmp/ultimo-livro-pacote/opt/ultimo-livro --modelo derived/desktop-model.gguf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-resultados-linux-x64
+          path: |
+            derived/desktop-results/linux-empacotado.json
+            derived/desktop-results/linux-empacotado.png
       - uses: actions/upload-artifact@v4
         with:
           name: ultimo-livro-linux-amd64-alpha

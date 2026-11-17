@@ -7,11 +7,14 @@ import {fileURLToPath} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const catalog=readFileSync(new URL('../catalogo.js',import.meta.url),'utf8');
+const downloads=readFileSync(new URL('../downloads.js',import.meta.url),'utf8');
 const script=readFileSync(new URL('../app.js',import.meta.url),'utf8');
-function start(saved){
+function start(saved,configureDownloads){
   const dom=new JSDOM(html,{url:'https://ultimo-livro.invalid/',runScripts:'outside-only'});
   if(saved)dom.window.localStorage.setItem('ul-checklist',saved);
-  dom.window.eval(catalog);dom.window.eval(script);return dom;
+  dom.window.eval(catalog);dom.window.eval(downloads);
+  if(configureDownloads)configureDownloads(dom.window.ULTIMO_LIVRO_DOWNLOADS);
+  dom.window.eval(script);return dom;
 }
 
 test('perfis reais e aviso de RAM respondem à escolha do visitante',()=>{
@@ -62,6 +65,50 @@ test('navegação local encontra seções e scripts não carregam terceiros',()=
   const dom=start(),d=dom.window.document;
   for(const a of d.querySelectorAll('a[href^="#"]'))assert.ok(d.querySelector(a.getAttribute('href')),a.outerHTML);
   for(const script of d.querySelectorAll('script[src]'))assert.equal(new URL(script.src).origin,'https://ultimo-livro.invalid');
-  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/lastbook/releases"]'));
+  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4"]'));
+  dom.window.close();
+});
+
+test('downloads apresentam plataformas, requisitos e apenas links de pacotes publicados',()=>{
+  const dom=start(),d=dom.window.document;
+  const section=d.querySelector('#downloads');
+  assert.equal(d.querySelector('#'+section.getAttribute('aria-labelledby')).tagName,'H2');
+  const cards=[...section.querySelectorAll('article[data-platform]')];
+  assert.deepEqual(cards.map(card=>card.dataset.platform),['linux','macos-arm64','macos-x64','windows-x64']);
+  for(const card of cards){
+    assert.equal(d.getElementById(card.getAttribute('aria-labelledby')).tagName,'H3');
+    assert.ok(card.querySelector('.download-instrucoes').textContent.length>30);
+  }
+  const linux=cards[0];
+  assert.match(linux.textContent,/v0\.4\.0-alpha\.4 · Alpha disponível/);
+  assert.match(linux.querySelector('.download-requisitos').textContent,/Ubuntu 24\.04–26\.04 x86_64/);
+  const files='https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.4/';
+  assert.equal(linux.querySelector('a').href,files+'ultimo-livro_0.4.0-alpha4_amd64.deb');
+  for(const mac of cards.slice(1,3))assert.match(mac.querySelector('.download-requisitos').textContent,/macOS 13\.3 ou posterior/);
+  assert.match(cards[1].textContent,/Apple Silicon/);assert.match(cards[2].textContent,/Intel/);
+  assert.match(cards[3].querySelector('.download-requisitos').textContent,/Windows 10 versão 1809 ou posterior, x64/);
+  assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
+  assert.match(cards[1].querySelector('.download-status').textContent,/Em validação · download indisponível/);
+  assert.equal(cards[1].querySelectorAll('a,button').length,0);
+  assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha4_macos-x64.dmg');
+  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4');
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/blob/feat/macos-windows/docs/brasil/INSTALACAO-DESKTOP.md"]'));
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/tree/v0.4.0-alpha.4"]'));
+  assert.match(d.querySelector('.hero').textContent,/Apple Silicon em validação/);
+  const scripts=[...d.querySelectorAll('script[src]')].map(s=>s.getAttribute('src'));
+  assert.ok(scripts.indexOf('downloads.js')<scripts.indexOf('app.js'));
+  dom.window.close();
+});
+
+test('disponibilidade exige URL publicada e ignora links de plataforma ainda em validação',()=>{
+  const dom=start(undefined,platforms=>{
+    platforms[0].releaseUrl=null;
+    platforms[0].downloadUrl=null;
+    platforms[1].releaseUrl='https://github.com/Moises-mfg/lastbook/releases';
+  });
+  const d=dom.window.document;
+  assert.equal(d.querySelectorAll('#downloads-lista a').length,2);
+  assert.match(d.querySelector('[data-platform=linux] .download-status').textContent,/download indisponível/);
+  assert.match(d.querySelector('[data-platform=macos-arm64] .download-status').textContent,/Em validação/);
   dom.window.close();
 });
