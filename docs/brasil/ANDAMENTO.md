@@ -95,3 +95,33 @@ Foram aprovados 18 testes Python, quatro testes DOM do site (incluindo o plano
 exportado aceito pelo validador do aplicativo) e o teste de interações na janela
 Linux. O teste visual completo do site e o benchmark de hardware alvo permanecem
 pendentes. Nenhum modelo ou arquivo de enciclopédia foi enviado ao Git.
+
+## Entrega 0.3 — 17/11/2026
+
+- PR [#6](https://github.com/Moises-mfg/lastbook/pull/6) integrado ao `main`.
+- [Instalador 0.3 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3),
+  cerca de 32 MB, produzido no Ubuntu 24.04 pelo CI e conferido por SHA-256.
+- [Dados dos mapas](https://github.com/Moises-mfg/lastbook/releases/tag/mapas-br-2026-11-16):
+  5.571 municípios, 27 UFs, visão geral e Brasil detalhado; créditos, licença e
+  proveniência incluídos. Os sete volumes foram comparados aos digests do GitHub.
+- Downloads reais de visão geral, Campinas e Boa Esperança do Norte, com pausa,
+  retomada, SHA-256, ativação e consulta offline aprovados.
+- Leitor vetorial com busca, zoom e camadas. Captura real de Campinas em
+  `docs/brasil/imagens/mapa-campinas.png`.
+- Diretório de 11 fontes e comunidades com descrições locais e abertura da fonte
+  original por ação explícita; inclui LoRa, radioamadorismo e criadores brasileiros.
+- Site atualizado e implantado com sucesso: https://ultimo-livro-brasil.genuineoffer32.chatgpt.site .
+  Acesso permanece privado para o proprietário. Fonte da hospedagem:
+  `1919f77e90e0aaa94274b8597a766a5088ca1a03`; fonte também versionada em `site-brasil/`.
+- CI aprovado: 28 testes brasileiros, 86 do instalador (dois de macOS ignorados),
+  cinco testes DOM, leitores ZIM em Python 3.12/3.13/3.14 e janela do pacote extraído.
+- O mesmo instalador foi extraído e testado no Ubuntu 26.04/Python 3.14 com
+  Wikipedia PT mini e mapa reais. A busca e leitura de artigos passaram.
+- Motor incluído no instalador respondeu Brasília com referências da Wikipedia
+  em 5,5 segundos no i5/16 GB usado para teste. Não é benchmark nem previsão para i3.
+
+Limites atuais: leitor de artigos em texto; mapas sem roteamento ou estado em
+tempo real; IA experimental. Pendem benchmark no i3 físico e revisão visual do
+site em navegador completo. Domínio próprio e programas de afiliados dependem
+das escolhas e cadastros pessoais do proprietário; há instruções em
+`DOMINIO-E-AFILIADOS.md`. Nenhuma conta, comissão ou compra foi ativada.

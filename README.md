@@ -2,14 +2,26 @@
 
 Aplicativo Linux de preparação e biblioteca offline em português, baseado no LastBook.
 
-**[Leia a documentação em português](README.pt-BR.md)** · [Projeto original](README.upstream.md)
+**[Baixar a versão 0.3 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3)** ·
+[Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
 
-Versão alpha: guias locais, busca, checklist persistente, perfis de instalação e IA
-pequena experimental. Alvo: notebook i3, 8 GB RAM. Modelos e Wikipedias selecionáveis têm
-download verificado. Mapas brasileiros por região estão em desenvolvimento. Código aberto, sem conta e sem telemetria.
+IA local em CPU, Wikipedias selecionáveis, mapas de todos os 5.571 municípios
+brasileiros e 27 unidades federativas, guias, checklist e diretório de fontes e
+comunidades. Quatro perfis de instalação, downloads verificados, pausa e retomada.
 
-```bash
-/usr/bin/python3 -B brasil/main.py
-```
+Alvo do perfil Leve: notebook i3 com 8 GB; o benchmark no i3 físico continua
+pendente. O pacote suporta Linux x86_64 com Python 3.12–3.14 e glibc 2.39+,
+começando por Ubuntu 24.04–26.04. Sem conta e sem telemetria.
 
-Veja dependências, instalação, testes e limites no [README em português](README.pt-BR.md).
+Modelos, Wikipedias e mapas são baixados separadamente quando você pedir.
+Para usar uma cidade, o aplicativo recebe apenas seu recorte; não é necessário
+baixar manualmente os sete volumes da release de dados. Os mapas não oferecem
+rotas automáticas nem informações em tempo real. O leitor de ZIM apresenta texto.
+
+O site tem comparador, checklist, diretório e plano JSON importável no aplicativo.
+Seu código está em `site-brasil/`.
+
+[Como começar com domínio e afiliados](docs/brasil/DOMINIO-E-AFILIADOS.md) ·
+[Mapas: fontes, construção e validação](docs/brasil/MAPAS-OFFLINE.md).
+
+Código aberto. Enciclopédias, mapas, motores e modelos mantêm suas próprias licenças.
