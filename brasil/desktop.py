@@ -85,6 +85,7 @@ def run_mac(server,base):
 def run_windows(server,base):
     import shell_windows as shell
     shell.TITLE=TITLE
+    shell.AI_PROCESS_NAMES=shell.AI_PROCESS_NAMES|{'llama-completion.exe'}
     shell.NO_RUNTIME='O aplicativo precisa do Microsoft Edge WebView2 Runtime. Execute novamente o instalador para incluir esse componente.'
     shell.TOO_BIG='Uma página usou memória demais e foi fechada.'
     failure=shell.preflight()

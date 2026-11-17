@@ -45,7 +45,7 @@ STEPS=[
     ("!!document.querySelector('#buscarZim button')&&!document.querySelector('#buscarZim button').disabled","document.querySelector('#termoZim').value='Brasil';document.querySelector('#buscarZim').requestSubmit()",'leitor ZIM'),
     ("document.querySelector('[data-zim]')?.textContent==='Brasil'","document.querySelector('[data-zim]').click()",'busca ZIM'),
     ("document.querySelector('#conteudo h1')?.textContent==='Brasil'&&document.querySelector('.resposta')?.textContent.includes('Brasília')","location.hash='mapas'",'artigo ZIM'),
-    ("document.querySelector('#mapaEstado')?.textContent.includes('consulta local')","document.querySelector('#mapaTermo').value='Hospital';document.querySelector('#mapaBusca').requestSubmit()",'desenho de mapa'),
+    ("document.querySelector('#mapaEstado')?.textContent.includes('consulta local')&&(()=>{const c=document.querySelector('#mapaCanvas'),p=c.getContext('2d').getImageData(c.width/2,c.height/2,1,1).data;return p[3]===255&&!(p[0]===216&&p[1]===231&&p[2]===233)})()","document.querySelector('#mapaTermo').value='Hospital';document.querySelector('#mapaBusca').requestSubmit()",'desenho de mapa'),
     ("document.querySelector('#mapaResultados button')?.textContent==='Hospital de Teste'","document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()",'busca no mapa'),
     ("document.querySelector('#mapaEstado')?.textContent.includes('Nível 16')","document.querySelector('[data-map-layer=water]').click();location.hash='compras'",'zoom e camadas'),
     ("document.querySelectorAll('[data-item]').length===10","document.querySelector('[data-item=luz]').click()",'checklist'),
@@ -96,7 +96,11 @@ class Check:
                 assert 'Brasília' in job['resposta'],job
                 assert job['fontes'] and job['fontes'][0]['tipo']=='zim'
                 result['ia']=job;result['motor']=str(store.runner())
-            self.save(True,result)
+            # A inferência não pode ter fechado/reiniciado a página.
+            def verify_view(value,error):
+                if error or value is not True:self.save(False,{'erro':'A interface não permaneceu disponível após a IA.','detalhe':str(error)})
+                else:self.save(True,result)
+            self.later(.1,lambda:self.evaluate("Boolean(document.querySelector('#mapaCanvas')&&document.querySelector('#mapaEstado')?.textContent.includes('consulta local'))",verify_view))
         except Exception:self.save(False,{'erro':traceback.format_exc()})
     def save(self,ok,result):
         self.finished=True

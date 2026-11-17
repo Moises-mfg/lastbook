@@ -19,6 +19,7 @@ import traceback
 from pathlib import Path
 
 import bridge as B
+from process_tree import window_processes
 
 # Audit W6: in the packaged app, nothing outside may steer WebView2 or pythonnet. WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS could open a
 # debugging port on this no-port app, WEBVIEW2_BROWSER_EXECUTABLE_FOLDER could swap the runtime, PYTHONNET_* the .NET runtime.
@@ -52,6 +53,7 @@ RESTART_GAP = 10    # seconds. A page that crashes its renderer gets the app rel
 # A page holds its memory in those processes, and only ending its renderer makes them give it back. Over the limit that renderer is ended
 # and the app starts again at home. This samples and then acts, so a page allocating very fast goes over by what it takes in that time.
 # Counted with them: this program's .NET heap, where what a page asks for passes on its way to the runtime. Not counted: the engine's own Python memory, which no page sets.
+AI_PROCESS_NAMES = frozenset({'lastbook-llm.exe'})
 MEMORY_LIMIT_MOST = 3 * 1024 ** 3
 MEMORY_EVERY = 0.1
 MEMORY_QUIET = 10   # seconds after ending a renderer before ending another: the system needs a moment to give the memory back
@@ -651,14 +653,8 @@ class _Processes:
                 ok = self.k.Process32NextW(snap, ctypes.byref(e))
         finally:
             self.k.CloseHandle(snap)
-        mine = {os.getpid()}
-        grew = True
-        while grew:
-            # The local AI's runner is not the web view's: its memory is the model's (about 19 GB of commit with a GPU), which
-            # llm_local fits to this computer before it starts. Counted here, it ended the page over and over once the model loaded.
-            more = {pid for pid, parent in parents.items() if parent in mine and pid not in mine and names.get(pid) != 'lastbook-llm.exe'}
-            mine |= more
-            grew = bool(more)
+        # A memória do modelo tem sua própria verificação; não é memória da janela.
+        mine=window_processes(os.getpid(),parents,names,AI_PROCESS_NAMES)
         for pid in list(self.handles):
             if pid not in mine:
                 self.k.CloseHandle(self.handles.pop(pid))

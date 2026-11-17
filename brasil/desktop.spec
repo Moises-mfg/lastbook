@@ -25,4 +25,4 @@ pyz=PYZ(a.pure)
 exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='UltimoLivro',console=False,debug=False,argv_emulation=False,strip=False,upx=False,codesign_identity=None,entitlements_file=None)
 coll=COLLECT(exe,a.binaries,a.datas,strip=False,upx=False,name='UltimoLivro')
 if MAC:
-    app=BUNDLE(coll,name='O Último Livro.app',bundle_identifier='br.org.ultimolivro.App',version='0.4.0',info_plist={'CFBundleDisplayName':'O Último Livro','CFBundleName':'O Último Livro','LSMinimumSystemVersion':'13.0','NSHighResolutionCapable':True,'NSHumanReadableCopyright':'Projeto aberto baseado no LastBook. Consulte LICENSE e THIRD_PARTY_NOTICES.md.'})
+    app=BUNDLE(coll,name='O Último Livro.app',bundle_identifier='br.org.ultimolivro.App',version='0.4.0',info_plist={'CFBundleDisplayName':'O Último Livro','CFBundleName':'O Último Livro','LSMinimumSystemVersion':'13.3','NSHighResolutionCapable':True,'NSHumanReadableCopyright':'Projeto aberto baseado no LastBook. Consulte LICENSE e THIRD_PARTY_NOTICES.md.'})

@@ -23,16 +23,38 @@ UninstallDisplayIcon={app}\UltimoLivro.exe
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 [Files]
 Source: "..\derived\desktop-dist\UltimoLivro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\derived\webview-runtime.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "..\derived\webview-runtime.exe"; Flags: dontcopy
 [Icons]
 Name: "{group}\O Último Livro"; Filename: "{app}\UltimoLivro.exe"
 Name: "{autodesktop}\O Último Livro"; Filename: "{app}\UltimoLivro.exe"
 [Run]
-Filename: "{tmp}\webview-runtime.exe"; Parameters: "/silent /install"; StatusMsg: "Preparando o componente WebView2 da Microsoft..."; Flags: waituntilterminated; Check: NeedsWebView
 Filename: "{app}\UltimoLivro.exe"; Description: "Abrir O Último Livro"; Flags: nowait postinstall skipifsilent
 [Code]
-function NeedsWebView: Boolean;
+function HasRuntime(RootKey: Integer; const Key: String): Boolean;
 var VersionValue: String;
 begin
-  Result := not ((RegQueryStringValue(HKLM32, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', VersionValue) or RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', VersionValue)) and (VersionValue <> '') and (VersionValue <> '0.0.0.0'));
+  Result := RegQueryStringValue(RootKey, Key, 'pv', VersionValue) and (VersionValue <> '') and (VersionValue <> '0.0.0.0');
+end;
+
+function NeedsWebView: Boolean;
+begin
+  Result := not (HasRuntime(HKLM32, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}') or HasRuntime(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'));
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var ResultCode: Integer; Attempt: Integer;
+begin
+  Result := '';
+  if not NeedsWebView then Exit;
+  ExtractTemporaryFile('webview-runtime.exe');
+  if not Exec(ExpandConstant('{tmp}\webview-runtime.exe'), '/silent /install', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+    Result := 'Não foi possível iniciar o componente WebView2 da Microsoft. Tente novamente.';
+    Exit;
+  end;
+  Log(Format('Instalador WebView2: código %d', [ResultCode]));
+  for Attempt := 1 to 40 do begin
+    if not NeedsWebView then Exit;
+    Sleep(500);
+  end;
+  Result := Format('O componente WebView2 não ficou disponível (código %d). Verifique as permissões do Windows e execute o instalador novamente.', [ResultCode]);
 end;
