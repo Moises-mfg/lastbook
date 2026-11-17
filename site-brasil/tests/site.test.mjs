@@ -89,8 +89,8 @@ test('downloads apresentam plataformas, requisitos e apenas links de pacotes pub
   assert.match(cards[3].querySelector('.download-requisitos').textContent,/Windows 10 versão 1809 ou posterior, x64/);
   assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
   assert.equal(cards[1].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha5_macos-arm64.dmg');
-  assert.equal(cards[2].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.4/ultimo-livro_0.4.0-alpha4_macos-x64.dmg');
-  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4');
+  assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha5_macos-x64.dmg');
+  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5');
   assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/blob/main/docs/brasil/INSTALACAO-DESKTOP.md"]'));
   assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/tree/v0.4.0-alpha.5"]'));
   const scripts=[...d.querySelectorAll('script[src]')].map(s=>s.getAttribute('src'));

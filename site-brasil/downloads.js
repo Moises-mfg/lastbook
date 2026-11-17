@@ -2,8 +2,6 @@
 // Habilite uma plataforma somente após validar o pacote e publicar uma URL real.
 const release05 = 'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5';
 const files05 = 'https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.5';
-const release04 = 'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4';
-const files04 = 'https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.4';
 window.ULTIMO_LIVRO_DOWNLOADS = [
   {
     id: 'linux', name: 'Linux', architecture: 'Intel / AMD x86_64',
@@ -21,14 +19,14 @@ window.ULTIMO_LIVRO_DOWNLOADS = [
   },
   {
     id: 'macos-x64', name: 'macOS · Intel', architecture: 'x86_64',
-    version: 'v0.4.0-alpha.4', available: true, releaseUrl: release04,
-    downloadUrl: files04 + '/ultimo-livro_0.4.0-alpha4_macos-x64.dmg',
+    version: 'v0.4.0-alpha.5', available: true, releaseUrl: release05,
+    downloadUrl: files05 + '/ultimo-livro_0.4.0-alpha5_macos-x64.dmg',
     requirements: 'macOS 13.3 ou posterior, em Mac com processador Intel.',
     instructions: 'Confira o processador em Sobre Este Mac. Abra o DMG e mova o aplicativo para Aplicativos.'
   },
   {
     id: 'windows-x64', name: 'Windows', architecture: 'x64',
-    version: 'v0.4.0-alpha.4', available: true, releaseUrl: release04, downloadUrl: null,
+    version: 'v0.4.0-alpha.5', available: true, releaseUrl: release05, downloadUrl: null,
     requirements: 'Windows 10 versão 1809 ou posterior, x64.',
     instructions: 'Na página da versão, escolha o instalador por usuário ou o ZIP portátil. O ZIP requer WebView2 instalado.'
   }

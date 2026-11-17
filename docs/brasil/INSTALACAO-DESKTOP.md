@@ -2,16 +2,14 @@
 
 ## Estado e requisitos
 
-- [Alpha 5](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5)
-  para Linux x86_64 (Ubuntu 24.04–26.04) e Apple Silicon (macOS 13.3 ou posterior).
-- [Alpha 4](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4)
-  para Mac Intel (macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809
-  ou posterior).
+A [alpha 5](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5)
+está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
+(macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
 
 O instalador Windows inclui o WebView2 Runtime. Os pacotes Mac e Windows
 incluem Python e o motor local. Modelos GGUF, enciclopédias e mapas são baixados
 por ação explícita no aplicativo. O perfil Leve recomenda 8 GB de RAM instalada.
-A IA do perfil Leve exige 2,5 GiB livres na alpha 5 e 3 GiB na alpha 4.
+A IA do perfil Leve exige 2,5 GiB livres no momento da resposta.
 
 ## Escolha do pacote
 
