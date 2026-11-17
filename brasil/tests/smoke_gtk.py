@@ -23,13 +23,25 @@ result={'ok':False}
 
 def build(self, app):
     original(self,app)
+    from brasil import main,mapa_vetor
+    import sqlite3
+    sample=Path(folder.name)/'teste.ulmap';db=sqlite3.connect(sample);mapa_vetor.create(db)
+    mapa_vetor.add_feature(db,1,'land','teste','',2,[[(-48.2,-16.2),(-47.8,-16.2),(-47.8,-15.8),(-48.2,-15.8),(-48.2,-16.2)]])
+    mapa_vetor.add_feature(db,2,'road','primary','Avenida Brasil',7,[[(-48.01,-16.01),(-47.99,-15.99)]])
+    mapa_vetor.add_feature(db,3,'poi','hospital','Hospital de Teste',12,[[(-48,-16)]])
+    mapa_vetor.finish(db,{'name':'Mapa de teste','bounds':[-48.02,-16.02,-47.98,-15.98],'attribution':'Dados sintéticos de teste'});db.close()
+    main.STORE.import_file('mapa',sample)
     steps=[
         ("({cards:document.querySelectorAll('[data-guide]').length})",lambda d: d['cards']==5,"location.hash='instalacao'"),
         ("({profiles:document.querySelectorAll('[name=perfil]').length,wikis:document.querySelectorAll('[name=wiki]').length,install:!!document.querySelector('#instalar')})",lambda d:d=={'profiles':4,'wikis':5,'install':True},"document.querySelector('#modelo').value='sem-ia';document.querySelector('#escolhas').requestSubmit()"),
         ("({saved:document.querySelector('#status').textContent.includes('Escolhas salvas')})",lambda d:d['saved'],"location.hash='downloads'"),
-        ("({packages:document.querySelectorAll('[data-package]').length})",lambda d:d['packages']==8,"location.hash='ia'"),
+        ("({packages:document.querySelectorAll('[data-package]').length})",lambda d:d['packages']>=8,"location.hash='ia'"),
         ("({disabled:document.querySelector('#enviar')?.disabled})",lambda d:d['disabled'],"location.hash='compras'"),
         ("({items:document.querySelectorAll('[data-item]').length})",lambda d:d['items']==10,"document.querySelector('[data-item=luz]').click()"),
+        ("({checked:document.querySelector('[data-item=luz]')?.checked})",lambda d:d['checked'],"location.hash='mapas'"),
+        ("({canvas:!!document.querySelector('#mapaCanvas'),local:document.querySelector('#mapaEstado')?.textContent})",lambda d:d['canvas'] and 'consulta local' in (d['local'] or ''),"document.querySelector('#mapaTermo').value='Hospital';document.querySelector('#mapaBusca').requestSubmit()"),
+        ("({place:document.querySelector('#mapaResultados button')?.textContent})",lambda d:d['place']=='Hospital de Teste',"document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()"),
+        ("({zoom:document.querySelector('#mapaEstado')?.textContent})",lambda d:'Nível 16' in (d['zoom'] or ''),"document.querySelector('[data-map-layer=road]').click()"),
     ]
     state={'index':0,'attempts':0}
     def tick():
@@ -40,7 +52,7 @@ def build(self, app):
                 assert main.STORE.choices()['modelo']=='sem-ia'
                 assert next(i for i in main.STORE.checklist() if i['id']=='luz')['feito']
                 result['ok']=True
-                print('Janela: biblioteca, perfis, salvar, catálogo, IA desativada e checklist OK',flush=True)
+                print('Janela: biblioteca, perfis, catálogo, IA desativada, checklist e mapa vetorial com busca/zoom/camadas OK',flush=True)
                 self.view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,WebKit2.SnapshotOptions.NONE,None,snapshot,None)
             except Exception as e:print('FALHA:',e,flush=True);app.quit()
             return False

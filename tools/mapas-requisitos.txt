@@ -1,0 +1,3 @@
+# Somente para construir os dados; não são dependências do aplicativo.
+osmium==4.3.2
+pyshp==3.1.9

@@ -27,6 +27,9 @@ from pathlib import Path
 
 ALLOWED_HOSTS = frozenset({
     'downloads.lastbook.org',
+    'github.com',  # arquivos de mapas da edição brasileira, com SHA-256 fixado
+    'release-assets.githubusercontent.com',
+    'objects.githubusercontent.com',
     'ftpmirror.your.org',  # espelho Kiwix listado nos metadados oficiais
     'mirror.download.kiwix.org',  # espelho oficial usado pelos pacotes brasileiros fixados
     'huggingface.co',
@@ -130,7 +133,7 @@ class Control:
             raise Stopped(self.why or 'paused')
 
 
-def _open(url, start, etag, allowed, context, timeout):
+def _open(url, start, etag, allowed, context, timeout, range_end=None):
     """(connection, response, final url) for a GET from byte `start`, after following allowed redirects."""
     for _ in range(MAX_REDIRECTS + 1):
         if not url_allowed(url, allowed):
@@ -138,8 +141,8 @@ def _open(url, start, etag, allowed, context, timeout):
         u = urllib.parse.urlsplit(url)
         conn = http.client.HTTPSConnection(u.hostname, u.port or 443, timeout=timeout, context=context)
         headers = {'User-Agent': USER_AGENT, 'Accept-Encoding': 'identity'}
-        if start:
-            headers['Range'] = f'bytes={start}-'
+        if start or range_end is not None:
+            headers['Range'] = f'bytes={start}-' + (str(range_end) if range_end is not None else '')
             if etag:
                 headers['If-Range'] = etag
         conn.request('GET', (u.path or '/') + ('?' + u.query if u.query else ''), headers=headers)
@@ -201,7 +204,12 @@ class Download:
     run() returns once the whole file is there and its SHA-256 matches, renamed to <dest>. Raises Stopped, Failed or BadChecksum.
     progress(done, total, phase) is called as bytes arrive; phase is 'downloading' or 'verifying'."""
 
-    def __init__(self, url, dest, size, sha256, control, progress=lambda d, t, p: None, allowed=None, context=None, timeout=TIMEOUT):
+    def __init__(self, url, dest, size, sha256, control, progress=lambda d, t, p: None, allowed=None, context=None, timeout=TIMEOUT, offset=None, container_size=None):
+        if (offset is None) != (container_size is None):
+            raise ValueError('incomplete bounded range')
+        if offset is not None and (type(offset) is not int or offset < 0 or type(container_size) is not int or container_size < offset + int(size)):
+            raise ValueError('invalid bounded range')
+        self.offset, self.container_size = offset or 0, container_size
         self.url, self.dest, self.size, self.sha256 = url, str(dest), int(size), sha256.lower()
         self.part, self.meta = self.dest + '.part', self.dest + '.part.json'
         self.control, self.progress = control, progress
@@ -300,14 +308,29 @@ class Download:
 
     def _fetch(self, start, etag, h, ctx):
         """Reads until the end or a break. Returns (bytes done, etag). Raises _Restart when the server's file is not the one begun."""
-        conn, r, final = _open(self.url, start, etag, self.allowed, ctx, self.timeout)
+        if self.container_size is not None:
+            conn, r, final = _open(self.url, self.offset + start, etag, self.allowed, ctx, self.timeout, self.offset + self.size - 1)
+        else:
+            conn, r, final = _open(self.url, start, etag, self.allowed, ctx, self.timeout)
         try:
             if r.status == 416 or r.status >= 400:
                 if 500 <= r.status < 600:
                     raise OSError(f'HTTP {r.status}')
                 raise Failed('network', f'The download server refused the file (HTTP {r.status}).')
             new_etag = r.getheader('ETag')
-            if r.status == 206:
+            if self.container_size is not None:
+                if r.status != 206:
+                    raise Failed('network', 'O servidor não aceitou o recorte solicitado. Nenhum mapa foi ativado.')
+                cr = _content_range(r.getheader('Content-Range'))
+                try:
+                    end = int(r.getheader('Content-Range').split('/')[0].split('-')[1])
+                except (ValueError, IndexError, AttributeError):
+                    end = None
+                if cr != (self.offset + start, self.container_size) or end != self.offset + self.size - 1:
+                    raise BadChecksum('O servidor enviou um recorte diferente do mapa solicitado.')
+                if etag and new_etag and etag != new_etag:
+                    raise _Restart(new_etag)
+            elif r.status == 206:
                 cr = _content_range(r.getheader('Content-Range'))
                 if not cr or cr[0] != start or cr[1] != self.size or (etag and new_etag and new_etag != etag):
                     raise _Restart(new_etag)

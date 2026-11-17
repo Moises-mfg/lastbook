@@ -9,6 +9,7 @@ trap 'rm -rf "$STAGE"' EXIT
 OPT="$STAGE/opt/ultimo-livro"
 mkdir -p "$OPT/brasil" "$OPT/app" "$OPT/engine/setup" "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/share/applications" "$STAGE/usr/share/doc/ultimo-livro" "$OUT"
 cp "$ROOT"/brasil/*.py "$ROOT/brasil/pacotes.json" "$OPT/brasil/"
+if [ -f "$ROOT/brasil/mapas_catalogo.json" ]; then cp "$ROOT/brasil/mapas_catalogo.json" "$OPT/brasil/"; fi
 cp -r "$ROOT/brasil/web" "$OPT/brasil/"
 if [ -d "$ROOT/brasil/vendor" ]; then cp -r "$ROOT/brasil/vendor" "$OPT/lib"; fi
 if [ -d "$ROOT/brasil/runtime" ]; then cp -r "$ROOT/brasil/runtime" "$OPT/brasil/"; fi

@@ -1333,7 +1333,7 @@ class Recommend(Base):
 
     def test_hardware_here(self):
         hw = hardware.detect([self.parent])
-        self.assertIn(hw['os'], ('macos', 'windows'))
+        self.assertEqual(hw['os'], 'linux' if sys.platform.startswith('linux') else 'macos' if sys.platform == 'darwin' else 'windows')
         self.assertGreater(hw['ram_bytes'], 2 ** 30)
         self.assertTrue(hw['disks'] and hw['disks'][0]['free_bytes'] > 0)
 

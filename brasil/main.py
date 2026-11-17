@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Aplicativo Linux sem servidor HTTP: reutiliza bridge e shell do LastBook."""
 import json
+import sqlite3
+import zlib
 import os
 from pathlib import Path
 import sys
@@ -28,20 +30,23 @@ class Handler(SetupHandler):
             if WEB.resolve() in p.parents and p.is_file():
                 return self._static(p)
         if path == '/api/brasil/mapa':
-            from brasil.arquivos import map_info
-            try: return _send_json(self,map_info(STORE.file_path('mapa')))
+            try: return _send_json(self,STORE.map_metadata())
             except ValueError as e: return _send_json(self,{'error':str(e)},400)
         if path == '/api/brasil/tile':
-            from brasil.arquivos import map_tile
             try:
                 q=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-                tile=map_tile(STORE.file_path('mapa'),*(int(q[k][0]) for k in ('z','x','y')))
+                tile=STORE.raster_tile(*(int(q[k][0]) for k in ('z','x','y')))
                 if tile is None: return _send_json(self,{'error':'Sem cobertura.'},404)
                 data,mime=tile
                 self.send_response(200);self.send_header('Content-Type',mime);self.send_header('Content-Length',str(len(data)));self.end_headers()
                 if self.command != 'HEAD': self.wfile.write(data)
                 return
             except (ValueError,KeyError,IndexError): return _send_json(self,{'error':'Imagem não disponível.'},400)
+        if path == '/api/brasil/vector-tile':
+            try:
+                q=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                return _send_json(self,STORE.vector_tile(*(int(q[k][0]) for k in ('z','x','y'))))
+            except (ValueError,KeyError,IndexError,sqlite3.Error,zlib.error):return _send_json(self,{'error':'Mapa não disponível.'},400)
         if path == '/api/brasil/state':
             return _send_json(self, STORE.state())
         if path == '/api/brasil/job':
@@ -56,12 +61,12 @@ class Handler(SetupHandler):
             return _send_json(self, {'error': 'Acesso somente neste computador.'}, 403)
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if not 0 < size <= 16384:
+            if not 0 < size <= 128*1024:
                 raise ValueError('Pedido inválido.')
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError('Pedido inválido.')
-            routes = {'/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
+            routes = {'/api/brasil/map-catalog': STORE.map_catalog_search, '/api/brasil/select-map': STORE.select_map, '/api/brasil/map-search': STORE.search_map, '/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
                       '/api/brasil/ask': STORE.ask, '/api/brasil/download-model': lambda b: STORE.download_model()}
             fn = routes.get(self._path())
             if not fn:
@@ -69,6 +74,8 @@ class Handler(SetupHandler):
             return _send_json(self, fn(body))
         except (ValueError, TypeError) as e:
             return _send_json(self, {'error': str(e)}, 400)
+        except (sqlite3.Error,zlib.error):
+            return _send_json(self, {'error':'Não foi possível ler o arquivo local. Confira o mapa ou importe outra cópia.'},400)
         except OSError:
             return _send_json(self, {'error': 'Não foi possível salvar. Verifique o espaço e as permissões da pasta.'}, 500)
 
@@ -88,7 +95,7 @@ def main():
         if kind not in ('zim','mapa','plano'): raise ValueError('Tipo de arquivo inválido.')
         event=threading.Event();out={}
         def choose():
-            dialog=Gtk.FileChooserNative.new({'zim':'Abrir enciclopédia ZIM','mapa':'Abrir mapa MBTiles','plano':'Importar plano JSON'}[kind],shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
+            dialog=Gtk.FileChooserNative.new({'zim':'Abrir enciclopédia ZIM','mapa':'Abrir mapa .ulmap ou MBTiles','plano':'Importar plano JSON'}[kind],shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
             try:
                 if dialog.run()==Gtk.ResponseType.ACCEPT: out['path']=dialog.get_filename()
             finally: dialog.destroy();event.set()
