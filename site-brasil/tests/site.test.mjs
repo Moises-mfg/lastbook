@@ -65,11 +65,11 @@ test('navegação local encontra seções e scripts não carregam terceiros',()=
   const dom=start(),d=dom.window.document;
   for(const a of d.querySelectorAll('a[href^="#"]'))assert.ok(d.querySelector(a.getAttribute('href')),a.outerHTML);
   for(const script of d.querySelectorAll('script[src]'))assert.equal(new URL(script.src).origin,'https://ultimo-livro.invalid');
-  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3"]'));
+  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4"]'));
   dom.window.close();
 });
 
-test('downloads apresentam plataformas, requisitos e somente a versão Linux publicada',()=>{
+test('downloads apresentam plataformas, requisitos e apenas links de pacotes publicados',()=>{
   const dom=start(),d=dom.window.document;
   const section=d.querySelector('#downloads');
   assert.equal(d.querySelector('#'+section.getAttribute('aria-labelledby')).tagName,'H2');
@@ -80,21 +80,21 @@ test('downloads apresentam plataformas, requisitos e somente a versão Linux pub
     assert.ok(card.querySelector('.download-instrucoes').textContent.length>30);
   }
   const linux=cards[0];
-  assert.match(linux.textContent,/v0\.3\.0-alpha\.3 · Alpha disponível/);
+  assert.match(linux.textContent,/v0\.4\.0-alpha\.4 · Alpha disponível/);
   assert.match(linux.querySelector('.download-requisitos').textContent,/Ubuntu 24\.04–26\.04 x86_64/);
-  assert.equal(linux.querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3');
+  const files='https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.4/';
+  assert.equal(linux.querySelector('a').href,files+'ultimo-livro_0.4.0-alpha4_amd64.deb');
   for(const mac of cards.slice(1,3))assert.match(mac.querySelector('.download-requisitos').textContent,/macOS 13\.3 ou posterior/);
   assert.match(cards[1].textContent,/Apple Silicon/);assert.match(cards[2].textContent,/Intel/);
   assert.match(cards[3].querySelector('.download-requisitos').textContent,/Windows 10 versão 1809 ou posterior, x64/);
   assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
-  for(const card of cards.slice(1)){
-    assert.match(card.querySelector('.download-status').textContent,/v0\.4 · Em validação · download indisponível/);
-    assert.equal(card.querySelectorAll('a,button').length,0);
-  }
-  assert.equal(d.querySelectorAll('a[href*="/releases/download/"]').length,0);
+  assert.match(cards[1].querySelector('.download-status').textContent,/Em validação · download indisponível/);
+  assert.equal(cards[1].querySelectorAll('a,button').length,0);
+  assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha4_macos-x64.dmg');
+  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4');
   assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/blob/feat/macos-windows/docs/brasil/INSTALACAO-DESKTOP.md"]'));
-  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/tree/feat/macos-windows"]'));
-  assert.match(d.querySelector('.hero').textContent,/macOS e Windows em validação/);
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/tree/v0.4.0-alpha.4"]'));
+  assert.match(d.querySelector('.hero').textContent,/Apple Silicon em validação/);
   const scripts=[...d.querySelectorAll('script[src]')].map(s=>s.getAttribute('src'));
   assert.ok(scripts.indexOf('downloads.js')<scripts.indexOf('app.js'));
   dom.window.close();
@@ -103,10 +103,11 @@ test('downloads apresentam plataformas, requisitos e somente a versão Linux pub
 test('disponibilidade exige URL publicada e ignora links de plataforma ainda em validação',()=>{
   const dom=start(undefined,platforms=>{
     platforms[0].releaseUrl=null;
+    platforms[0].downloadUrl=null;
     platforms[1].releaseUrl='https://github.com/Moises-mfg/lastbook/releases';
   });
   const d=dom.window.document;
-  assert.equal(d.querySelectorAll('#downloads-lista a').length,0);
+  assert.equal(d.querySelectorAll('#downloads-lista a').length,2);
   assert.match(d.querySelector('[data-platform=linux] .download-status').textContent,/download indisponível/);
   assert.match(d.querySelector('[data-platform=macos-arm64] .download-status').textContent,/Em validação/);
   dom.window.close();

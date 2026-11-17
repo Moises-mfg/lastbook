@@ -1,9 +1,9 @@
 # O Último Livro — Brasil
 
 Aplicativo de preparação e biblioteca offline em português, baseado no LastBook.
-Linux disponível em alpha; macOS e Windows em validação nativa na versão 0.4.
+Alpha 0.4 disponível para Linux, Windows e Mac Intel. Apple Silicon em validação.
 
-**[Baixar a versão 0.3 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3)** ·
+**[Baixar a versão 0.4 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4)** ·
 [Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
 
 IA local em CPU, Wikipedias selecionáveis, mapas de todos os 5.571 municípios

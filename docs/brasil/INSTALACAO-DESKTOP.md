@@ -2,11 +2,16 @@
 
 ## Estado e requisitos
 
-A versão **0.3 para Linux** está publicada. A versão **0.4 para macOS e Windows** ainda está em validação; ainda não há links finais para download. O macOS planejado requer macOS 13.3 ou posterior e terá imagens DMG para Apple Silicon (ARM) e Intel. No Windows, o alvo é Windows 10 versão 1809 ou posterior, x64, com instalador por usuário e ZIP portátil. O instalador incluirá o WebView2 Runtime standalone. Python e o motor do aplicativo serão incluídos nos pacotes; arquivos GGUF, Wikis e mapas serão baixados somente depois de uma ação explícita no aplicativo.
+A [versão 0.4 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4)
+está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel (macOS 13.3 ou
+posterior) e Windows x64 (Windows 10 versão 1809 ou posterior). O DMG para Apple
+Silicon segue em validação nativa. No Windows, o instalador inclui o WebView2
+Runtime standalone. Os pacotes Mac e Windows incluem Python e o motor local.
+Modelos GGUF, enciclopédias e mapas são baixados por ação explícita no aplicativo.
 
 ## Escolha do pacote
 
-No macOS, confira em **Sobre Este Mac** se o processador é Apple Silicon (ARM) ou Intel e escolha o DMG correspondente; o pacote errado pode não abrir. No Windows, use o instalador para a instalação comum por usuário ou extraia o ZIP portátil em uma pasta onde sua conta possa gravar. O ZIP não instala o WebView2 Runtime: se ele não estiver disponível no computador, a interface pode não iniciar até que o runtime seja instalado por um meio confiável.
+No macOS, confira em **Sobre Este Mac** se o processador é Apple Silicon (ARM) ou Intel e escolha o DMG da arquitetura correta quando estiver disponível. No Windows, use o instalador para a instalação comum por usuário ou extraia o ZIP portátil em uma pasta onde sua conta possa gravar. O ZIP não instala o WebView2 Runtime: se ele não estiver disponível no computador, a interface pode não iniciar até que o runtime seja instalado por um meio confiável.
 
 ## Dados e backups
 
@@ -14,7 +19,7 @@ Os dados ficam em `~/Library/Application Support/UltimoLivro` no macOS, `%LOCALA
 
 ## Assinatura e limites
 
-Os pacotes macOS planejados usam assinatura ad hoc; os instaladores Windows não têm certificado comercial. Gatekeeper ou SmartScreen podem mostrar avisos, e não há garantia de aprovação automática. Confira a origem e a integridade do pacote e siga as opções de análise disponíveis para aquele arquivo; não desative proteções globais. Os pacotes 0.4 e seus links só serão anunciados após a validação.
+Os pacotes macOS usam assinatura ad hoc; os instaladores Windows não têm certificado comercial. Gatekeeper ou SmartScreen podem mostrar avisos, e não há garantia de aprovação automática. Confira a origem e a integridade do pacote e siga as opções de análise disponíveis para aquele arquivo; não desative proteções globais.
 
 ## Licenças e fontes
 
