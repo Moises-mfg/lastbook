@@ -30,6 +30,7 @@ def read_zim(path, query=None, entry=None):
             item=arc.get_entry_by_path(entry).get_item()
             if not item.mimetype.startswith('text/html'):
                 raise ValueError('Esta versão abre apenas artigos HTML em texto.')
+            if item.size>2*1024*1024: raise ValueError('Artigo grande demais para esta versão.')
             raw=bytes(item.content)
             if len(raw)>2*1024*1024: raise ValueError('Artigo grande demais para esta versão.')
             parser=TextOnly();parser.feed(raw.decode('utf-8','replace'))
@@ -53,10 +54,13 @@ def map_info(path):
             row=db.execute('SELECT zoom_level,tile_column,tile_row FROM tiles ORDER BY zoom_level LIMIT 1').fetchone()
             if row is None: raise ValueError('Este mapa não contém imagens.')
             z,x,tms_y=map(int,row)
+            if not 0<=z<=22: raise ValueError('Nível de mapa inválido.')
             y=2**z-1-tms_y
             if 'center' in metadata:
                 lon,lat,z0=map(float,metadata['center'].split(','))
-                z=int(z0);n=2**z
+                z=int(z0)
+                if not 0<=z<=22: raise ValueError('Nível de mapa inválido.')
+                n=2**z
                 x=int((lon+180)/360*n)
                 lat=max(-85,min(85,lat))
                 y=int((1-math.asinh(math.tan(math.radians(lat)))/math.pi)/2*n)
