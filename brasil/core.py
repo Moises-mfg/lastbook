@@ -103,7 +103,7 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.4.0-alpha.4', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.4.0-alpha.5', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
@@ -384,7 +384,8 @@ class Store(MapSupport):
                     raise ValueError('O modelo não passou na verificação de integridade.')
             available=plataforma.available_memory()
             if available is None or available < spec['available_gib'] * GiB:
-                raise ValueError(f'É preciso ao menos {spec["available_gib"]} GB de memória disponível para este modelo. Feche outros programas ou escolha um modelo menor.')
+                minimum = f'{spec["available_gib"]:g}'.replace('.', ',')
+                raise ValueError(f'É preciso ao menos {minimum} GiB de memória disponível para este modelo. Feche outros programas ou escolha um modelo menor.')
             references = self.sources_for(question)
             if not references:
                 return {'resposta': 'Não encontrei fontes locais suficientes para responder. Tente outras palavras ou instale uma enciclopédia relevante.', 'fontes': []}
