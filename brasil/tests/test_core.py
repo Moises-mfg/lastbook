@@ -41,6 +41,14 @@ class CoreTests(unittest.TestCase):
             for body in ({'id':'luz','feito':'false'}, {'id':'inexistente','feito':True}):
                 with self.assertRaises(ValueError): Store(path).check(body)
 
+    def test_model_choice_never_silently_falls_back(self):
+        with tempfile.TemporaryDirectory() as path:
+            s=Store(path)
+            s.save_choices({'perfil':'personalizada','modelo':'sem-ia'})
+            with self.assertRaisesRegex(ValueError,'desativada'):s.ask({'pergunta':'Como começar?'})
+            s.save_choices({'perfil':'moderada'})
+            with self.assertRaisesRegex(ValueError,'ainda não foi integrado'):s.ask({'pergunta':'Como começar?'})
+
     def test_question_validation(self):
         with tempfile.TemporaryDirectory() as path:
             for q in ('', 'x'*1501, [], None):

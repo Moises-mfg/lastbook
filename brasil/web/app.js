@@ -85,7 +85,9 @@
     }catch(e){failure(e);}
   }
   function ia() {
-    $('#conteudo').innerHTML = `<p class="tag">Assistente local · experimental</p><h1>Pergunte aos<br>guias da biblioteca.</h1><p class="intro">O modelo roda neste computador. Respostas podem conter erros: confira as referências, principalmente em situações de emergência.</p><div class="painel"><p>Motor local: <b>${S.ia.motor ? 'disponível' : 'não instalado'}</b> · Modelo: <b>${S.ia.modelo ? 'disponível' : 'não baixado'}</b></p><p>Qwen3 0.6B Q8 · cerca de 640 MB · CPU · contexto de 2.048 tokens.</p><button id="baixar" class="secundario">Baixar ou retomar modelo</button><p>Somente este botão acessa a internet para obter o modelo. O download verifica a integridade do arquivo.</p></div><form id="pergunta"><label for="texto">Sua pergunta</label><textarea id="texto" maxlength="1500" required placeholder="Como começar a organizar minha preparação?"></textarea><div class="acoes"><button id="enviar"${!S.ia.motor || !S.ia.modelo ? ' disabled' : ''}>Perguntar à IA</button><button type="button" class="secundario" id="buscar">Consultar guias sem IA</button></div></form><div id="resposta" class="resposta" aria-live="polite"></div>`;
+    const selected = (S.escolhas || {}).modelo || 'qwen3-0.6b';
+    const enabled = selected === 'qwen3-0.6b';
+    $('#conteudo').innerHTML = `<p class="tag">Assistente local · experimental</p><h1>Pergunte aos<br>guias da biblioteca.</h1><p class="intro">O modelo roda neste computador. Respostas podem conter erros: confira as referências, principalmente em situações de emergência.</p><div class="painel"><p>Motor local: <b>${S.ia.motor ? 'disponível' : 'não instalado'}</b> · Modelo: <b>${S.ia.modelo ? 'disponível' : 'não baixado'}</b></p><p>Qwen3 0.6B Q8 · cerca de 640 MB · CPU · contexto de 2.048 tokens.</p>${!enabled ? '<p class="aviso">O modelo escolhido está desativado ou ainda não integrado. Selecione Qwen3 0.6B em Minha instalação para experimentar a IA.</p>' : ''}<button id="baixar" class="secundario">Baixar ou retomar modelo</button><p>Somente este botão acessa a internet para obter o modelo. O download verifica a integridade do arquivo.</p></div><form id="pergunta"><label for="texto">Sua pergunta</label><textarea id="texto" maxlength="1500" required placeholder="Como começar a organizar minha preparação?"></textarea><div class="acoes"><button id="enviar"${!enabled || !S.ia.motor || !S.ia.modelo ? ' disabled' : ''}>Perguntar à IA</button><button type="button" class="secundario" id="buscar">Consultar guias sem IA</button></div></form><div id="resposta" class="resposta" aria-live="polite"></div>`;
     $('#buscar').onclick = () => { location.hash = 'biblioteca'; };
     $('#baixar').onclick = async () => { if (!confirm('Baixar o modelo de aproximadamente 640 MB? O arquivo ficará neste computador.')) return; try { await api('download-model',{}); poll(); } catch(e) { failure(e); } };
     $('#pergunta').onsubmit = async e => { e.preventDefault(); try { await api('ask',{pergunta:$('#texto').value}); $('#enviar').disabled = true; poll(); } catch(e) { failure(e); } };
@@ -101,7 +103,7 @@
       notice(j.estado === 'erro' ? j.mensagem : j.mensagem || 'Resposta concluída. Confira as referências.');
       S = await api('state');
       if ($('#resposta') && j.resposta) { $('#resposta').textContent = j.resposta + '\n\nGuias consultados: ' + j.fontes.join(', '); }
-      if ($('#enviar')) $('#enviar').disabled = !S.ia.motor || !S.ia.modelo;
+      if ($('#enviar')) $('#enviar').disabled = !S.ia.motor || !S.ia.modelo || ((S.escolhas || {}).modelo || 'qwen3-0.6b') !== 'qwen3-0.6b';
     } catch(e) { failure(e); }
   }
   window.addEventListener('hashchange',route);

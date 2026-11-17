@@ -98,6 +98,11 @@ def main():
         if not out.get('path'): return {'cancelado':True}
         return STORE.import_file(kind,out['path'])
     PICK_FILE=pick_file
+    original_quit = shell_linux.quit_app
+    def quit_app():
+        STORE.close()
+        original_quit()
+    shell_linux.quit_app = quit_app
     shell_linux.APP_ID = 'br.org.ultimolivro.App'
     shell_linux.APP_TITLE = 'O Último Livro'
     shell_linux.GO = [('Biblioteca', '#biblioteca'), ('Preparação', '#compras'), ('Assistente', '#ia')]

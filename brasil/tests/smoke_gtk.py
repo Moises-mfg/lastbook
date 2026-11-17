@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get('ULTIMO_LIVRO_TEST_ROOT') or Path(__file__).resolve().parents[2])
 sys.path[:0] = [str(ROOT), str(ROOT/'app')]
 import gi
 gi.require_version('Gtk','3.0')
@@ -15,6 +15,7 @@ import shell_linux
 folder=tempfile.TemporaryDirectory(prefix='ultimo-livro-gtk-')
 os.environ['XDG_DATA_HOME']=folder.name
 os.environ['XDG_CACHE_HOME']=folder.name
+shell_linux.quit_app=lambda: None
 original=shell_linux.Shell.build
 result={'ok':False}
 

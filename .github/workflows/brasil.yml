@@ -30,6 +30,11 @@ jobs:
           derived/brasil-deps/bin/pip install --only-binary=:all: --no-compile --target brasil/vendor libzim==3.13.1
       - run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-gi python3-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+          dpkg-deb --extract derived/brasil-build/*.deb /tmp/ultimo-livro-pacote
+          ULTIMO_LIVRO_TEST_ROOT=/tmp/ultimo-livro-pacote/opt/ultimo-livro WEBKIT_DISABLE_DMABUF_RENDERER=1 xvfb-run -a /usr/bin/python3 -B brasil/tests/smoke_gtk.py
       - uses: actions/upload-artifact@v4
         with:
           name: ultimo-livro-linux-amd64-alpha

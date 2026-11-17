@@ -62,6 +62,8 @@ class Store:
         self.lock = threading.Lock()
         self.job = {'estado': 'parado'}
         self.control = None
+        self.proc = None
+        self.closing = threading.Event()
 
     def db(self):
         return sqlite3.connect(self.folder / 'dados.sqlite', timeout=10)
@@ -162,6 +164,17 @@ class Store:
         threading.Thread(target=run, daemon=True).start()
         return {'iniciado': True}
 
+    def close(self):
+        self.closing.set()
+        if self.control:
+            self.control.stop('paused')
+        with self.lock:
+            proc = self.proc
+        if proc is not None and proc.poll() is None:
+            proc.terminate()
+            try: proc.wait(timeout=3)
+            except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=3)
+
     def download_model(self):
         def work():
             if shutil.disk_usage(self.folder).free < MODEL_SIZE + GiB:
@@ -169,6 +182,7 @@ class Store:
             target = self.model_path()
             target.parent.mkdir(parents=True, exist_ok=True)
             self.control = download.Control()
+            if self.closing.is_set(): self.control.stop('paused')
             def progress(done, total, phase):
                 with self.lock:
                     self.job = {'estado': 'baixando', 'feito': done, 'total': total,
@@ -178,6 +192,11 @@ class Store:
         return self.start_job(work)
 
     def ask(self, body):
+        selected = (self.choices() or {}).get('modelo', 'qwen3-0.6b')
+        if selected == 'sem-ia':
+            raise ValueError('A IA está desativada nas suas escolhas. A biblioteca continua disponível.')
+        if selected != 'qwen3-0.6b':
+            raise ValueError('O modelo escolhido ainda não foi integrado. Selecione Qwen3 0.6B para experimentar a IA nesta versão.')
         question = body.get('pergunta', '')
         if not isinstance(question, str) or not question.strip() or len(question) > 1500:
             raise ValueError('Escreva uma pergunta de até 1.500 caracteres.')
@@ -214,8 +233,17 @@ class Store:
                       '\n/no_think<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
             command = [runner, '-m', str(model), '-c', '2048', '-n', '256', '-t', '2', '-ngl', '0',
                        '-p', prompt, '--no-conversation', '--no-display-prompt', '--simple-io']
-            result = subprocess.run(command, stdin=subprocess.DEVNULL, capture_output=True, timeout=180, text=True, errors='replace')
-            if result.returncode:
+            with self.lock:
+                if self.closing.is_set(): raise ValueError('O aplicativo está fechando.')
+                proc = self.proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, errors='replace')
+            try:
+                stdout, stderr = proc.communicate(timeout=180)
+            except subprocess.TimeoutExpired:
+                proc.kill(); proc.communicate()
+                raise ValueError('A resposta demorou demais. Use a busca ou tente uma pergunta menor.')
+            finally:
+                with self.lock: self.proc = None
+            if proc.returncode:
                 raise ValueError('O motor de IA não conseguiu responder. A biblioteca continua disponível.')
-            return {'resposta': result.stdout.replace('[end of text]', '').strip()[-12000:], 'fontes': [g['id'] for g in ranked]}
+            return {'resposta': stdout.replace('[end of text]', '').strip()[-12000:], 'fontes': [g['id'] for g in ranked]}
         return self.start_job(work)
