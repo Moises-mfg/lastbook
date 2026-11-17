@@ -12,6 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'app'))
 sys.path.insert(0, str(ROOT / 'lib'))
+ABI=f'cp{sys.version_info.major}{sys.version_info.minor}'
+sys.path.insert(0,str(ROOT/'lib'/ABI))
+sys.path.insert(0,str(ROOT/'brasil/vendor'/ABI))
 from brasil.core import Store
 from engine.setup.api import SetupHandler, _send_json
 

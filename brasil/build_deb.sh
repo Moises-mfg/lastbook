@@ -34,7 +34,7 @@ Package: ultimo-livro
 Version: $VERSION
 Architecture: amd64
 Maintainer: Comunidade O Último Livro
-Depends: python3 (>= 3.12), python3 (<< 3.13), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, gir1.2-soup-3.0, libgomp1, libstdc++6, libzstd1, zlib1g
+Depends: python3 (>= 3.12), python3 (<< 3.15), libc6 (>= 2.39), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, gir1.2-soup-3.0, libgomp1, libstdc++6, libzstd1, zlib1g
 Section: education
 Priority: optional
 Homepage: https://github.com/Moises-mfg/lastbook

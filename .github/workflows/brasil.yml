@@ -31,9 +31,7 @@ jobs:
     needs: testar
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          python3 -m venv derived/brasil-deps
-          derived/brasil-deps/bin/pip install --only-binary=:all: --no-compile --target brasil/vendor libzim==3.13.1
+      - run: python3 -B brasil/build_zim.py
       - uses: actions/cache@v4
         id: motor
         with:

@@ -4,7 +4,7 @@ Adaptação independente e aberta do [LastBook](https://github.com/Immortal-Prot
 **Versão alpha em desenvolvimento, não um produto pronto para emergências.**
 
 Alvo inicial: Linux x86_64, Ubuntu 24.04 ou posterior, notebook i3 com 8 GB de RAM.
-O pacote `.deb` publicado tem como alvo Ubuntu 24.04 e Python 3.12.
+O pacote 0.3 tem como alvo Ubuntu 24.04–26.04 x86_64, com Python 3.12–3.14 e glibc 2.39 ou posterior. O motor é compilado no Ubuntu 24.04.
 A geração do i3 e o desempenho da IA ainda precisam ser validados em equipamento real.
 
 ## O que já funciona
@@ -13,14 +13,16 @@ A geração do i3 e o desempenho da IA ainda precisam ser validados em equipamen
 - Busca em várias enciclopédias ZIM, com artigos em texto e prioridade para títulos exatos.
 - Catálogo fixado de Wikipedia PT mini/nopic/maxi, inglês mini e espanhol mini.
 - Downloads por ação explícita, com SHA-256, pausa e retomada após reabrir.
-- Visualização de mapas MBTiles raster locais, com zoom e deslocamento.
+- Mapas vetoriais de 5.571 municípios, 27 UFs, visão geral e Brasil detalhado, com busca local de ruas e lugares, zoom e camadas.
+- Importação de mapas raster MBTiles locais.
 - Cinco guias iniciais em português, com referências, e busca sem internet.
 - Checklist persistente, salvo em SQLite no computador.
-- Seleção dos quatro perfis, idiomas e estados, salva localmente.
+- Seleção dos quatro perfis, idiomas, estados e municípios, salva localmente.
 - IA local em CPU: Qwen3 0.6B Q8, 4B Q4 e 14B Q4, com reservas de memória por modelo.
 - Site com comparador, tamanhos reais, checklist e plano JSON importável no aplicativo.
+- Diretório de 11 fontes e comunidades, com descrições offline e abertura externa por ação explícita.
 
-A distribuição de mapas brasileiros ainda está pendente. O assistente recupera trechos
+Os mapas são baixados separadamente por região, com SHA-256 e retomada. Recortes incluem o entorno; não há rotas automáticas ou informação em tempo real. O assistente recupera trechos
 dos guias e das enciclopédias instaladas e oferece botões para consultar as referências.
 As respostas continuam experimentais. O catálogo não exige downloads de gigabytes
 para abrir o aplicativo; a pessoa escolhe os arquivos e vê o espaço necessário.
@@ -70,7 +72,7 @@ pode depender de bibliotecas indisponíveis na mais antiga. A automação brasil
 usa Ubuntu 24.04. Guias e checklist funcionam em pacotes sem o motor. O pacote completo também inclui
 python-libzim 3.13.1, com licença GPL e componentes indicados em THIRD_PARTY_NOTICES.md.
 Para executar a leitura de ZIM pelo código-fonte, instale libzim==3.13.1 em um
-ambiente Python compatível ou em brasil/vendor.
+ambiente Python compatível. Para montar os leitores oficiais de Python 3.12, 3.13 e 3.14 com hashes fixados, execute `python3 brasil/build_zim.py`. O aplicativo escolhe apenas o leitor do Python em uso, sem carregar as três versões na memória.
 
 Mapas aceitos: `.mbtiles` raster com metadado format=png/jpg/jpeg/webp; mapas vetoriais
 ainda não são aceitos. A atribuição do pacote é exibida. Não baixamos tiles públicos
@@ -104,3 +106,16 @@ próprias licenças. Não redistribuímos a biblioteca de terceiros do LastBook.
 Imagem da própria janela Linux em teste, com dados descartáveis:
 
 ![Biblioteca brasileira na janela Linux](docs/brasil/interface-alpha.png)
+
+## Mapas brasileiros e diretório
+
+O catálogo inclui os 5.571 municípios da lista oficial do IBGE, inclusive Boa
+Esperança do Norte/MT. A visão geral tem 28,35 MB; o exemplo de Campinas/SP tem
+16,52 MB; o mapa nacional detalhado tem 2,28 GB. Os sete volumes de transporte
+somam 11,75 GB porque reúnem todos os recortes; o aplicativo recebe apenas os
+intervalos escolhidos. Não é preciso baixar os sete volumes para usar sua cidade.
+
+[Como os mapas são construídos](docs/brasil/MAPAS-OFFLINE.md) ·
+[Fontes e comunidades](docs/brasil/FONTES-E-COMUNIDADES.md).
+
+![Mapa real de Campinas na janela Linux](docs/brasil/imagens/mapa-campinas.png)

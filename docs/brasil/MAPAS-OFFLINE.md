@@ -87,3 +87,22 @@ O diretório de fontes acrescenta 11 referências revisadas, com descrições lo
 e abertura da página original somente por ação explícita. Inclui fontes oficiais,
 projetos LoRa, grupos regionais, LABRE e criadores, com identificação comercial.
 Nenhum vídeo, página completa ou conversa foi redistribuído.
+
+### Publicação e teste do transporte real
+
+A release `mapas-br-2026-11-16` foi publicada após conferir os SHA-256 dos sete
+volumes com os digests retornados pelo GitHub. O downloader do próprio aplicativo
+baixou a visão geral, Campinas/SP e Boa Esperança do Norte/MT; pausou e retomou
+Campinas, verificou hashes e ativou os três mapas. A busca offline encontrou
+Campinas. O teste é reproduzível por `python3 tools/validar_mapas_publicados.py`.
+
+O teste identificou a ausência das raízes Sectigo usadas pelo GitHub no bundle
+herdado. Foram acrescentadas E46/R46 a partir do Mozilla/certifi 2026.10.23;
+continuam permitidas somente as 13 raízes explícitas, com TLS 1.2+, hostname
+verificado e recusa de certificado fora da lista. Todas as origens autorizadas
+passaram na verificação de TLS; a origem externa de controle foi recusada.
+
+O pacote agora inclui os wheels oficiais libzim 3.13.1 para CPython 3.12, 3.13
+e 3.14 em diretórios separados, com SHA-256 fixado. Apenas a variante do Python
+em uso é carregada. A Wikipedia PT mini real abriu e foi pesquisada na janela
+do Ubuntu 26.04/Python 3.14. A compilação do motor permanece no Ubuntu 24.04.
