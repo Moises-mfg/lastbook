@@ -354,9 +354,9 @@ class Store:
         question = body.get('pergunta', '')
         if not isinstance(question, str) or not question.strip() or len(question) > 1500:
             raise ValueError('Escreva uma pergunta de até 1.500 caracteres.')
+        spec = pacotes.catalog()[selected]
         def work():
-            spec = self.model_spec()
-            model, runner = self.model_path(), self.runner()
+            model, runner = self.package_path(spec), self.runner()
             if not runner or not model.is_file():
                 raise ValueError('Instale o motor local e baixe o modelo antes de usar a IA. A busca funciona sem eles.')
             if model.stat().st_size != spec['size']:
@@ -388,7 +388,7 @@ class Store:
                       '<|im_start|>user\nFONTES:\n' + plain(sources) + '\nPERGUNTA:\n' + plain(question) +
                       '\n/no_think<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
             command = [runner, '-m', str(model), '-c', str(spec['context']), '-n', '256', '-t', '2', '-ngl', '0',
-                       '-p', prompt, '--no-conversation', '--no-display-prompt', '--simple-io']
+                       '--temp', '0.2', '--seed', '42', '-p', prompt, '--no-conversation', '--no-display-prompt', '--simple-io']
             with self.lock:
                 if self.closing.is_set(): raise ValueError('O aplicativo está fechando.')
                 proc = self.proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, errors='replace')

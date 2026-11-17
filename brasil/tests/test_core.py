@@ -24,7 +24,7 @@ class CoreTests(unittest.TestCase):
             self.assertFalse(next(x for x in second.checklist() if x['id']=='luz')['feito'])
 
     def test_reject_unknown_content_and_malformed_requests(self):
-        for body in ({'perfil':'desconhecido'},{'wikis':'pt-mini'}, {'estados':['../SP']},{'modelo':'gemma-26b'}, {'wikis':[{}]}):
+        for body in ({'perfil':'desconhecido'},{'wikis':'pt-mini'}, {'estados':['../SP']},{'modelo':'gemma-26b'}, {'wikis':[{}]}, {'modelo':{}}, {'perfil':None}, {'mapa':[]}):
             with self.subTest(body=body), self.assertRaises(ValueError):
                 validate_choices(body)
 
