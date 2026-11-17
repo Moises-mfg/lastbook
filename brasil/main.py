@@ -61,7 +61,7 @@ class Handler(SetupHandler):
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError('Pedido inválido.')
-            routes = {'/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
+            routes = {'/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
                       '/api/brasil/ask': STORE.ask, '/api/brasil/download-model': lambda b: STORE.download_model()}
             fn = routes.get(self._path())
             if not fn:
@@ -85,10 +85,10 @@ def main():
     import threading
     from gi.repository import GLib, Gtk
     def pick_file(kind):
-        if kind not in ('zim','mapa'): raise ValueError('Tipo de arquivo inválido.')
+        if kind not in ('zim','mapa','plano'): raise ValueError('Tipo de arquivo inválido.')
         event=threading.Event();out={}
         def choose():
-            dialog=Gtk.FileChooserNative.new('Abrir enciclopédia ZIM' if kind=='zim' else 'Abrir mapa MBTiles',shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
+            dialog=Gtk.FileChooserNative.new({'zim':'Abrir enciclopédia ZIM','mapa':'Abrir mapa MBTiles','plano':'Importar plano JSON'}[kind],shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
             try:
                 if dialog.run()==Gtk.ResponseType.ACCEPT: out['path']=dialog.get_filename()
             finally: dialog.destroy();event.set()
@@ -96,7 +96,7 @@ def main():
         GLib.idle_add(choose)
         if not event.wait(300): raise ValueError('A seleção de arquivo expirou. Tente novamente.')
         if not out.get('path'): return {'cancelado':True}
-        return STORE.import_file(kind,out['path'])
+        return STORE.import_plan(out['path']) if kind=='plano' else STORE.import_file(kind,out['path'])
     PICK_FILE=pick_file
     original_quit = shell_linux.quit_app
     def quit_app():

@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 import sqlite3
 import math
+import re
 
 class TextOnly(HTMLParser):
     def __init__(self):
@@ -10,10 +11,11 @@ class TextOnly(HTMLParser):
         self.skip=0
         self.parts=[]
     def handle_starttag(self, tag, attrs):
-        if tag in ('script','style'): self.skip+=1
+        if tag in ('head','script','style'): self.skip+=1
         if tag in ('p','div','br','h1','h2','h3','li','tr'): self.parts.append('\n')
+        if tag in ('td','th'): self.parts.append(' ')
     def handle_endtag(self,tag):
-        if tag in ('script','style') and self.skip: self.skip-=1
+        if tag in ('head','script','style') and self.skip: self.skip-=1
     def handle_data(self,data):
         if not self.skip: self.parts.append(data)
 
@@ -34,13 +36,31 @@ def read_zim(path, query=None, entry=None):
             raw=bytes(item.content)
             if len(raw)>2*1024*1024: raise ValueError('Artigo grande demais para esta versão.')
             parser=TextOnly();parser.feed(raw.decode('utf-8','replace'))
-            return {'titulo':arc.get_entry_by_path(entry).title, 'texto':''.join(parser.parts)[:120000]}
+            text = '\n'.join(clean for line in ''.join(parser.parts).splitlines() if (clean := re.sub(r'\s+', ' ', line).strip()))
+            return {'titulo':arc.get_entry_by_path(entry).title, 'texto':text[:120000]}
         if not query:
             return {'titulo':Path(path).name,'busca':bool(arc.has_fulltext_index)}
         if not arc.has_fulltext_index:
             raise ValueError('Este arquivo ZIM não contém índice de busca.')
-        results=Searcher(arc).search(Query().set_query(query))
-        return [{'titulo':arc.get_entry_by_path(p).title,'entrada':p} for p in results.getResults(0,12)]
+        matches = []
+        seen = set()
+        # Correspondência exata deve anteceder a pontuação textual de termos
+        # frequentes, que pode favorecer listas e desambiguações em arquivos mini.
+        for term in query.split(' OR ')[:6]:
+            for title in dict.fromkeys((term, term[:1].upper() + term[1:], term.title())):
+                try:
+                    entry = arc.get_entry_by_title(title)
+                    if entry.path not in seen:
+                        seen.add(entry.path)
+                        matches.append({'titulo':entry.title,'entrada':entry.path})
+                except (KeyError, RuntimeError):
+                    pass
+        results = Searcher(arc).search(Query().set_query(query))
+        for path in results.getResults(0,12):
+            if path not in seen:
+                seen.add(path)
+                matches.append({'titulo':arc.get_entry_by_path(path).title,'entrada':path})
+        return matches[:12]
     except (RuntimeError, KeyError, OSError) as e:
         raise ValueError('Não foi possível ler esta enciclopédia. Verifique o arquivo ZIM.') from e
 

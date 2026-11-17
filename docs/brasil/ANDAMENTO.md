@@ -54,3 +54,28 @@ A Wikipedia PT mini publicada no catálogo Kiwix em maio de 2026 aparece com cer
   em 16/11/2026). Isso atualiza a incerteza de tamanhos registrada no planejamento
   original. O aplicativo ainda não baixa essas enciclopédias; abre arquivos locais.
   Fonte: https://download.kiwix.org/zim/wikipedia/
+
+## Evolução 0.2 — 17/11/2026
+
+- Catálogo fixado de cinco Wikipedias e três modelos Qwen, com tamanho, versão,
+  fonte e SHA-256. Os dados são consultados por ação do mantenedor; abrir o app
+  não consulta a rede.
+- O plano de instalação usa esses tamanhos, calcula o restante e mostra a reserva
+  de disco. Salvar preferências continua sem iniciar downloads.
+- Downloads pausáveis e retomáveis após reabrir, com ativação só após verificação.
+- Importação de múltiplos ZIM, busca conjunta ou por coleção e prioridade a títulos
+  exatos. O assistente recupera trechos dessas coleções e oferece referências abríveis.
+- O plano exportado pelo site agora usa o formato aceito pelo aplicativo.
+- Testes DOM do site verificam os controles e a exportação/importação. Isso não é
+  revisão visual de navegador; a ferramenta de navegador continua indisponível.
+- Wikipedia PT mini real: 1.703.536.110 bytes, baixada por HTTPS, verificada com o
+  digest oficial e pesquisada offline. Os outros tamanhos exatos estão no catálogo.
+- Testes locais HTTPS comprovaram pausa, retomada por Range após reabrir e recusa
+  de checksum incorreto. A interface Linux verificou navegação, perfis, gravação,
+  oito pacotes, desativação da IA e checklist em dados descartáveis.
+
+O teste inicial do 4B na compilação sem otimizações atingiu o limite de tempo.
+A compilação está sendo atualizada para os backends oficiais com seleção automática
+por instruções da CPU, preservando uma variante genérica para máquinas antigas.
+O modelo 14B ainda precisa de teste em computador com memória suficiente; não há
+benchmark de um i3 físico de 8 GB. Mapas brasileiros por região continuam pendentes.

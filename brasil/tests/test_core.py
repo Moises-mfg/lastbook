@@ -47,7 +47,9 @@ class CoreTests(unittest.TestCase):
             s.save_choices({'perfil':'personalizada','modelo':'sem-ia'})
             with self.assertRaisesRegex(ValueError,'desativada'):s.ask({'pergunta':'Como começar?'})
             s.save_choices({'perfil':'moderada'})
-            with self.assertRaisesRegex(ValueError,'ainda não foi integrado'):s.ask({'pergunta':'Como começar?'})
+            self.assertEqual(s.model_spec()['id'], 'qwen3-4b')
+            self.assertEqual(s.model_path().name, 'Qwen3-4B-Q4_K_M.gguf')
+            self.assertNotEqual(s.model_path().name, 'Qwen3-0.6B-Q8_0.gguf')
 
     def test_question_validation(self):
         with tempfile.TemporaryDirectory() as path:

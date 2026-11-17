@@ -27,6 +27,8 @@ from pathlib import Path
 
 ALLOWED_HOSTS = frozenset({
     'downloads.lastbook.org',
+    'ftpmirror.your.org',  # espelho Kiwix listado nos metadados oficiais
+    'mirror.download.kiwix.org',  # espelho oficial usado pelos pacotes brasileiros fixados
     'huggingface.co',
     'cas-bridge.xethub.hf.co',
 })

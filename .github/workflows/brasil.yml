@@ -19,7 +19,12 @@ jobs:
           pip install --only-binary=:all: libzim==3.13.1
       - run: python -B -m unittest discover -s brasil/tests -v
       - run: node --check brasil/web/app.js && node --check site-brasil/app.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - run: python site-brasil/build.py
+      - run: npm ci --prefix site-brasil --ignore-scripts --no-audit --no-fund --no-bin-links
+      - run: npm test --prefix site-brasil
   pacote:
     runs-on: ubuntu-24.04
     needs: testar
@@ -28,7 +33,13 @@ jobs:
       - run: |
           python3 -m venv derived/brasil-deps
           derived/brasil-deps/bin/pip install --only-binary=:all: --no-compile --target brasil/vendor libzim==3.13.1
-      - run: bash brasil/build_runtime.sh
+      - uses: actions/cache@v4
+        id: motor
+        with:
+          path: brasil/runtime
+          key: ultimo-livro-ubuntu24-cpu-${{ hashFiles('brasil/build_runtime.sh') }}
+      - if: steps.motor.outputs.cache-hit != 'true'
+        run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
       - run: |
           sudo apt-get update -qq

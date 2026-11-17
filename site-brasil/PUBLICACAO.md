@@ -12,7 +12,9 @@ Site de avaliação: https://ultimo-livro-brasil.genuineoffer32.chatgpt.site
 - Não guardar credenciais de hospedagem ou do GitHub nos arquivos do projeto.
 
 O navegador integrado não estava disponível para revisão visual. A publicação foi
-confirmada pelo serviço de hospedagem; a sintaxe do JavaScript foi verificada.
+confirmada pelo serviço de hospedagem. Os controles do configurador, checklist,
+exportação e formato aceito pelo aplicativo são verificados por testes DOM
+(`npm test --prefix site-brasil`); eles não verificam layout nem renderização.
 O site é estático, não usa formulário de cadastro nem scripts/fontes externos.
 
 A compra do domínio e a abertura do acesso público ficam para decisão do responsável.

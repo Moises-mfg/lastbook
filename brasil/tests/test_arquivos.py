@@ -56,6 +56,17 @@ class Encyclopedia(unittest.TestCase):
             self.assertIn('Iluminação',article['texto'])
             self.assertNotIn('nunca executar',article['texto'])
             s=Store(Path(tmp)/'data');s.import_file('zim',path)
-            self.assertTrue(s.search_zim({'busca':'lanternas'}))
+            self.assertTrue(s.search_zim({'busca':'lanternas'})['resultados'])
+            self.assertEqual(read_zim(path,query='energia doméstica')[0]['titulo'],'Energia doméstica')
+            second=Path(tmp)/'segunda.zim'
+            with Creator(second).config_indexing(True,'por') as c:
+                c.add_item(Article());c.set_mainpath('A/Energia')
+            s.import_file('zim',second)
+            hits=s.search_zim({'busca':'lanternas'})['resultados']
+            self.assertEqual(len({hit['colecao'] for hit in hits}),2)
+            refs=s.sources_for('lanternas')
+            self.assertEqual(len([ref for ref in refs if ref['tipo']=='zim']),2)
+            for ref in refs:
+                if ref['tipo']=='zim':self.assertIn('Iluminação',s.article_zim(ref)['texto'])
 
 if __name__=='__main__':unittest.main()

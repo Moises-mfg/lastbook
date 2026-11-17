@@ -32,3 +32,5 @@ build/
 .venv/
 
 /brasil/vendor/
+
+node_modules/

@@ -8,8 +8,8 @@ PERFIS = {
 MODELOS = {
     'sem-ia': {'nome': 'Somente biblioteca', 'ram_gib': 0},
     'qwen3-0.6b': {'nome': 'Qwen3 0.6B · experimental', 'ram_gib': 8},
-    'qwen3-4b': {'nome': 'Qwen3 4B · planejado', 'ram_gib': 16},
-    'qwen3-14b': {'nome': 'Qwen3 14B · planejado', 'ram_gib': 32},
+    'qwen3-4b': {'nome': 'Qwen3 4B · CPU, 16 GB RAM', 'ram_gib': 16},
+    'qwen3-14b': {'nome': 'Qwen3 14B · CPU, 32 GB RAM', 'ram_gib': 32},
 }
 ESTADOS = {'AC':'Acre','AL':'Alagoas','AP':'Amapá','AM':'Amazonas','BA':'Bahia','CE':'Ceará','DF':'Distrito Federal',
            'ES':'Espírito Santo','GO':'Goiás','MA':'Maranhão','MT':'Mato Grosso','MS':'Mato Grosso do Sul','MG':'Minas Gerais',
@@ -32,7 +32,7 @@ GUIAS = [
      'texto':'Combine previamente contatos e horários de comunicação. Guarde números importantes também em papel. LoRa é uma tecnologia de rádio, não acesso à internet. Meshtastic e MeshCore são ecossistemas diferentes; um nó isolado não cria uma rede. Antes de comprar, verifique a homologação do equipamento e as regras brasileiras. Teste a cobertura com outras pessoas antes de depender dela.',
      'fonte':'Anatel · equipamentos de radiação restrita', 'url':'https://informacoes.anatel.gov.br/legislacao/resolucoes/2017/936-resolucao-680'},
     {'id':'wikipedia','titulo':'Escolha sua Wikipedia offline','categoria':'Conhecimento',
-     'texto':'Os arquivos ZIM podem conter enciclopédias inteiras. A variante mini guarda introduções e quadros; nopic guarda artigos sem imagens; maxi inclui imagens. Escolha idiomas e variantes conforme espaço e necessidade. Esta versão registra suas escolhas e permite pesquisar um arquivo ZIM local por vez. O pacote completo inclui o leitor. O download integrado dos pacotes brasileiros ainda não está disponível.',
+     'texto':'Os arquivos ZIM podem conter enciclopédias inteiras. A variante mini guarda introduções e quadros; nopic guarda artigos sem imagens; maxi inclui imagens. Escolha idiomas e variantes conforme espaço e necessidade. Esta versão registra suas escolhas e permite pesquisar um arquivo ZIM local por vez. O pacote completo inclui o leitor. O aplicativo baixa edições verificadas por SHA-256 e permite consultar várias enciclopédias. As variantes maiores exigem mais espaço; o leitor atual apresenta os artigos em texto.',
      'fonte':'Kiwix · variantes da Wikipedia', 'url':'https://get.kiwix.org/en/faq-items/what-do-mini-nopic-and-maxi-mean-in-the-wikipedia-zim-files/'},
 ]
 COMPRAS = [

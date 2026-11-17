@@ -10,17 +10,20 @@ A geração do i3 e o desempenho da IA ainda precisam ser validados em equipamen
 ## O que já funciona
 
 - Janela Linux usando o transporte local sem porta do LastBook.
-- Leitura e busca em um ZIM local por vez, com artigos em texto.
+- Busca em várias enciclopédias ZIM, com artigos em texto e prioridade para títulos exatos.
+- Catálogo fixado de Wikipedia PT mini/nopic/maxi, inglês mini e espanhol mini.
+- Downloads por ação explícita, com SHA-256, pausa e retomada após reabrir.
 - Visualização de mapas MBTiles raster locais, com zoom e deslocamento.
 - Cinco guias iniciais em português, com referências, e busca sem internet.
 - Checklist persistente, salvo em SQLite no computador.
 - Seleção dos quatro perfis, idiomas e estados, salva localmente.
-- IA pequena experimental em CPU: Qwen3 0.6B Q8, download voluntário com SHA-256.
-- Site com comparador de perfis, exportação de plano e checklist local.
+- IA local em CPU: Qwen3 0.6B Q8, 4B Q4 e 14B Q4, com reservas de memória por modelo.
+- Site com comparador, tamanhos reais, checklist e plano JSON importável no aplicativo.
 
-Mapas e pacotes brasileiros de Wikipedia ainda não estão publicados. Modelos 4B e
-14B são escolhas planejadas; a integração inicial executa somente o 0.6B.
-O assistente usa os guias incluídos; não pesquisa automaticamente toda a Wikipedia.
+A distribuição de mapas brasileiros ainda está pendente. O assistente recupera trechos
+dos guias e das enciclopédias instaladas e oferece botões para consultar as referências.
+As respostas continuam experimentais. O catálogo não exige downloads de gigabytes
+para abrir o aplicativo; a pessoa escolhe os arquivos e vê o espaço necessário.
 
 ## Executar no Linux
 
@@ -39,10 +42,13 @@ instale Git, CMake, compiladores C/C++ e OpenMP e execute:
 bash brasil/build_runtime.sh
 ```
 
-O motor compilado é `llama-completion`, que executa por pipes. O `llama-cli` da
+O motor compilado é `llama-completion`, que executa por pipes. São incluídos os
+backends oficiais de CPU com seleção automática por instruções disponíveis;
+a variante genérica permanece para processadores antigos. O `llama-cli` da
 revisão atual abre um serviço local e por isso não é usado nesta adaptação.
-Não enviamos perguntas para uma IA na nuvem. O download do modelo só começa após
-uma ação explícita na tela Assistente local. O modelo e seus dados não entram no Git.
+Não enviamos perguntas para uma IA na nuvem. Downloads começam por ação explícita
+em Minha instalação, Downloads ou Assistente local. O catálogo inclui as fontes
+oficiais Qwen e o espelho Kiwix `ftpmirror.your.org`, com HTTPS, tamanho e SHA-256 fixados. O modelo e seus dados não entram no Git.
 
 Dados: `${XDG_DATA_HOME:-~/.local/share}/ultimo-livro`. Desinstalar o pacote não
 apaga sua preparação. Telemetria e cadastro não existem nesta versão.
@@ -52,7 +58,9 @@ apaga sua preparação. Telemetria e cadastro não existem nesta versão.
 ```bash
 python3 -B -m unittest discover -s brasil/tests -v
 node --check brasil/web/app.js
-node --check site-brasil/app.js
+python3 site-brasil/build.py
+npm ci --prefix site-brasil --ignore-scripts --no-bin-links
+npm test --prefix site-brasil
 bash brasil/build_deb.sh
 ```
 
@@ -66,9 +74,19 @@ ambiente Python compatível ou em brasil/vendor.
 
 Mapas aceitos: `.mbtiles` raster com metadado format=png/jpg/jpeg/webp; mapas vetoriais
 ainda não são aceitos. A atribuição do pacote é exibida. Não baixamos tiles públicos
-do OpenStreetMap. Enciclopédias: selecione seu `.zim` já baixado; esta versão mostra
-texto dos artigos e não executa seus scripts. Dados externos não são copiados: o
-disco de origem precisa permanecer conectado.
+do OpenStreetMap. Enciclopédias: baixe pelo catálogo ou importe seus arquivos `.zim`;
+os artigos aparecem em texto e seus scripts não são executados. Arquivos importados
+permanecem no disco de origem, que precisa continuar conectado. Downloads do catálogo
+ficam em `encyclopedias/` e `models/` na pasta de dados do aplicativo.
+
+Para usar o plano do site, exporte o JSON e escolha **Minha instalação → Importar
+plano do site**. A importação valida as escolhas e não inicia downloads. Depois,
+confira os tamanhos e pressione **Baixar modelos e enciclopédias**. O andamento,
+a pausa e a retomada ficam na seção **Downloads**.
+
+O catálogo é gerado por uma ação do mantenedor com `tools/atualizar_catalogo_br.py`.
+Ele consulta metadados oficiais e fixa versões; o aplicativo não consulta a rede
+ao abrir. A interface do site usa os mesmos dados para evitar tamanhos divergentes.
 
 ## Documentação
 
