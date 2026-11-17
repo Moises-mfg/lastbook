@@ -2,7 +2,7 @@ name: Brasil · testes e pacote Linux
 on:
   push:
     branches: [main]
-    paths: ['brasil/**', 'app/bridge.py', 'app/shell_linux.py', 'engine/setup/**', 'site-brasil/**', 'tools/testar_linux.py', 'tools/modelo_teste_desktop.py', '.github/workflows/brasil.yml']
+    paths: ['brasil/**', 'app/bridge.py', 'app/shell_linux.py', 'engine/setup/**', 'site-brasil/**', 'tools/testar_linux.py', 'tools/modelo_teste_desktop.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/workflows/brasil.yml']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -56,7 +56,7 @@ jobs:
       - run: bash brasil/build_deb.sh
       - run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq python3-gi python3-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+          sudo apt-get install -y -qq python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
           dpkg-deb --extract derived/brasil-build/*.deb /tmp/ultimo-livro-pacote
           ULTIMO_LIVRO_TEST_ROOT=/tmp/ultimo-livro-pacote/opt/ultimo-livro WEBKIT_DISABLE_DMABUF_RENDERER=1 xvfb-run -a /usr/bin/python3 -B brasil/tests/smoke_gtk.py
       - uses: actions/cache/restore@v4

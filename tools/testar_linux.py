@@ -32,6 +32,12 @@ def run(root, model, temporary):
     import gi
     gi.require_version('Gtk', '3.0')
     gi.require_version('WebKit2', '4.1')
+    # Pycairo fornece Surface; o conversor GI separado é necessário para receber
+    # a imagem real de WebKit2.get_snapshot_finish (pacote python3-gi-cairo).
+    try:
+        gi.require_foreign('cairo')
+    except ImportError as error:
+        raise RuntimeError('A captura requer python3-gi-cairo, além de python3-cairo.') from error
     from gi.repository import GLib, WebKit2
     import shell_linux
     from brasil import main
