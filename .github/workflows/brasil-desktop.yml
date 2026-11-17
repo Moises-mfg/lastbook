@@ -66,6 +66,14 @@ jobs:
           $sig = Get-AuthenticodeSignature derived/webview-runtime.exe
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'O componente WebView2 não possui a assinatura Microsoft esperada.' }
       - run: python -B brasil/build_desktop.py
+      - run: python -B tools/medir_memoria_desktop.py
+      - if: runner.os == 'macOS'
+        name: Registrar memória e liberar cache da compilação no runner
+        run: |
+          mkdir -p derived/desktop-results
+          { sysctl hw.memsize; vm_stat; } > derived/desktop-results/memoria-antes.log
+          sudo -n /usr/sbin/purge
+          vm_stat > derived/desktop-results/memoria-depois.log
       - run: python -B tools/testar_desktop.py
       - if: runner.os == 'Windows'
         shell: pwsh

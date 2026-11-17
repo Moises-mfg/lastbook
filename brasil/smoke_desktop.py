@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -27,7 +28,12 @@ def seed(server):
         def get_contentprovider(self):return StringProvider('<html><h1>Brasil</h1><p>A capital do Brasil é Brasília.</p></html>')
         def get_hints(self):return {Hint.FRONT_ARTICLE:1}
     book=folder/'teste.zim'
-    with Creator(book).config_indexing(True,'por') as c:c.add_item(Article());c.set_mainpath('Brasil')
+    # O escritor libzim Windows usa caminhos ANSI; o produto só lê ZIM.
+    # Criar a amostra em ASCII preserva o teste do leitor na pasta com acentos.
+    with tempfile.TemporaryDirectory(prefix='ul-zim-source-') as temporary:
+        source=Path(temporary)/'teste.zim'
+        with Creator(source).config_indexing(True,'por') as c:c.add_item(Article());c.set_mainpath('Brasil')
+        shutil.copyfile(source,book)
     server.STORE.import_file('zim',book)
     path=folder/'teste.ulmap';db=sqlite3.connect(path);mapa_vetor.create(db)
     mapa_vetor.add_feature(db,1,'land','teste','',2,[[(-48.1,-16.1),(-47.9,-16.1),(-47.9,-15.9),(-48.1,-15.9),(-48.1,-16.1)]])
@@ -73,7 +79,23 @@ class Check:
             self.labels.append(label);self.index+=1;self.attempts=0
             self.evaluate(action,lambda value,error:self.later(.35,self.tick))
         self.evaluate('Boolean('+condition+')',done)
+    def ui_value(self,script,timeout=20):
+        event=threading.Event();box={}
+        def done(value,error):box.update(value=value,error=error);event.set()
+        self.later(.01,lambda:self.evaluate(script,done))
+        if not event.wait(timeout):raise RuntimeError('A janela não respondeu ao autoteste.')
+        if box.get('error'):raise RuntimeError(str(box['error']))
+        return box.get('value')
+    def wait_ui(self,condition,timeout=30):
+        deadline=time.monotonic()+timeout;last=None
+        while time.monotonic()<deadline:
+            try:
+                if self.ui_value('Boolean('+condition+')') is True:return
+            except RuntimeError as error:last=error
+            time.sleep(.15)
+        raise RuntimeError('A interface não confirmou: '+condition+'; '+str(last or 'sem erro de avaliação'))
     def ai(self):
+        result={'sistema':sys.platform,'interfaces':self.labels}
         try:
             from .core import Store
             from .plataforma import available_memory
@@ -81,27 +103,40 @@ class Check:
             assert persisted.choices()['modelo']=='sem-ia'
             assert next(i for i in persisted.checklist() if i['id']=='luz')['feito']
             available=available_memory();assert available and available>0
-            result={'sistema':sys.platform,'memoria_disponivel':available,'interfaces':self.labels,'segundos':round(time.monotonic()-self.started,2)}
+            result.update(memoria_disponivel=available,segundos=round(time.monotonic()-self.started,2))
             if model:=os.environ.get('ULTIMO_LIVRO_TEST_MODEL'):
-                store=self.server.STORE;store.save_choices({'perfil':'leve'});target=store.package_path(store.model_spec());target.parent.mkdir(parents=True,exist_ok=True)
+                from . import pacotes
+                store=self.server.STORE;target=store.package_path(pacotes.catalog()['qwen3-0.6b']);target.parent.mkdir(parents=True,exist_ok=True)
                 try:os.link(model,target)
                 except OSError:shutil.copyfile(model,target)
-                store.ask({'pergunta':'Qual é a capital do Brasil?'})
+                # A pergunta precisa atravessar a interface e o transporte local.
+                self.ui_value("location.hash='instalacao';true")
+                self.wait_ui("document.querySelector('#escolhas')&&document.querySelector('#modelo')")
+                self.ui_value("document.querySelector('#status').textContent='';document.querySelector('[name=perfil][value=leve]').click();document.querySelector('#escolhas').requestSubmit();true")
+                self.wait_ui("document.querySelector('#status').textContent.includes('Escolhas salvas')")
+                self.ui_value("location.hash='ia';true")
+                self.wait_ui("document.querySelector('#enviar')&&!document.querySelector('#enviar').disabled")
+                self.ui_value("document.querySelector('#texto').value='Qual é a capital do Brasil?';document.querySelector('#pergunta').requestSubmit();true")
                 deadline=time.monotonic()+210
                 while time.monotonic()<deadline:
                     with store.lock:job=dict(store.job)
-                    if job['estado'] not in ('executando','baixando'):break
+                    if job['estado'] not in ('parado','executando','baixando'):break
                     time.sleep(.1)
                 assert job['estado']=='concluido',job
                 assert 'Brasília' in job['resposta'],job
                 assert job['fontes'] and job['fontes'][0]['tipo']=='zim'
-                result['ia']=job;result['motor']=str(store.runner())
+                self.wait_ui("document.querySelector('#resposta')?.textContent.includes('Brasília')&&document.querySelectorAll('#fontesResposta button').length>0")
+                self.ui_value("document.querySelector('#fontesResposta button').click();true")
+                self.wait_ui("document.querySelector('#conteudo h1')?.textContent==='Brasil'&&document.querySelector('.resposta')?.textContent.includes('Brasília')")
+                self.ui_value("location.hash='mapas';true")
+                self.wait_ui("document.querySelector('#mapaCanvas')&&document.querySelector('#mapaEstado')?.textContent.includes('consulta local')")
+                result['ia']=job;result['motor']=str(store.runner());result['ia_pela_interface']=True;result['referencia_abrivel']=True
             # A inferência não pode ter fechado/reiniciado a página.
             def verify_view(value,error):
                 if error or value is not True:self.save(False,{'erro':'A interface não permaneceu disponível após a IA.','detalhe':str(error)})
                 else:self.save(True,result)
             self.later(.1,lambda:self.evaluate("Boolean(document.querySelector('#mapaCanvas')&&document.querySelector('#mapaEstado')?.textContent.includes('consulta local'))",verify_view))
-        except Exception:self.save(False,{'erro':traceback.format_exc()})
+        except Exception:self.save(False,{**result,'erro':traceback.format_exc()})
     def save(self,ok,result):
         self.finished=True
         path=output_path();path.parent.mkdir(parents=True,exist_ok=True)

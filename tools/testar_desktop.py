@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -42,6 +43,8 @@ def main():
         if code!=0 or not result.get('ok') or not result.get('ia'):raise RuntimeError('O aplicativo não passou no teste completo.')
         print(args.rotulo+': janela, Wikipedia, mapas, preferências, checklist e IA local aprovados.')
     finally:
+        log=folder/'aplicativo.log'
+        if log.exists():shutil.copyfile(log,report.with_suffix('.log'))
         if mount:
             result=subprocess.run(['hdiutil','detach',str(mount)],timeout=40)
             if result.returncode:subprocess.run(['hdiutil','detach','-force',str(mount)],check=True,timeout=40)
