@@ -12,7 +12,9 @@ import unicodedata
 
 from engine.setup import hardware, download
 from .arquivos import read_zim, map_info
-from . import pacotes
+from . import pacotes, mapa_vetor
+from .mapas import MapSupport
+from .fontes import RECURSOS
 from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 
 GiB = 2**30
@@ -45,16 +47,20 @@ def validate_choices(body):
         raise ValueError('Seleção de enciclopédias inválida.')
     if not isinstance(states, list) or len(states) > 27 or any(not isinstance(s, str) or s not in ESTADOS for s in states):
         raise ValueError('Seleção de estados inválida.')
+    cities=body.get('municipios',[])
+    if not isinstance(cities,list) or len(cities)>6000 or any(not isinstance(code,str) or 'map-city-'+code not in pacotes.maps_catalog() for code in cities):
+        raise ValueError('Seleção de municípios inválida.')
     return {'versao': 1, 'perfil': profile, 'modelo': model, 'wikis': sorted(set(wiki)),
-            'estados': sorted(set(states)), 'mapa': map_kind}
+            'estados': sorted(set(states)), 'mapa': map_kind, 'municipios': sorted(set(cities))}
 
 
-class Store:
+class Store(MapSupport):
     def __init__(self, folder):
         self.folder = Path(folder)
         self.folder.mkdir(parents=True, exist_ok=True)
         with self.db() as db:
             db.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS maps (id TEXT PRIMARY KEY, path TEXT NOT NULL, name TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS encyclopedias (id TEXT PRIMARY KEY, path TEXT NOT NULL, name TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS checklist (id TEXT PRIMARY KEY, done INTEGER NOT NULL)')
         self.lock = threading.Lock()
@@ -95,12 +101,12 @@ class Store:
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.2.0-alpha.2', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.3.0-alpha.3', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
                 'modelo': self.model_path().is_file(), 'download_bytes': self.model_spec()['size'], 'nome': self.model_spec()['file']},
-                'arquivos': self.files(), 'aviso': 'Modelos e enciclopédias disponíveis para download. Mapas ainda são importados de arquivos locais.'}
+                'recursos': RECURSOS, 'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
 
     def files(self):
         with self.db() as db:
@@ -140,10 +146,14 @@ class Store:
             if path.suffix.lower() != '.zim': raise ValueError('Escolha um arquivo .zim.')
             read_zim(path)
         else:
-            if path.suffix.lower() != '.mbtiles': raise ValueError('Escolha um arquivo .mbtiles.')
-            map_info(path)
+            if path.suffix.lower() not in ('.mbtiles','.ulmap'): raise ValueError('Escolha um arquivo .mbtiles ou .ulmap.')
+            (mapa_vetor.info if path.suffix.lower()=='.ulmap' else map_info)(path)
         with self.db() as db:
             db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', ('arquivo:'+kind,json.dumps({'nome':path.name,'caminho':str(path)})))
+            if kind == 'mapa':
+                ident='local-'+hashlib.sha256(str(path).encode()).hexdigest()[:20]
+                db.execute('INSERT OR REPLACE INTO maps VALUES (?,?,?)',(ident,str(path),path.name))
+                db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('active-map',ident))
             if kind == 'zim':
                 ident = 'local-' + hashlib.sha256(str(path).encode()).hexdigest()[:20]
                 db.execute('INSERT OR REPLACE INTO encyclopedias VALUES (?,?,?)', (ident, str(path), path.name))
@@ -203,43 +213,45 @@ class Store:
         return dict(read_zim(self.zim_path(ident), entry=entry), colecao=ident, entrada=entry)
 
     def package_path(self, item):
-        return self.folder / ('models' if item['kind'] == 'model' else 'encyclopedias') / item['file']
+        return self.folder / ({'model':'models','zim':'encyclopedias','map':'maps'}[item['kind']]) / item['file']
 
     def package_state(self):
+        selected_maps=set(self.chosen_map_ids())
         with self.db() as db:
             installed = {k.split(':', 1)[1]: v for k, v in db.execute("SELECT key,value FROM settings WHERE key LIKE 'verified:%'")}
         return {ident: dict(item, instalado=(item['sha256'] == installed.get(ident) and self.package_path(item).is_file()),
-                           parcial_bytes=(self.package_path(item).with_suffix(self.package_path(item).suffix + '.part').stat().st_size
-                                          if self.package_path(item).with_suffix(self.package_path(item).suffix + '.part').is_file() else 0))
-                for ident, item in pacotes.catalog().items()}
+                           parcial_bytes=pacotes.partial_bytes(self.package_path(item),item))
+                for ident, item in pacotes.all_catalog().items() if item['kind']!='map' or ident in selected_maps}
 
     def install_plan(self):
         choices = self.choices() or validate_choices({'perfil': 'leve'})
         ids = list(choices['wikis'])
         if choices['modelo'] != 'sem-ia':
             ids.insert(0, choices['modelo'])
+        ids+=self.chosen_map_ids(choices)
         known = self.package_state()
         items = [known[ident] for ident in ids]
         remaining = sum(max(0, p['size'] - p['parcial_bytes']) for p in items if not p['instalado'])
         return {'pacotes': items, 'download_bytes': remaining, 'livre_bytes': shutil.disk_usage(self.folder).free,
-                'necessario_bytes': remaining + (GiB if remaining else 0),
-                'aviso_mapas': 'Mapas ainda precisam ser importados de MBTiles locais; não serão baixados nesta operação.'}
+                'necessario_bytes': remaining + sum(p['size'] for p in items if 'parts' in p and not p['instalado']) + (GiB if remaining else 0),
+                'aviso_mapas': 'Mapas regionais selecionados incluídos no total.' if pacotes.maps_catalog() else 'Mapas ainda não publicados para esta versão.'}
 
     def install_packages(self, ids):
-        if not isinstance(ids, list) or not ids or len(ids) > len(pacotes.catalog()) or any(not isinstance(i, str) or i not in pacotes.catalog() for i in ids):
+        known=pacotes.all_catalog()
+        if not isinstance(ids, list) or not ids or len(ids) > len(known) or any(not isinstance(i, str) or i not in known for i in ids):
             raise ValueError('Selecione pacotes válidos.')
         ids = list(dict.fromkeys(ids))
-        items = [pacotes.catalog()[ident] for ident in ids]
+        items = [known[ident] for ident in ids]
         def work():
             with self.db() as db:
                 db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', ('pending-install', json.dumps(ids)))
             self.control = download.Control()
             if self.closing.is_set():
                 self.control.stop('paused')
-            remaining = sum(max(0, item['size'] - (Path(str(self.package_path(item)) + '.part').stat().st_size
-                            if Path(str(self.package_path(item)) + '.part').is_file() else 0))
-                            for item in items if not self.package_path(item).is_file() or self.package_path(item).stat().st_size != item['size'])
-            if shutil.disk_usage(self.folder).free < remaining + GiB:
+            needed=[p for p in items if not self.package_path(p).is_file() or self.package_path(p).stat().st_size!=p['size']]
+            remaining=sum(max(0,p['size']-pacotes.partial_bytes(self.package_path(p),p)) for p in needed)
+            assembly=sum(p['size'] for p in needed if 'parts' in p)
+            if shutil.disk_usage(self.folder).free < remaining + assembly + GiB:
                 raise ValueError('Espaço insuficiente. Libere espaço antes de baixar os pacotes escolhidos.')
             for index, item in enumerate(items):
                 self.control.check()
@@ -251,10 +263,14 @@ class Store:
                 path = pacotes.obtain(item, self.package_path(item), self.control, progress)
                 if item['kind'] == 'zim':
                     read_zim(path)
+                elif item['kind']=='map':mapa_vetor.info(path)
                 self.control.check()
                 with self.db() as db:
                     if item['kind'] == 'zim':
                         db.execute('INSERT OR REPLACE INTO encyclopedias VALUES (?,?,?)', (item['id'], str(path), item['file']))
+                    if item['kind']=='map':
+                        db.execute('INSERT OR REPLACE INTO maps VALUES (?,?,?)',(item['id'],str(path),item['name']))
+                        db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)',('active-map',item['id']))
                     db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', ('verified:' + item['id'], item['sha256']))
             with self.db() as db:
                 db.execute("DELETE FROM settings WHERE key='pending-install'")

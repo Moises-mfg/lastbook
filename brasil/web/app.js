@@ -13,9 +13,10 @@
   function options(items, selected) { return Object.entries(items).map(([id, v]) => `<option value="${esc(id)}"${selected === id ? ' selected' : ''}>${esc(v.nome || v)}</option>`).join(''); }
   function route() {
     if (!S) return;
+    window.ULMapas?.close();
     const page = location.hash.slice(1) || 'biblioteca';
     document.querySelectorAll('nav a').forEach(a => { a.removeAttribute('aria-current'); if (a.hash === '#' + page) a.setAttribute('aria-current','page'); });
-    if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'ia') ia(); else biblioteca();
+    if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'fontes') fontes(); else if (page === 'ia') ia(); else biblioteca();
   }
   function biblioteca() {
     $('#conteudo').innerHTML = '<p class="tag">Sua base de conhecimento</p><h1>O essencial, mesmo<br>sem conexão.</h1><p class="intro">Guias curtos para começar a preparação da sua casa. Consulte a fonte e adapte o plano às necessidades da sua família.</p><label for="busca">Buscar nos guias locais</label><input id="busca" type="search" placeholder="Água, energia, comunicação…"><div class="cards" id="guias"></div>';
@@ -32,6 +33,17 @@
     $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button><p class="tag">${esc(g.categoria)}</p><h1>${esc(g.titulo)}</h1><article><p>${esc(g.texto)}</p><p class="fonte">Referência: ${esc(g.fonte)}<br>Endereço para consultar enquanto houver internet:<code>${esc(g.url)}</code></p></article>`;
     $('#voltar').onclick = biblioteca;
   }
+  function fontes(){
+    const resources=S.recursos||[],categories=[...new Set(resources.map(r=>r.categoria))];
+    $('#conteudo').innerHTML=`<p class="tag">Aprenda enquanto há conexão</p><h1>Fontes para estudar.<br>Pessoas para conhecer.</h1><p class="intro">O diretório e seus endereços ficam neste computador. Abrir as páginas usa seu navegador e requer internet. Não há cópia de vídeos, assinatura de canais ou participação automática em grupos.</p><div class="painel"><h2>Antes de ficar offline</h2><p>Baixe sua biblioteca e mapas; abra os arquivos e teste a consulta sem conexão. Carregue seus aparelhos, confira cópias e mantenha contatos essenciais também em papel. Conheça grupos locais e teste seus equipamentos com outras pessoas.</p></div><label for="categoriaFonte">Tema</label><select id="categoriaFonte"><option value="">Todos os temas</option>${categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><label for="buscaFonte">Buscar fonte ou comunidade</label><input id="buscaFonte" type="search" placeholder="LoRa, água, canais…"><div class="cards" id="listaFontes"></div><p>Fontes oficiais, comunidades e criadores têm papéis distintos. A inclusão no diretório não aprova todos os conteúdos publicados nem estabelece parceria comercial.</p>`;
+    function draw(){
+      const fold=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),query=fold($('#buscaFonte').value),category=$('#categoriaFonte').value;
+      const hits=resources.filter(r=>(!category||r.categoria===category)&&fold(r.nome+' '+r.resumo+' '+r.categoria).includes(query));
+      $('#listaFontes').innerHTML=hits.length?hits.map(r=>`<article data-resource="${esc(r.id)}"><p class="tag">${esc(r.tipo)}</p><h2>${esc(r.nome)}</h2><p>${esc(r.resumo)}</p><p>${esc(r.observacao)}</p><p class="fonte">Verificado em ${esc(r.revisado)}<br><code>${esc(r.url)}</code></p><button data-open-resource="${esc(r.id)}">Abrir no navegador · internet</button></article>`).join(''):'<p>Nenhuma referência encontrada.</p>';
+      document.querySelectorAll('[data-open-resource]').forEach(b=>b.onclick=()=>api('open-resource',{id:b.dataset.openResource}).then(r=>notice(r.mensagem)).catch(failure));
+    }
+    $('#buscaFonte').oninput=draw;$('#categoriaFonte').onchange=draw;draw();
+  }
   function compras() {
     $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><p class="aviso">Sem anúncios ou links de afiliado nesta versão. A prioridade é a utilidade para sua casa.</p>`;
     document.querySelectorAll('[data-item]').forEach(input => input.onchange = async () => {
@@ -41,25 +53,46 @@
     });
   }
   function instalacao() {
-    draft = S.escolhas ? structuredClone(S.escolhas) : {perfil:S.recomendado,modelo:S.perfis[S.recomendado].modelo,wikis:[S.perfis[S.recomendado].wiki],mapa:S.perfis[S.recomendado].mapa,estados:[]};
-    $('#conteudo').innerHTML = `<p class="tag">Brasil inteiro, escolhas locais</p><h1>Uma biblioteca do<br>tamanho da sua vida.</h1><p class="intro">Escolha modelos, idiomas e variantes. O botão de salvar guarda suas preferências; o download só começa quando você pedir. Para um i3 com 8 GB, comece pelo Leve.</p><button id="importarPlano" class="secundario">Importar plano do site (.json)</button><form id="escolhas"><div class="cards">${Object.entries(S.perfis).map(([id,p]) => `<label class="card perfil"><input type="radio" name="perfil" value="${id}"${draft.perfil === id ? ' checked' : ''}><h2>${p.nome}</h2><p>${p.ram_gib ? p.ram_gib + ' GB de RAM como alvo' : 'Você escolhe os componentes'}${S.recomendado === id ? ' · sugerido' : ''}</p></label>`).join('')}</div><fieldset><legend>IA local</legend><label for="modelo">Modelo</label><select id="modelo">${options(S.modelos,draft.modelo)}</select><p>O modelo menor ocupa cerca de 640 MB; os modelos 4B e 14B precisam de mais memória e espaço. Desempenho depende do processador e deve ser testado no computador real.</p></fieldset><fieldset><legend>Enciclopédias</legend>${Object.entries(S.wikis).map(([id,title]) => `<label class="linha"><input type="checkbox" name="wiki" value="${id}"${draft.wikis.includes(id) ? ' checked' : ''}><span>${esc(title)}<br><small>${size(S.catalogo[id].size)} · edição ${esc(S.catalogo[id].edition)}</small></span></label>`).join('')}<p>Mini: introduções e quadros. Sem imagens: artigos completos em texto. Completa: arquivo com imagens; o leitor atual exibe os artigos em texto.</p></fieldset><fieldset><legend>Mapas desejados</legend><label for="mapa">Abrangência</label><select id="mapa">${options(S.mapas,draft.mapa)}</select><p>O download de mapas ainda está em desenvolvimento. As escolhas abaixo registram suas regiões de interesse; você já pode importar mapas MBTiles locais.</p><div class="selecao">${Object.entries(S.estados).map(([id,title]) => `<label class="linha"><input type="checkbox" name="estado" value="${id}"${draft.estados.includes(id) ? ' checked' : ''}>${esc(title)} (${id})</label>`).join('')}</div></fieldset><div class="aviso" id="estimativa" aria-live="polite"></div><div class="acoes"><button>Salvar escolhas</button><button type="button" id="instalar">Baixar modelos e enciclopédias</button></div></form>`;
+    draft = S.escolhas ? structuredClone(S.escolhas) : {perfil:S.recomendado,modelo:S.perfis[S.recomendado].modelo,wikis:[S.perfis[S.recomendado].wiki],mapa:S.perfis[S.recomendado].mapa,estados:[],municipios:[]};
+    const selected=new Set(draft.municipios||[]),mapItems=new Map();let request=0,offset=0,total=0;
+    $('#conteudo').innerHTML = `<p class="tag">Brasil inteiro, escolhas locais</p><h1>Uma biblioteca do<br>tamanho da sua vida.</h1><p class="intro">Escolha modelos, idiomas e regiões. Salvar guarda suas preferências; o download começa quando você pedir. Para um i3 com 8 GB, comece pelo Leve.</p><button id="importarPlano" class="secundario">Importar plano do site (.json)</button><form id="escolhas"><div class="cards">${Object.entries(S.perfis).map(([id,p]) => `<label class="card perfil"><input type="radio" name="perfil" value="${id}"${draft.perfil === id ? ' checked' : ''}><h2>${p.nome}</h2><p>${p.ram_gib ? p.ram_gib + ' GB de RAM como alvo' : 'Você escolhe os componentes'}${S.recomendado === id ? ' · sugerido' : ''}</p></label>`).join('')}</div><fieldset><legend>IA local</legend><label for="modelo">Modelo</label><select id="modelo">${options(S.modelos,draft.modelo)}</select><p>O menor modelo ocupa cerca de 640 MB. O desempenho depende do processador; os modelos maiores exigem mais memória.</p></fieldset><fieldset><legend>Enciclopédias</legend>${Object.entries(S.wikis).map(([id,title]) => `<label class="linha"><input type="checkbox" name="wiki" value="${id}"${draft.wikis.includes(id) ? ' checked' : ''}><span>${esc(title)}<br><small>${size(S.catalogo[id].size)} · edição ${esc(S.catalogo[id].edition)}</small></span></label>`).join('')}<p>Mini: introduções e quadros. Sem imagens: artigos completos em texto. Completa: arquivo com imagens; o leitor atual exibe os artigos em texto.</p></fieldset><fieldset><legend>Mapas offline</legend><label for="mapa">Abrangência</label><select id="mapa">${options(S.mapas,draft.mapa)}</select><p>Ruas, água, localidades e serviços para consulta. Recortes por município e estado incluem o entorno delimitado pelo retângulo da região. Sem rotas automáticas, relevo ou informações em tempo real.</p><div id="mapaMunicipios"><label for="ufMunicipio">Estado para buscar municípios</label><select id="ufMunicipio"><option value="">Todo o Brasil</option>${options(S.estados,'')}</select><label for="buscaMunicipio">Nome do município</label><input id="buscaMunicipio" type="search" maxlength="100" placeholder="Ex.: Campinas"><p id="municipiosStatus" role="status"></p><div id="municipiosResultados" class="selecao"></div><button type="button" id="maisMunicipios" class="secundario">Próximos municípios</button><h3>Municípios escolhidos</h3><div id="municipiosSelecionados"></div></div><div id="mapaEstados" class="selecao">${Object.entries(S.estados).map(([id,title]) => `<label class="linha"><input type="checkbox" name="estado" value="${id}"${draft.estados.includes(id) ? ' checked' : ''}>${esc(title)} (${id})</label>`).join('')}</div><p id="mapaNacional">O mapa detalhado nacional inclui todos os estados e exige mais espaço, inclusive durante a montagem do arquivo.</p><p>Visão geral do Brasil incluída nas opções municipais e estaduais. Créditos: © contribuidores do OpenStreetMap, Geofabrik e IBGE. Licença ODbL 1.0.</p></fieldset><div class="aviso" id="estimativa" aria-live="polite"></div><div class="acoes"><button>Salvar escolhas</button><button type="button" id="instalar">Baixar seleção</button></div></form>`;
     $('#importarPlano').onclick=()=>importar('plano').catch(failure);
-    function values(){return {perfil:$('[name=perfil]:checked').value,modelo:$('#modelo').value,mapa:$('#mapa').value,wikis:[...document.querySelectorAll('[name=wiki]:checked')].map(e=>e.value),estados:[...document.querySelectorAll('[name=estado]:checked')].map(e=>e.value)};}
+    function values(){return {perfil:$('[name=perfil]:checked').value,modelo:$('#modelo').value,mapa:$('#mapa').value,wikis:[...document.querySelectorAll('[name=wiki]:checked')].map(e=>e.value),estados:[...document.querySelectorAll('[name=estado]:checked')].map(e=>e.value),municipios:[...selected]};}
     function estimate(){
       const c=values(),ids=[...c.wikis,...(c.modelo==='sem-ia'?[]:[c.modelo])];
-      const bytes=ids.reduce((n,id)=>n+(S.catalogo[id].instalado?0:Math.max(0,S.catalogo[id].size-S.catalogo[id].parcial_bytes)),0);
-      const model=S.modelos[c.modelo];const warning=model.ram_gib && S.hardware.ram_bytes && S.hardware.ram_bytes<model.ram_gib*2**30*.94;
-      $('#estimativa').textContent=`Download restante: ${size(bytes)}. Espaço livre: ${size(S.hardware.livre_bytes)}. Reserva adicional: 1 GB. Mapas não estão incluídos nesta operação.${warning?' O modelo escolhido excede a memória alvo deste computador; prefira uma opção menor.':''}`;
+      if(S.mapas_disponiveis){if(c.mapa==='brasil')ids.push('map-br-full');else{ids.push('map-br-base');ids.push(...(c.mapa==='estado'?c.estados.map(uf=>'map-uf-'+uf):c.municipios.map(id=>'map-city-'+id)));}}
+      let bytes=0,extra=0,unknown=false;
+      for(const id of ids){const p=S.catalogo[id]||mapItems.get(id);if(!p){unknown=true;continue;}if(!p.instalado){bytes+=Math.max(0,p.size-(p.parcial_bytes||0));if(p.parts)extra+=p.size;}}
+      const model=S.modelos[c.modelo],warning=model.ram_gib && S.hardware.ram_bytes && S.hardware.ram_bytes<model.ram_gib*2**30*.94;
+      $('#mapaMunicipios').hidden=c.mapa!=='municipio';$('#mapaEstados').hidden=c.mapa!=='estado';$('#mapaNacional').hidden=c.mapa!=='brasil';
+      $('#estimativa').textContent=`Download restante estimado: ${size(bytes)}${unknown?' (aguardando tamanhos dos mapas)':''}. Espaço livre: ${size(S.hardware.livre_bytes)}. Reserva adicional: 1 GB${extra?' e '+size(extra)+' para montar o mapa nacional':''}.${!S.mapas_disponiveis?' Catálogo de mapas ainda indisponível nesta versão.':''}${warning?' O modelo escolhido excede a memória alvo deste computador; prefira uma opção menor.':''}`;
       $('#instalar').disabled=!ids.length;
     }
-    document.querySelectorAll('[name=perfil]').forEach(r => r.onchange = () => {
-      const p = S.perfis[r.value]; $('#modelo').value = p.modelo; $('#mapa').value = p.mapa;
-      document.querySelectorAll('[name=wiki]').forEach(w => w.checked = w.value === p.wiki); estimate();
-    });
-    $('#escolhas').addEventListener('change',estimate);estimate();
+    function drawSelected(){
+      const out=$('#municipiosSelecionados');out.replaceChildren();
+      if(!selected.size)out.textContent='Nenhum município escolhido. Você pode baixar somente a visão geral ou escolher sua cidade.';
+      for(const code of selected){const p=mapItems.get('map-city-'+code)||S.catalogo['map-city-'+code],b=document.createElement('button');b.type='button';b.className='secundario';b.textContent=(p?p.name+' · '+size(p.size):code)+' · remover';b.onclick=()=>{selected.delete(code);drawSelected();searchCities(offset);estimate();};out.append(b);}
+    }
+    async function searchCities(start=0){
+      const ticket=++request;
+      try{
+        const data=await api('map-catalog',{uf:$('#ufMunicipio').value,busca:$('#buscaMunicipio').value,offset:start,selecionados:[...selected]});
+        if(ticket!==request||!$('#municipiosResultados'))return;
+        for(const p of [...data.resultados,...data.estados,...(data.nacionais||[]),...(data.selecionados||[])])mapItems.set(p.id,p);
+        offset=start;total=data.total;$('#municipiosStatus').textContent=data.disponivel?`${total} municípios encontrados · mostrando ${total?start+1:0} a ${Math.min(start+50,total)}.`:'Catálogo ainda em preparação. É possível importar mapas locais na seção Mapas.';
+        $('#maisMunicipios').hidden=start+50>=total;
+        $('#municipiosResultados').innerHTML=data.resultados.map(p=>`<label class="linha"><input type="checkbox" data-city="${esc(p.code)}"${selected.has(p.code)?' checked':''}><span>${esc(p.name)}<br><small>${size(p.size)}</small></span></label>`).join('');
+        document.querySelectorAll('[data-city]').forEach(b=>b.onchange=()=>{b.checked?selected.add(b.dataset.city):selected.delete(b.dataset.city);drawSelected();estimate();});drawSelected();estimate();
+      }catch(e){failure(e);}
+    }
+    $('#ufMunicipio').onchange=()=>searchCities();let debounce;
+    $('#buscaMunicipio').oninput=()=>{clearTimeout(debounce);debounce=setTimeout(()=>searchCities(),200);};
+    $('#maisMunicipios').onclick=()=>searchCities(offset+50);
+    document.querySelectorAll('[name=perfil]').forEach(r => r.onchange = () => {const p=S.perfis[r.value];$('#modelo').value=p.modelo;$('#mapa').value=p.mapa;document.querySelectorAll('[name=wiki]').forEach(w=>w.checked=w.value===p.wiki);estimate();});
+    $('#escolhas').addEventListener('change',estimate);estimate();drawSelected();searchCities();
     async function save(){S.escolhas=await api('choices',values());S=await api('state');}
-    $('#escolhas').onsubmit=async e=>{e.preventDefault();try{await save();notice('Escolhas salvas. O download começa apenas quando você pedir.');}catch(e){failure(e);}};
-    $('#instalar').onclick=async()=>{try{await save();await begin('install-selected',{},`Baixar os modelos e enciclopédias selecionados? Download restante: ${size(S.plano.download_bytes)}. Mapas não serão baixados.`);}catch(e){failure(e);}};
+    $('#escolhas').onsubmit=async e=>{e.preventDefault();try{await save();estimate();notice('Escolhas salvas. O download começa apenas quando você pedir.');}catch(e){failure(e);}};
+    $('#instalar').onclick=async()=>{try{await save();await begin('install-selected',{},`Baixar modelos, enciclopédias e mapas selecionados? Download restante: ${size(S.plano.download_bytes)}. Espaço necessário: ${size(S.plano.necessario_bytes)}.`);}catch(e){failure(e);}};
   }
   async function begin(path,body,question){
     if(question && !confirm(question))return;
@@ -68,7 +101,7 @@
   async function downloads(){
     S=await api('state');
     if(location.hash!=='#downloads')return;
-    $('#conteudo').innerHTML=`<p class="tag">Sua biblioteca, verificada</p><h1>Baixe agora.<br>Consulte depois.</h1><p class="intro">Arquivos oficiais, com tamanho e checksum fixados nesta versão. Você pode pausar downloads e retomá-los depois; a biblioteca instalada continua acessível.</p><div class="painel"><p id="andamento" role="status">Consultando andamento…</p><div class="acoes"><button id="pausar" class="secundario">Pausar download</button><button id="retomar">Retomar instalação pendente</button></div></div><div class="cards">${Object.entries(S.catalogo).map(([id,p])=>`<article><p class="tag">${p.kind==='zim'?'Enciclopédia':'IA local'}</p><h3>${esc(p.kind==='zim'?S.wikis[id]:S.modelos[id].nome)}</h3><p>${size(p.size)}${p.edition?' · '+esc(p.edition):''}<br>${p.instalado?'Verificado e instalado':p.parcial_bytes?'Parcial: '+size(p.parcial_bytes):'Ainda não instalado'}</p><details><summary>Fonte e licença</summary><p>${esc(p.source)}<br>${esc(p.license)}</p><p class="fonte">Arquivo: ${esc(p.file)}<br>SHA-256: ${esc(p.sha256)}</p></details><button data-package="${id}" class="secundario">${p.instalado?'Verificar arquivo':'Baixar ou retomar'}</button></article>`).join('')}</div>`;
+    $('#conteudo').innerHTML=`<p class="tag">Sua biblioteca, verificada</p><h1>Baixe agora.<br>Consulte depois.</h1><p class="intro">Arquivos oficiais, com tamanho e checksum fixados nesta versão. Você pode pausar downloads e retomá-los depois; a biblioteca instalada continua acessível.</p><div class="painel"><p id="andamento" role="status">Consultando andamento…</p><div class="acoes"><button id="pausar" class="secundario">Pausar download</button><button id="retomar">Retomar instalação pendente</button></div></div><div class="cards">${Object.entries(S.catalogo).map(([id,p])=>`<article><p class="tag">${p.kind==='zim'?'Enciclopédia':p.kind==='map'?'Mapa':'IA local'}</p><h3>${esc(p.kind==='zim'?S.wikis[id]:p.kind==='map'?p.name:S.modelos[id].nome)}</h3><p>${size(p.size)}${p.edition?' · '+esc(p.edition):''}<br>${p.instalado?'Verificado e instalado':p.parcial_bytes?'Parcial: '+size(p.parcial_bytes):'Ainda não instalado'}</p><details><summary>Fonte e licença</summary><p>${esc(p.source)}<br>${esc(p.license)}</p><p class="fonte">Arquivo: ${esc(p.file)}<br>SHA-256: ${esc(p.sha256)}</p></details><button data-package="${id}" class="secundario">${p.instalado?'Verificar arquivo':'Baixar ou retomar'}</button></article>`).join('')}</div>`;
     document.querySelectorAll('[data-package]').forEach(b=>b.onclick=()=>begin('install-package',{id:b.dataset.package},`Baixar/verificar ${S.catalogo[b.dataset.package].file}? Tamanho total: ${size(S.catalogo[b.dataset.package].size)}.`).catch(failure));
     $('#pausar').onclick=()=>api('pause',{}).then(r=>notice(r.mensagem)).catch(failure);
     $('#retomar').onclick=()=>begin('resume',{}).catch(failure);
@@ -101,19 +134,17 @@
     $('#conteudo').innerHTML=`<button class="secundario" id="voltarZim">← Enciclopédias</button><article><h1>${esc(article.titulo)}</h1><p class="fonte">${esc(source.nome_colecao || source.colecao)} · artigo ${esc(source.entrada)}<br>Conteúdo Wikipedia/Kiwix ou coleção importada. Consulte os avisos da edição para créditos e licença.</p><p class="resposta">${esc(article.texto)}</p></article>`;
     $('#voltarZim').onclick=()=>{location.hash='enciclopedias';enciclopedias();};
   }
-  async function mapas() {
-    $('#conteudo').innerHTML=`<p class="tag">Orientação offline</p><h1>Mapas que<br>ficam com você.</h1><p class="intro">Abra um arquivo MBTiles raster (PNG, JPEG ou WebP). Mapas vetoriais e rotas ainda estão em desenvolvimento. Não há geolocalização ou informações em tempo real.</p><button id="abrirMapa">Abrir mapa .mbtiles</button><p>Arquivo: ${esc(S.arquivos.mapa || 'nenhum selecionado')}</p><div id="mapaLocal"></div>`;
+  async function mapas(){
+    const maps=S.mapas_instalados || [];
+    $('#conteudo').innerHTML=`<p class="tag">Orientação offline</p><h1>Encontre seu caminho,<br>mesmo sem conexão.</h1><p class="intro">Mapas locais de ruas, água, localidades e pontos de interesse. Use o mouse, arraste ou navegue com as setas do teclado. Os mapas são históricos: não mostram bloqueios, riscos ou atendimento em tempo real.</p><div class="acoes"><button id="abrirMapa">Importar mapa local</button><a class="botao" href="#instalacao">Escolher mapas para baixar</a></div><label for="mapaEscolhido">Mapa instalado</label><select id="mapaEscolhido">${maps.length?maps.map(m=>`<option value="${esc(m.id)}"${m.id===S.mapa_ativo?' selected':''}>${esc(m.nome)}${m.disponivel?'':' (disco desconectado)'}</option>`).join(''):'<option>Nenhum mapa instalado</option>'}</select><div id="mapaLocal"></div>`;
     $('#abrirMapa').onclick=()=>importar('mapa').catch(failure);
-    if(!S.arquivos.mapa)return;
+    $('#mapaEscolhido').onchange=async()=>{try{await api('select-map',{id:$('#mapaEscolhido').value});S=await api('state');mapas();}catch(e){failure(e);}};
+    if(!maps.length)return;
     try{
-      const info=await api('mapa');let {z,x,y}=info;
-      function draw(){
-        const n=2**z;x=((x%n)+n)%n;y=Math.max(0,Math.min(n-1,y));
-        $('#mapaLocal').innerHTML=`<div class="acoes"><button data-move="-1,0" aria-label="Oeste">←</button><button data-move="0,-1" aria-label="Norte">↑</button><button data-move="0,1" aria-label="Sul">↓</button><button data-move="1,0" aria-label="Leste">→</button><button id="mais" aria-label="Aproximar">+</button><button id="menos" aria-label="Afastar">−</button></div><div class="mapa-quadro"><div class="mapa-imagens">${[-1,0,1].flatMap(dy=>[-1,0,1].map(dx=>`<img alt="" src="/api/brasil/tile?z=${z}&x=${((x+dx)%n+n)%n}&y=${y+dy}" width="256" height="256">`)).join('')}</div></div><p>Nível ${z}. Áreas sem imagens podem estar fora da cobertura do arquivo.</p><p class="fonte">${esc(info.atribuicao)}</p>`;
-        document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.move.split(',').map(Number);x+=dx;y+=dy;draw();});
-        $('#mais').disabled=z>=Math.min(info.maxzoom,22);$('#menos').disabled=z<=info.minzoom;
-        $('#mais').onclick=()=>{x*=2;y*=2;z++;draw();};$('#menos').onclick=()=>{x=Math.floor(x/2);y=Math.floor(y/2);z--;draw();};
-      }draw();
+      const info=await api('mapa');if(!$('#mapaLocal'))return;
+      const vector=info.formato==='ulmap';
+      $('#mapaLocal').innerHTML=`${vector?'<form id="mapaBusca"><label for="mapaTermo">Localidade, rua ou serviço neste mapa</label><input id="mapaTermo" type="search" required maxlength="160"><button>Buscar offline</button></form><div id="mapaResultados" class="acoes"></div>':''}<div class="acoes"><button data-map-move="-1,0" aria-label="Oeste">←</button><button data-map-move="0,-1" aria-label="Norte">↑</button><button data-map-move="0,1" aria-label="Sul">↓</button><button data-map-move="1,0" aria-label="Leste">→</button><button id="mapaMais" aria-label="Aproximar">+</button><button id="mapaMenos" aria-label="Afastar">−</button></div>${vector?'<div class="mapa-camadas">'+[['road','Ruas'],['water','Água'],['place','Localidades'],['poi','Serviços']].map(([id,label])=>`<label><input type="checkbox" data-map-layer="${id}" checked>${label}</label>`).join('')+'</div>':''}<canvas id="mapaCanvas" tabindex="0" role="img" aria-label="Mapa offline. Setas para mover, mais e menos para aproximar. A busca lista lugares como texto."></canvas><p id="mapaEstado" role="status"></p><p id="mapaDetalhe" aria-live="polite"></p><p class="fonte">${esc(info.nome)}${info.data?' · '+esc(info.data):''}<br>${esc(info.atribuicao)}${info.licenca?' · '+esc(info.licenca):''}<br>${esc(info.licenca_url||'')}</p>`;
+      window.ULMapas.open(info,{api,notice});
     }catch(e){failure(e);}
   }
   function ia(){
@@ -142,5 +173,5 @@
     }catch(e){failure(e);}
   }
   window.addEventListener('hashchange',route);
-  api('state').then(s => { S=s; $('#hardware').textContent = `${s.hardware.ram_bytes ? (s.hardware.ram_bytes/2**30).toFixed(1) + ' GB RAM' : 'RAM não identificada'} · ${s.hardware.arch} · offline`; route(); }).catch(failure);
+  api('state').then(s => { S=s; $('#hardware').textContent = `${s.hardware.ram_bytes ? (s.hardware.ram_bytes/2**30).toFixed(1) + ' GB RAM' : 'RAM não identificada'} · ${s.hardware.arch} · consulta local`; route(); }).catch(failure);
 })();

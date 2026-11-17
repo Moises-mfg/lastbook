@@ -11,6 +11,9 @@ bundle as certifi ships it. Chains checked 12 Nov 2026:
   pub-….r2.dev                           Let's Encrypt, ISRG Root X2 (cross-signed by X1)
   huggingface.co, cas-bridge.xethub.hf.co, us.aws.cdn.hf.co, cdn-lfs*.hf.co   Amazon Root CA 1 (cross-signed by Starfield G2)
   us.gcp.cdn.hf.co                       Let's Encrypt, ISRG Root YR, cross-signed by ISRG Root X1
+Brazilian edition, chain checked 17 Nov 2026:
+  github.com                            Sectigo Public Server Authentication Root E46
+  release-assets.githubusercontent.com, objects.githubusercontent.com   ISRG Root X1
 No eMudhra or emSign root, ever.
 """
 import base64
@@ -22,7 +25,8 @@ from pathlib import Path
 ROOTS = ['GTS Root R1', 'GTS Root R3', 'GTS Root R4', 'GlobalSign ECC Root CA - R4',
          'ISRG Root X1', 'ISRG Root X2',
          'Amazon Root CA 1', 'Amazon Root CA 2', 'Amazon Root CA 3', 'Amazon Root CA 4',
-         'Starfield Services Root Certificate Authority - G2']
+         'Starfield Services Root Certificate Authority - G2',
+         'Sectigo Public Server Authentication Root E46', 'Sectigo Public Server Authentication Root R46']
 OUT = Path(__file__).resolve().parents[1] / 'engine' / 'setup' / 'roots.pem'
 BLOCK = re.compile(r'# Label: "([^"]+)"\n(?:#[^\n]*\n)*(-----BEGIN CERTIFICATE-----\n.*?\n-----END CERTIFICATE-----)', re.S)
 

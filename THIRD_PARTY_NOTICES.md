@@ -84,3 +84,18 @@ Model card e licença: https://huggingface.co/Qwen/Qwen3-0.6B-GGUF
 Enciclopédias e mapas importados permanecem sob as licenças de seus fornecedores.
 O aplicativo mostra as atribuições do mapa MBTiles e não redistribui os arquivos
 importados. A extração de artigos em texto é uma limitação da versão alpha.
+
+## Mapas vetoriais brasileiros (download separado)
+
+Dados © contribuidores do OpenStreetMap, extraídos pelo Geofabrik em 16/11/2026;
+recortes e nomes municipais do IBGE, malha 2025. A base derivada de mapas é
+oferecida sob Open Database License 1.0 (ODbL), incluindo fonte e método de
+construção em `tools/*mapas_br.py`. Isso não altera as licenças do código.
+Licença: https://opendatacommons.org/licenses/odbl/1-0/
+Origem e créditos: https://www.openstreetmap.org/copyright
+Extrato: https://download.geofabrik.de/south-america/brazil.html
+IBGE: https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2025/Brasil/
+
+O instalador não incorpora os gigabytes de mapas. O catálogo aponta para dados
+separados, com tamanho e SHA-256, obtidos apenas por pedido da pessoa. Mapas
+importados continuam sob a licença do fornecedor original.
