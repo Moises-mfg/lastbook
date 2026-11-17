@@ -43,4 +43,4 @@ CTRL
 find "$STAGE" -type d -exec chmod 755 {} +
 find "$STAGE" -type f -exec chmod a+r,go-w {} +
 dpkg-deb --root-owner-group --build "$STAGE" "$OUT/ultimo-livro_${VERSION}_amd64.deb"
-sha256sum "$OUT/ultimo-livro_${VERSION}_amd64.deb" > "$OUT/SHA256SUMS"
+(cd "$OUT" && sha256sum "ultimo-livro_${VERSION}_amd64.deb" > SHA256SUMS)
