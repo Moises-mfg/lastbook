@@ -70,7 +70,7 @@ def map_info(path):
         with sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True) as db:
             metadata=dict(db.execute('SELECT name,value FROM metadata'))
             if metadata.get('format','').lower() not in ('png','jpg','jpeg','webp'):
-                raise ValueError('Escolha MBTiles com imagens PNG, JPEG ou WebP. Mapas vetoriais ainda não são suportados nesta versão.')
+                raise ValueError('Escolha MBTiles com imagens PNG, JPEG ou WebP. MBTiles vetorial não é suportado; use os mapas .ulmap do catálogo.')
             row=db.execute('SELECT zoom_level,tile_column,tile_row FROM tiles ORDER BY zoom_level LIMIT 1').fetchone()
             if row is None: raise ValueError('Este mapa não contém imagens.')
             z,x,tms_y=map(int,row)

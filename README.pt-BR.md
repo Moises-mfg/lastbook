@@ -74,16 +74,15 @@ python-libzim 3.13.1, com licença GPL e componentes indicados em THIRD_PARTY_NO
 Para executar a leitura de ZIM pelo código-fonte, instale libzim==3.13.1 em um
 ambiente Python compatível. Para montar os leitores oficiais de Python 3.12, 3.13 e 3.14 com hashes fixados, execute `python3 brasil/build_zim.py`. O aplicativo escolhe apenas o leitor do Python em uso, sem carregar as três versões na memória.
 
-Mapas aceitos: `.mbtiles` raster com metadado format=png/jpg/jpeg/webp; mapas vetoriais
-ainda não são aceitos. A atribuição do pacote é exibida. Não baixamos tiles públicos
+Mapas aceitos: `.ulmap` vetorial do catálogo e `.mbtiles` raster com metadado format=png/jpg/jpeg/webp. MBTiles vetorial não é suportado. A atribuição do pacote é exibida. Não baixamos tiles públicos
 do OpenStreetMap. Enciclopédias: baixe pelo catálogo ou importe seus arquivos `.zim`;
 os artigos aparecem em texto e seus scripts não são executados. Arquivos importados
 permanecem no disco de origem, que precisa continuar conectado. Downloads do catálogo
-ficam em `encyclopedias/` e `models/` na pasta de dados do aplicativo.
+ficam em `encyclopedias/`, `models/` e `maps/` na pasta de dados do aplicativo.
 
 Para usar o plano do site, exporte o JSON e escolha **Minha instalação → Importar
 plano do site**. A importação valida as escolhas e não inicia downloads. Depois,
-confira os tamanhos e pressione **Baixar modelos e enciclopédias**. O andamento,
+confira os tamanhos e pressione **Baixar seleção**. O andamento,
 a pausa e a retomada ficam na seção **Downloads**.
 
 O catálogo é gerado por uma ação do mantenedor com `tools/atualizar_catalogo_br.py`.
