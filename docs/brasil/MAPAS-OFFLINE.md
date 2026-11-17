@@ -63,3 +63,14 @@ instalação real de ao menos um recorte com busca e desenho offline.
 
 A geração e distribuição nacional ainda estão em andamento. Este arquivo é
 atualizado conforme a validação, sem tratar o leitor pronto como dados publicados.
+
+### Validação com dados reais
+
+O recorte de Campinas/SP abriu na janela Linux. A busca encontrou Campinas, o
+zoom exibiu ruas e bairros e o controle de camadas alterou o desenho.
+[Captura do aplicativo](imagens/mapa-campinas.png). Isso valida o leitor com dados
+reais; o teste de download por GitHub ainda será feito após publicar os volumes.
+
+A suíte brasileira passou 27 testes; o instalador original passou 86 testes
+(com dois específicos de macOS ignorados no Linux); o site passou quatro testes
+DOM. O primeiro CI do PR #6 passou nos testes e na compilação/teste do pacote.

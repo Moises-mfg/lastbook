@@ -30,10 +30,10 @@ class Packages(unittest.TestCase):
             with self.subTest(profile=profile),tempfile.TemporaryDirectory() as tmp:
                 s=Store(tmp);s.save_choices({'perfil':profile})
                 plan=s.install_plan()
-                self.assertEqual(len(plan['pacotes']),2)
+                self.assertEqual(sum(p['kind']!='map' for p in plan['pacotes']),2)
                 self.assertEqual(plan['download_bytes'],sum(p['size'] for p in plan['pacotes']))
-                self.assertEqual(plan['necessario_bytes'],plan['download_bytes']+2**30)
-                self.assertIn('Mapas ainda',plan['aviso_mapas'])
+                self.assertEqual(plan['necessario_bytes'],plan['download_bytes']+sum(p['size'] for p in plan['pacotes'] if 'parts' in p)+2**30)
+                self.assertIn('Mapas regionais' if pacotes.maps_catalog() else 'Mapas ainda',plan['aviso_mapas'])
 
     def test_existing_same_size_file_must_pass_digest(self):
         with tempfile.TemporaryDirectory() as tmp:

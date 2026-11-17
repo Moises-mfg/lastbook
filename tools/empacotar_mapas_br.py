@@ -22,7 +22,8 @@ def pack(entries,output,limit=LIMIT):
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     packages={};volumes=[];current=None;number=0
     try:
-        for item in entries:
+        for index,item in enumerate(entries):
+            if index%500==0:print(f'Empacotando mapa {index+1}/{len(entries)}',flush=True)
             source=Path(item['path']);size=source.stat().st_size
             parts=[];whole=hashlib.sha256();remaining=size
             with source.open('rb') as file:
@@ -46,12 +47,13 @@ def pack(entries,output,limit=LIMIT):
                     remaining-=count
             fields={k:v for k,v in item.items() if k!='path'}
             common={**fields,'size':size,'sha256':whole.hexdigest(),'source':'OpenStreetMap/Geofabrik e IBGE',
-                'edition':'2026-11-16','license':'ODbL-1.0','attribution':'© contribuidores do OpenStreetMap; Geofabrik; IBGE 2025.'}
+                'edition':'2026-11-16','license':'ODbL-1.0','license_url':'https://opendatacommons.org/licenses/odbl/1-0/','attribution':'© contribuidores do OpenStreetMap; Geofabrik; IBGE 2025.'}
             packages[item['id']]={**common,**parts[0]} if len(parts)==1 else {**common,'parts':parts}
     finally:
         if current:current.close()
     containers={}
     for path in volumes:
+        print('Verificando volume',path.name,flush=True)
         with path.open('rb') as file:sha=hashlib.file_digest(file,'sha256').hexdigest()
         containers[path.name]={'size':path.stat().st_size,'sha256':sha}
     for item in packages.values():

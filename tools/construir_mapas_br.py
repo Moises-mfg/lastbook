@@ -37,7 +37,7 @@ def provenance():
 
 def metadata(name,bounds,scope):
     return {'name':name,'bounds':bounds,'scope':scope,'source':'OpenStreetMap/Geofabrik e IBGE',
-            'attribution':ATTRIBUTION,'license':'ODbL-1.0','data_as_of':'OSM 2026-11-16; recortes IBGE 2025',
+            'attribution':ATTRIBUTION,'license':'ODbL-1.0','license_url':'https://opendatacommons.org/licenses/odbl/1-0/','data_as_of':'OSM 2026-11-16; recortes IBGE 2025',
             'sources':provenance(),'notice':'Mapa para consulta offline. Não informa vias bloqueadas, atendimento ou riscos em tempo real.'}
 
 

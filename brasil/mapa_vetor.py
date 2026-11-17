@@ -91,7 +91,7 @@ def info(path):
             lon,lat=(left+right)/2,(bottom+top)/2
             zoom=max(2,min(15,int(math.log2(360/max(right-left,top-bottom)*1.3))))
             return {'nome':meta['name'],'formato':'ulmap','bounds':bounds,'atribuicao':meta['attribution'],
-                    'licenca':meta.get('license','ODbL-1.0'),'data':meta.get('data_as_of',''),
+                    'licenca':meta.get('license','ODbL-1.0'),'licenca_url':meta.get('license_url',''),'data':meta.get('data_as_of',''),
                     'fonte':meta.get('source',''),'z':zoom,'x':int((lon+180)/360*2**zoom),
                     'y':int((1-math.asinh(math.tan(math.radians(lat)))/math.pi)/2*2**zoom),'minzoom':2,'maxzoom':18}
     except (sqlite3.Error,KeyError,TypeError,json.JSONDecodeError) as error:

@@ -30,7 +30,11 @@ def build(self, app):
     mapa_vetor.add_feature(db,2,'road','primary','Avenida Brasil',7,[[(-48.01,-16.01),(-47.99,-15.99)]])
     mapa_vetor.add_feature(db,3,'poi','hospital','Hospital de Teste',12,[[(-48,-16)]])
     mapa_vetor.finish(db,{'name':'Mapa de teste','bounds':[-48.02,-16.02,-47.98,-15.98],'attribution':'Dados sintéticos de teste'});db.close()
-    main.STORE.import_file('mapa',sample)
+    actual=os.environ.get('ULTIMO_LIVRO_TEST_MAP')
+    main.STORE.import_file('mapa',Path(actual) if actual else sample)
+    search='Campinas' if actual else 'Hospital'
+    place='Campinas' if actual else 'Hospital de Teste'
+    zoom='Nível 13' if actual else 'Nível 16'
     steps=[
         ("({cards:document.querySelectorAll('[data-guide]').length})",lambda d: d['cards']==5,"location.hash='instalacao'"),
         ("({profiles:document.querySelectorAll('[name=perfil]').length,wikis:document.querySelectorAll('[name=wiki]').length,install:!!document.querySelector('#instalar')})",lambda d:d=={'profiles':4,'wikis':5,'install':True},"document.querySelector('#modelo').value='sem-ia';document.querySelector('#escolhas').requestSubmit()"),
@@ -39,9 +43,9 @@ def build(self, app):
         ("({disabled:document.querySelector('#enviar')?.disabled})",lambda d:d['disabled'],"location.hash='compras'"),
         ("({items:document.querySelectorAll('[data-item]').length})",lambda d:d['items']==10,"document.querySelector('[data-item=luz]').click()"),
         ("({checked:document.querySelector('[data-item=luz]')?.checked})",lambda d:d['checked'],"location.hash='mapas'"),
-        ("({canvas:!!document.querySelector('#mapaCanvas'),local:document.querySelector('#mapaEstado')?.textContent})",lambda d:d['canvas'] and 'consulta local' in (d['local'] or ''),"document.querySelector('#mapaTermo').value='Hospital';document.querySelector('#mapaBusca').requestSubmit()"),
-        ("({place:document.querySelector('#mapaResultados button')?.textContent})",lambda d:d['place']=='Hospital de Teste',"document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()"),
-        ("({zoom:document.querySelector('#mapaEstado')?.textContent})",lambda d:'Nível 16' in (d['zoom'] or ''),"document.querySelector('[data-map-layer=road]').click()"),
+        ("({canvas:!!document.querySelector('#mapaCanvas'),local:document.querySelector('#mapaEstado')?.textContent})",lambda d:d['canvas'] and 'consulta local' in (d['local'] or ''),f"document.querySelector('#mapaTermo').value={json.dumps(search)};document.querySelector('#mapaBusca').requestSubmit()"),
+        ("({place:document.querySelector('#mapaResultados button')?.textContent})",lambda d:d['place']==place,"document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()"),
+        ("({zoom:document.querySelector('#mapaEstado')?.textContent})",lambda d:zoom in (d['zoom'] or ''),"document.querySelector('[data-map-layer=water]').click();document.querySelector('#mapaCanvas').scrollIntoView({block:'center'})"),
     ]
     state={'index':0,'attempts':0}
     def tick():
