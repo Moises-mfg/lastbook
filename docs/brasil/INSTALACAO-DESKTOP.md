@@ -15,3 +15,21 @@ Os dados ficam em `~/Library/Application Support/UltimoLivro` no macOS, `%LOCALA
 ## Assinatura e limites
 
 Os pacotes macOS planejados usam assinatura ad hoc; os instaladores Windows não têm certificado comercial. Gatekeeper ou SmartScreen podem mostrar avisos, e não há garantia de aprovação automática. Confira a origem e a integridade do pacote e siga as opções de análise disponíveis para aquele arquivo; não desative proteções globais. Os pacotes 0.4 e seus links só serão anunciados após a validação.
+
+## Licenças e fontes
+
+Os pacotes 0.4 autocontidos incluem uma pasta `licenses` com textos, avisos e um
+`MANIFESTO.json` de versões, origens e hashes. No Windows, ela fica em
+`_internal/licenses` dentro da pasta do aplicativo. No macOS, integra o conteúdo
+do aplicativo; use **Mostrar Conteúdo do Pacote** para inspecioná-la.
+
+A release deve oferecer gratuitamente o arquivo `fontes` da plataforma e
+arquitetura correspondente, além dos instaladores. Esse ZIP é destinado à
+inspeção e reconstrução dos componentes; não é necessário para usar o aplicativo.
+Modelos, enciclopédias e mapas não estão nesse arquivo. Os componentes Microsoft
+continuam com seus próprios termos; a licença MIT do projeto não os relicencia.
+
+Para empacotar localmente, `GITHUB_SHA` precisa apontar para o commit completo
+publicado que corresponde ao código sob compilação, e `GITHUB_REPOSITORY` deve
+identificar o fork. O CI fornece esses valores automaticamente. A coleta de
+fontes é uma etapa do mantenedor com conexão, não uma atividade do aplicativo.

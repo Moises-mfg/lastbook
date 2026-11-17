@@ -21,6 +21,8 @@ def webview():
     paths=['lib/net462/Microsoft.Web.WebView2.Core.dll','lib/net462/Microsoft.Web.WebView2.WinForms.dll','runtimes/win-x64/native/WebView2Loader.dll']
     with zipfile.ZipFile(archive) as z:
         for path in paths:(target/Path(path).name).write_bytes(z.read(path))
+        (target/'LICENSE.txt').write_bytes(z.read('LICENSE.txt'))
+    return {'componente':'Microsoft.Web.WebView2 SDK','versao':version,'url':url,'sha256_pacote':hashlib.sha256(archive.read_bytes()).hexdigest()}
 
 
 def windows_motor_runtime():
@@ -41,6 +43,7 @@ def windows_motor_runtime():
             "{ throw ('CRT sem assinatura Microsoft válida: '+$file) } }")
     subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',base64.b64encode(script.encode('utf-16le')).decode('ascii')],check=True)
     for file in files:shutil.copy2(file,target/file.name)
+    records=[]
     present={file.name.lower() for file in target.iterdir() if file.is_file()}
     for file in target.iterdir():
         if file.suffix.lower() not in ('.dll','.exe'):continue
@@ -49,12 +52,30 @@ def windows_motor_runtime():
             imports=list(getattr(pe,'DIRECTORY_ENTRY_IMPORT',[]))+list(getattr(pe,'DIRECTORY_ENTRY_DELAY_IMPORT',[]))
             missing={entry.dll.decode('ascii').lower() for entry in imports if is_crt(entry.dll.decode('ascii'))}-present
             if missing:raise RuntimeError(f'CRT ausente ao lado de {file.name}: {sorted(missing)}')
+        if is_crt(file.name):
+            with pefile.PE(str(file)) as pe:
+                fixed=pe.VS_FIXEDFILEINFO[0]
+                version='.'.join(str(v) for v in (fixed.FileVersionMS>>16,fixed.FileVersionMS&65535,fixed.FileVersionLS>>16,fixed.FileVersionLS&65535))
+            records.append({'arquivo':file.name,'versao':version,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'origem':'Dependência Microsoft coletada pelo PyInstaller, assinatura Authenticode Microsoft validada antes da cópia.'})
+    return {'componente':'Microsoft Visual C++/UCRT redistribuíveis','arquivos':records,'termos':'Termos Microsoft próprios; consulte também Python/PC/crtlicense.txt nos avisos do Python. As permissões MIT/GPL dos outros componentes não relicenciam estes arquivos.','documentacao':'https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files'}
 
 
 def main():
-    if sys.platform=='win32':webview()
+    from coletar_licencas import collect
+    sdk=webview() if sys.platform=='win32' else None
+    licenses=collect(VERSION)
+    if sdk:
+        sdk['avisos']=[licenses.put('WebView2-SDK','LICENSE.txt',(ROOT/'derived/webview2/LICENSE.txt').read_bytes())]
+        licenses.items.append(sdk)
+        runtime=ROOT/'derived/webview-runtime.exe'
+        if not runtime.is_file():raise FileNotFoundError('O instalador oficial WebView2 Runtime está ausente.')
+        licenses.items.append({'componente':'Microsoft WebView2 Runtime Evergreen standalone','url':'https://go.microsoft.com/fwlink/?linkid=2124701','sha256_instalador':hashlib.sha256(runtime.read_bytes()).hexdigest(),'distribuicao':'Instalador oficial Microsoft inalterado, somente no instalador Windows; termos próprios Microsoft.','documentacao':'https://learn.microsoft.com/microsoft-edge/webview2/concepts/distribution'})
+    licenses.finish(VERSION,source_archive=False)
     subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--distpath',str(ROOT/'derived/desktop-dist'),'--workpath',str(ROOT/'derived/desktop-build'),str(ROOT/'brasil/desktop.spec')],check=True,cwd=ROOT)
-    if sys.platform=='win32':windows_motor_runtime()
+    if sys.platform=='win32':
+        licenses.items.append(windows_motor_runtime())
+    licenses.finish(VERSION)
+    if sys.platform=='win32':shutil.copytree(licenses.directory,ROOT/'derived/desktop-dist/UltimoLivro/_internal/licenses',dirs_exist_ok=True)
     out=ROOT/'derived/desktop-release';out.mkdir(parents=True,exist_ok=True)
     if sys.platform=='darwin':
         app=ROOT/'derived/desktop-dist/O Último Livro.app'

@@ -1,10 +1,15 @@
 # Aplicativos brasileiros autocontidos: Python, leitor ZIM e motor local.
 import sys
+import json
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_all,collect_submodules
+from PyInstaller.utils.hooks import collect_all,collect_submodules,copy_metadata
 ROOT=Path(SPECPATH).parent
 MAC=sys.platform=='darwin'
 datas=[(str(ROOT/'brasil/web'),'brasil/web'),(str(ROOT/'engine/setup/roots.pem'),'engine/setup'),(str(ROOT/'LICENSE'),'.'),(str(ROOT/'THIRD_PARTY_NOTICES.md'),'.')]
+legal=ROOT/'derived/desktop-licenses'
+if not (legal/'MANIFESTO.json').is_file():raise ValueError('As licenças/fontes precisam ser coletadas antes do empacotamento.')
+datas.append((str(legal),'licenses'))
+for package in json.loads((legal/'DISTRIBUICOES-PYTHON.json').read_text(encoding='utf-8')):datas+=copy_metadata(package)
 for name in ('pacotes.json','mapas_catalogo.json'):datas.append((str(ROOT/'brasil'/name),'brasil'))
 binaries=[]
 for file in (ROOT/'brasil/runtime').iterdir():

@@ -2,7 +2,7 @@ name: Brasil · aplicativos macOS e Windows
 on:
   push:
     branches: [main, feat/macos-windows]
-    paths: ['brasil/**', 'app/bridge.py', 'app/shell_macos.py', 'app/shell_windows.py', 'app/process_tree.py', 'engine/setup/**', 'tools/*desktop.py', '.github/workflows/brasil-desktop.yml']
+    paths: ['brasil/**', 'app/bridge.py', 'app/shell_macos.py', 'app/shell_windows.py', 'app/process_tree.py', 'engine/setup/**', 'tools/*desktop.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/workflows/brasil-desktop.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
           - runner: macos-26
             arch: arm64
             artifact: macos-arm64
-          - runner: macos-15-intel
+          - runner: macos-26-intel
             arch: x64
             artifact: macos-x64
           - runner: windows-2025

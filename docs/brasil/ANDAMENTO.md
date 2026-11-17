@@ -150,3 +150,29 @@ e o download dos conteúdos depende de uma ação explícita.
 Uma medição curta no Linux registrou pico de 943.054.848 bytes no processo do motor
 0.6B. Esse valor não representa a RAM total do aplicativo nem certifica o alvo i3/8 GB.
 Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTOP.md`.
+
+### Verificações adicionais da 0.4
+
+- Windows x64: o run [44131108762](https://github.com/Moises-mfg/lastbook/actions/runs/44131108762)
+  passou no motor, na cópia empacotada e na cópia instalada em pasta com acentos.
+  As 15 etapas da janela, a pergunta pelo formulário, a resposta real com Brasília,
+  a abertura da referência ZIM e o retorno ao mapa passaram. A correção do CRT
+  compartilhado resolveu a falha inicial na abertura do modelo.
+- A captura da cópia instalada foi conferida e está em `imagens/windows-alpha.png`.
+  O pico do processo do motor foi 943.079.424 bytes numa pergunta curta; não é
+  medição de RAM total nem benchmark do i3 alvo.
+- Linux: o run [44134607804](https://github.com/Moises-mfg/lastbook/actions/runs/44134607804)
+  passou também no teste repetível `tools/testar_linux.py`, com pacote extraído,
+  IA, referência e captura obrigatórias. O CI agora inclui o conversor GI/Cairo.
+- Os jobs macOS da rodada Windows acima foram cancelados antes de iniciar, com
+  annotations de indisponibilidade de runners hospedados. Não houve teste do DMG
+  nessa rodada. A nova tentativa usará o runner padrão `macos-26-intel`, além do
+  ARM já configurado; trocar a imagem não garante disponibilidade.
+- Antes de disponibilizar a alpha 0.4, o empacotamento está sendo completado com
+  textos de licença e fontes das versões efetivamente incorporadas. A aprovação
+  funcional do Windows não equivale à conclusão dessa revisão da distribuição.
+
+O site recebeu a seção de downloads por sistema, com requisitos e estados reais,
+e passou nos sete testes DOM. Publicação privada confirmada; fonte da hospedagem
+`b6f8b27c8d153aecabb651128a9e9af0b98f1771`. O roteamento dos subagentes também está
+registrado em `AGENTS.md`; esse arquivo não troca automaticamente o modelo principal.
