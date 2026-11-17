@@ -16,6 +16,7 @@ class Maps(unittest.TestCase):
                 db.executemany('INSERT INTO metadata VALUES (?,?)',[('format','png'),('name','Mapa de teste'),('attribution','OpenStreetMap contributors')])
                 db.execute('CREATE TABLE tiles(zoom_level INTEGER,tile_column INTEGER,tile_row INTEGER,tile_data BLOB)')
                 db.execute('INSERT INTO tiles VALUES (1,0,0,?)',(image,))
+            db.close()
             info=map_info(path)
             self.assertEqual((info['z'],info['x'],info['y']),(1,0,1))
             self.assertEqual(map_tile(path,1,0,1),(image,'image/png'))

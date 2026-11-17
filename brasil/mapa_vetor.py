@@ -6,6 +6,7 @@ from pathlib import Path
 import sqlite3
 import sys
 import zlib
+from .sqlite_local import Connection
 
 APP_ID=0x554c4d50
 SCHEMA=1
@@ -14,7 +15,7 @@ MAX_GEOMETRY=2*1024*1024
 
 
 def connect(path):
-    db=sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True)
+    db=sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro',uri=True,factory=Connection)
     db.execute('PRAGMA query_only=ON')
     db.execute('PRAGMA cache_size=-4096')
     return db

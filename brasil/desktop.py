@@ -53,6 +53,13 @@ def run_mac(server,base):
         if not on_ui(lambda:AppKit.NSWorkspace.sharedWorkspace().openURL_(Foundation.NSURL.URLWithString_(url)),15):raise ValueError('Não foi possível abrir o navegador.')
         return {'mensagem':'Endereço aberto no navegador. A página externa precisa de conexão.'}
     server.OPEN_RESOURCE=external
+    def ask(self,kind,message,done):
+        alert=AppKit.NSAlert.alloc().init();alert.setMessageText_(message);alert.addButtonWithTitle_('OK')
+        if kind=='confirm':alert.addButtonWithTitle_('Cancelar')
+        self.pulse.paused+=1
+        def answered(result):self.pulse.paused-=1;done(result==shell.MODAL_FIRST_BUTTON)
+        alert.beginSheetModalForWindow_completionHandler_(self.window,answered)
+    shell.Shell.ask=ask
     original_build=shell.Shell.build
     def build(self):
         current['shell']=self;original_build(self);self.window.setTitle_(TITLE)

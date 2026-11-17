@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install -r brasil/requirements_desktop.txt
-      - run: python -B -m unittest brasil.tests.test_core brasil.tests.test_arquivos brasil.tests.test_api brasil.tests.test_mapas brasil.tests.test_fontes -v
+      - run: python -B -m unittest brasil.tests.test_core brasil.tests.test_arquivos brasil.tests.test_api brasil.tests.test_mapas brasil.tests.test_fontes brasil.tests.test_plataforma -v
       - uses: actions/cache/restore@v4
         id: motor
         with:

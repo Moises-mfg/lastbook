@@ -16,6 +16,7 @@ from . import pacotes, mapa_vetor
 from .mapas import MapSupport
 from .fontes import RECURSOS
 from . import plataforma
+from .sqlite_local import Connection
 from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 
 GiB = 2**30
@@ -75,7 +76,7 @@ class Store(MapSupport):
             self.job = {'estado': 'pausado', 'mensagem': 'Há downloads pendentes. Retome quando quiser.'}
 
     def db(self):
-        return sqlite3.connect(self.folder / 'dados.sqlite', timeout=10)
+        return sqlite3.connect(self.folder / 'dados.sqlite', timeout=10,factory=Connection)
 
     def choices(self):
         with self.db() as db:
