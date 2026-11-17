@@ -68,6 +68,10 @@ def main():
     shell_linux.APP_ID = 'br.org.ultimolivro.App'
     shell_linux.APP_TITLE = 'O Último Livro'
     shell_linux.GO = [('Biblioteca', '#biblioteca'), ('Preparação', '#compras'), ('Assistente', '#ia')]
+    def header(self):
+        from gi.repository import Gtk
+        return Gtk.HeaderBar(title='O Último Livro', subtitle='Edição brasileira · alpha', show_close_button=True)
+    shell_linux.Shell.header = header
     shell_linux.MEMORY_LIMIT_MB = 768
     if not shell_linux.claim(str(base)):
         return
