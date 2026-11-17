@@ -79,13 +79,16 @@ STUCK = 'A page stopped responding, so it was closed.'
 _libproc = ctypes.CDLL('/usr/lib/libproc.dylib')
 
 
+ERROR_TITLE = 'Lastbook'
+
+
 def show_error(message):
     """Before there is a window, or instead of one."""
     app = AppKit.NSApplication.sharedApplication()
     app.setActivationPolicy_(AppKit.NSApplicationActivationPolicyRegular)
     app.activateIgnoringOtherApps_(True)
     alert = AppKit.NSAlert.alloc().init()
-    alert.setMessageText_('Lastbook')
+    alert.setMessageText_(ERROR_TITLE)
     alert.setInformativeText_(message)
     alert.setAlertStyle_(AppKit.NSAlertStyleCritical)
     alert.runModal()

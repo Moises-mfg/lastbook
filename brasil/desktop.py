@@ -25,6 +25,7 @@ def run_mac(server,base):
     import shell_macos as shell
     import AppKit,Foundation
     from PyObjCTools import AppHelper
+    shell.ERROR_TITLE=TITLE
     shell.STOPPED='Uma página parou de funcionar e foi fechada.'
     shell.TOO_BIG='Uma página usou memória demais e foi fechada.'
     shell.STUCK='Uma página parou de responder e foi fechada.'
@@ -88,6 +89,9 @@ def run_windows(server,base):
     shell.AI_PROCESS_NAMES=shell.AI_PROCESS_NAMES|{'llama-completion.exe'}
     shell.NO_RUNTIME='O aplicativo precisa do Microsoft Edge WebView2 Runtime. Execute novamente o instalador para incluir esse componente.'
     shell.TOO_BIG='Uma página usou memória demais e foi fechada.'
+    shell.WINDOW_FILES_ERROR='Não foi possível carregar os arquivos necessários para abrir a janela.\n\nEles devem estar em {folder}.'
+    shell.WINDOW_OPEN_ERROR='Não foi possível abrir a janela do aplicativo.\n\n{detail}'
+    shell.WINDOW_STOPPED='O componente da janela parou de funcionar. O Último Livro será fechado. Sua biblioteca não foi afetada.'
     failure=shell.preflight()
     if failure:raise RuntimeError(failure)
     current={}

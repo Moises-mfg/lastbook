@@ -132,6 +132,10 @@ def main():
     shell_linux.quit_app = quit_app
     shell_linux.APP_ID = 'br.org.ultimolivro.App'
     shell_linux.APP_TITLE = 'O Último Livro'
+    shell_linux.STOPPED = 'Uma página parou de funcionar e foi fechada.'
+    shell_linux.TOO_BIG = 'Uma página usou memória demais e foi fechada.'
+    shell_linux.NO_NETWORK_REFUSED = 'Não foi possível isolar a janela da rede. Reinicie o aplicativo.'
+    shell_linux.ALREADY_OPEN = 'O Último Livro já está aberto.'
     shell_linux.GO = [('Biblioteca', '#biblioteca'), ('Preparação', '#compras'), ('Assistente', '#ia')]
     def header(self):
         from gi.repository import Gtk

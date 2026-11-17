@@ -71,6 +71,9 @@ BROWSER_ARGS = ('--disable-features=ElasticOverscroll,msOneAuthWAM,msForceOneAut
                 '--webrtc-ip-handling-policy=disable_non_proxied_udp --force-webrtc-ip-handling-policy=disable_non_proxied_udp')   # both layers' spelling
 NO_RUNTIME = ('Lastbook needs the Microsoft Edge WebView2 Runtime, and it was not found on this computer.\n\n'
               'Windows 11 normally includes it. Install "WebView2 Runtime" from Microsoft, then start Lastbook again.')
+WINDOW_FILES_ERROR = 'Lastbook could not load the files it needs to show its window.\n\nThey should be in {folder}.'
+WINDOW_OPEN_ERROR = 'Lastbook could not open its window.\n\n{detail}'
+WINDOW_STOPPED = 'The window part of Lastbook stopped working, so Lastbook will close. Your library is not affected.'
 BLOCKED_SCHEMES = ('http', 'https', 'ws', 'wss', 'ftp')
 # All a right-click offers. Anything else in the runtime's menu, now or after an update, goes: its Share panel posts to other programs and makes the runtime write a crash report.
 MENU_KEEP = {'cut', 'copy', 'paste', 'pasteAndMatchStyle', 'selectAll', 'undo', 'redo', 'copyImage'}
@@ -564,7 +567,7 @@ def preflight():
         n = net()
     except Exception:
         traceback.print_exc()
-        return f'Lastbook could not load the files it needs to show its window.\n\nThey should be in {_lib_dir()}.'
+        return WINDOW_FILES_ERROR.format(folder=_lib_dir())
     try:
         version = n.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()
     except Exception as e:
@@ -821,7 +824,7 @@ class Shell:
     def on_ready(self, sender, args):
         if not args.IsSuccess:
             print('WebView2 did not start:', args.InitializationException, flush=True)
-            message(NO_RUNTIME if 'NotFound' in str(type(args.InitializationException)) else f'Lastbook could not open its window.\n\n{args.InitializationException.Message}')
+            message(NO_RUNTIME if 'NotFound' in str(type(args.InitializationException)) else WINDOW_OPEN_ERROR.format(detail=args.InitializationException.Message))
             self.form.Close()
             return
         Core = self.n.Core
@@ -1109,7 +1112,7 @@ class Shell:
         print('web view process failed:', kind, args.Reason, flush=True)
         note(kind='process-failed', what=str(kind), reason=str(args.Reason))
         if kind == Kind.BrowserProcessExited:
-            message('The window part of Lastbook stopped working, so Lastbook will close. Your library is not affected.')
+            message(WINDOW_STOPPED)
             self.ui(self.form.Close)
         elif self.ended_why and kind in (Kind.RenderProcessExited, Kind.FrameRenderProcessExited):
             why, self.ended_why = self.ended_why, None

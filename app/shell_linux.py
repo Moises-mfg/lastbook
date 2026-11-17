@@ -65,6 +65,7 @@ FEATURES_OFF = ('PeerConnectionEnabled', 'NavigationAPIEnabled', 'LinkPreconnect
 MENU_KEEP = {getattr(WebKit2.ContextMenuAction, n) for n in ('COPY', 'CUT', 'PASTE', 'SELECT_ALL', 'COPY_IMAGE_TO_CLIPBOARD', 'PASTE_AS_PLAIN_TEXT') if hasattr(WebKit2.ContextMenuAction, n)}
 STOPPED = 'A page stopped working, so it was closed.'
 TOO_BIG = 'A page was using too much memory, so it was closed.'
+ALREADY_OPEN = 'Lastbook is already open.'
 GO = [('Videos', '#/videos'), ('Map', '#/map'), ('Chat', '#/ask')]
 SIDE_TOGGLE = "document.getElementById('sideBtn').click()"
 FIND = "document.dispatchEvent(new KeyboardEvent('keydown',{key:'f',code:'KeyF',metaKey:true}))"   # the page's own find, as the Mac menu asks for it
@@ -96,7 +97,7 @@ def show_error(message):
     """Before there is a window, or instead of one."""
     if not _gtk():
         return
-    d = Gtk.MessageDialog(message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.OK, text='Lastbook')
+    d = Gtk.MessageDialog(message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.OK, text=APP_TITLE)
     d.format_secondary_text(message)
     _icon(d)
     d.run()
@@ -174,7 +175,7 @@ def claim(lock_dir):
         _lock_file = open(os.path.join(lock_dir, 'lastbook.lock'), 'w')
         fcntl.flock(_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
-        show_error('Lastbook is already open.')
+        show_error(ALREADY_OPEN)
         return False
     return True
 
