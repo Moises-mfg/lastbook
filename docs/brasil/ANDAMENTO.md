@@ -125,3 +125,28 @@ tempo real; IA experimental. Pendem benchmark no i3 físico e revisão visual do
 site em navegador completo. Domínio próprio e programas de afiliados dependem
 das escolhas e cadastros pessoais do proprietário; há instruções em
 `DOMINIO-E-AFILIADOS.md`. Nenhuma conta, comissão ou compra foi ativada.
+
+## Validação 0.4 — aplicativos para três sistemas
+
+Implementação em revisão no PR [#7](https://github.com/Moises-mfg/lastbook/pull/7).
+As janelas macOS/WebKit e Windows/WebView2 reutilizam o transporte local sem porta;
+Python, leitor ZIM e motor CPU são incluídos no pacote. Os dados permanecem locais
+e o download dos conteúdos depende de uma ação explícita.
+
+- Linux: os 33 testes brasileiros passaram localmente, incluindo leitura de ZIM em
+  pastas com acentos, persistência, integridade e retomada de downloads. O CI gerou
+  o pacote `0.4.0~alpha4` no commit `795bd1561971431033c365dbc7a6fe2a30a01bc9`.
+- Esse `.deb`, extraído no Ubuntu 26.04/Python 3.14, passou no fluxo da janela:
+  mapas, busca/leitura ZIM, preferências, checklist, pergunta enviada pelo formulário,
+  resposta real do motor incluído e abertura da referência apresentada pela IA.
+- macOS Intel passou em uma rodada anterior com janela e inferência reais. A rodada
+  atual exige também execução da cópia montada diretamente do DMG somente leitura.
+- macOS ARM e Windows seguem em validação: criação da amostra ZIM no Windows foi
+  separada da leitura em caminho Unicode; o consumo do motor e a memória disponível
+  agora são registrados. A reserva de memória do produto permanece ativa.
+- A cópia instalada no Windows também precisa passar no fluxo completo. Os pacotes
+  não serão apresentados como disponíveis antes dessas verificações.
+
+Uma medição curta no Linux registrou pico de 943.054.848 bytes no processo do motor
+0.6B. Esse valor não representa a RAM total do aplicativo nem certifica o alvo i3/8 GB.
+Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTOP.md`.

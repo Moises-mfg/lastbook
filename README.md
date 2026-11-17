@@ -1,6 +1,7 @@
 # O Último Livro — Brasil
 
-Aplicativo Linux de preparação e biblioteca offline em português, baseado no LastBook.
+Aplicativo de preparação e biblioteca offline em português, baseado no LastBook.
+Linux disponível em alpha; macOS e Windows em validação nativa na versão 0.4.
 
 **[Baixar a versão 0.3 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3)** ·
 [Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
@@ -22,6 +23,7 @@ O site tem comparador, checklist, diretório e plano JSON importável no aplicat
 Seu código está em `site-brasil/`.
 
 [Como começar com domínio e afiliados](docs/brasil/DOMINIO-E-AFILIADOS.md) ·
-[Mapas: fontes, construção e validação](docs/brasil/MAPAS-OFFLINE.md).
+[Mapas: fontes, construção e validação](docs/brasil/MAPAS-OFFLINE.md) ·
+[Instalação, requisitos e backups no desktop](docs/brasil/INSTALACAO-DESKTOP.md).
 
 Código aberto. Enciclopédias, mapas, motores e modelos mantêm suas próprias licenças.
