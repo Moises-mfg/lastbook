@@ -55,7 +55,8 @@ jobs:
         run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
       - name: Instalar dependências gráficas do teste Linux
-        timeout-minutes: 6
+        # O WebKit e suas dependências podem levar vários minutos no espelho do runner.
+        timeout-minutes: 18
         run: |
           apt_options=(-o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
           sudo apt-get "${apt_options[@]}" -q update
