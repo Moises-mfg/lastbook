@@ -80,3 +80,9 @@ disco de origem precisa permanecer conectado.
 Nome provisório; não há vínculo oficial com os autores do LastBook.
 O código original continua MIT. Conteúdo, mapas, motores e modelos mantêm suas
 próprias licenças. Não redistribuímos a biblioteca de terceiros do LastBook.
+
+## Interface da alpha
+
+Imagem da própria janela Linux em teste, com dados descartáveis:
+
+![Biblioteca brasileira na janela Linux](docs/brasil/interface-alpha.png)
