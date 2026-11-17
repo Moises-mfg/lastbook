@@ -15,7 +15,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install --only-binary=:all: libzim==3.13.1
+      - run: |
+          pip install --only-binary=:all: libzim==3.13.1
       - run: python -B -m unittest discover -s brasil/tests -v
       - run: node --check brasil/web/app.js && node --check site-brasil/app.js
       - run: python site-brasil/build.py
