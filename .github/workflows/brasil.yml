@@ -26,9 +26,23 @@ jobs:
       - run: python site-brasil/build.py
       - run: npm ci --prefix site-brasil --ignore-scripts --no-audit --no-fund --no-bin-links
       - run: npm test --prefix site-brasil
+  leitores-zim:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ['3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -B brasil/build_zim.py
+      - run: |
+          ABI=$(python -c 'import sys;print(f"cp{sys.version_info.major}{sys.version_info.minor}")')
+          PYTHONPATH="brasil/vendor/$ABI" python -B -m unittest brasil.tests.test_arquivos -v
   pacote:
     runs-on: ubuntu-24.04
-    needs: testar
+    needs: [testar, leitores-zim]
     steps:
       - uses: actions/checkout@v4
       - run: python3 -B brasil/build_zim.py
