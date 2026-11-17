@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Aplicativo Linux sem servidor HTTP: reutiliza bridge e shell do LastBook."""
+"""Aplicativo brasileiro nativo, sem servidor HTTP, para Linux, macOS e Windows."""
 import json
 import sqlite3
 import zlib
@@ -86,12 +86,16 @@ class Handler(SetupHandler):
 
 def main():
     global STORE, PICK_FILE, OPEN_RESOURCE
-    base = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'ultimo-livro'
+    from brasil.plataforma import data_folder
+    base=data_folder()
     STORE = Store(base)
     if '--diagnostico' in sys.argv:
         print(json.dumps(STORE.state(), ensure_ascii=False, indent=2))
         return
     import bridge
+    if sys.platform in ('darwin','win32'):
+        from brasil.desktop import run
+        return run(sys.modules[__name__],base)
     import shell_linux
     import threading
     from gi.repository import GLib, Gtk

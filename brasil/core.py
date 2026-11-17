@@ -15,6 +15,7 @@ from .arquivos import read_zim, map_info
 from . import pacotes, mapa_vetor
 from .mapas import MapSupport
 from .fontes import RECURSOS
+from . import plataforma
 from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 
 GiB = 2**30
@@ -101,7 +102,7 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.3.0-alpha.3', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.4.0-alpha.4', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
@@ -299,7 +300,7 @@ class Store(MapSupport):
         return pacotes.catalog().get(ident, pacotes.catalog()['qwen3-0.6b'])
 
     def runner(self):
-        bundled = Path(__file__).parent / 'runtime' / 'llama-completion'
+        bundled = Path(__file__).parent / 'runtime' / ('llama-completion.exe' if os.name=='nt' else 'llama-completion')
         return str(bundled) if bundled.is_file() else shutil.which('llama-completion')
 
     def model_path(self):
@@ -380,14 +381,7 @@ class Store(MapSupport):
             with model.open('rb') as f:
                 if hashlib.file_digest(f, 'sha256').hexdigest() != spec['sha256']:
                     raise ValueError('O modelo não passou na verificação de integridade.')
-            # MemAvailable inclui cache recuperável; não usar RAM total como folga.
-            available = None
-            try:
-                for line in Path('/proc/meminfo').read_text().splitlines():
-                    if line.startswith('MemAvailable:'):
-                        available = int(line.split()[1]) * 1024
-            except OSError:
-                pass
+            available=plataforma.available_memory()
             if available is None or available < spec['available_gib'] * GiB:
                 raise ValueError(f'É preciso ao menos {spec["available_gib"]} GB de memória disponível para este modelo. Feche outros programas ou escolha um modelo menor.')
             references = self.sources_for(question)
@@ -407,7 +401,7 @@ class Store(MapSupport):
                        '--temp', '0.2', '--seed', '42', '-p', prompt, '--no-conversation', '--no-display-prompt', '--simple-io']
             with self.lock:
                 if self.closing.is_set(): raise ValueError('O aplicativo está fechando.')
-                proc = self.proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, errors='replace')
+                proc = self.proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', **plataforma.subprocess_options())
             try:
                 stdout, stderr = proc.communicate(timeout=180)
             except subprocess.TimeoutExpired:

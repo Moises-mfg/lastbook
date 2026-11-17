@@ -1,0 +1,86 @@
+name: Brasil · aplicativos macOS e Windows
+on:
+  push:
+    branches: [main, feat/macos-windows]
+    paths: ['brasil/**', 'app/bridge.py', 'app/shell_macos.py', 'app/shell_windows.py', 'engine/setup/**', 'tools/*desktop.py', '.github/workflows/brasil-desktop.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  aplicativos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+            artifact: macos-arm64
+          - runner: macos-15-intel
+            arch: x64
+            artifact: macos-x64
+          - runner: windows-2025
+            arch: x64
+            artifact: windows-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: python -m pip install -r brasil/requirements_desktop.txt
+      - run: python -B -m unittest brasil.tests.test_core brasil.tests.test_arquivos brasil.tests.test_api brasil.tests.test_mapas brasil.tests.test_fontes -v
+      - uses: actions/cache/restore@v4
+        id: motor
+        with:
+          path: brasil/runtime
+          key: desktop-motor-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('brasil/build_runtime.py') }}
+      - if: steps.motor.outputs.cache-hit != 'true'
+        run: python -B brasil/build_runtime.py
+      - uses: actions/cache/save@v4
+        if: steps.motor.outputs.cache-hit != 'true'
+        with:
+          path: brasil/runtime
+          key: desktop-motor-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('brasil/build_runtime.py') }}
+      - uses: actions/cache/restore@v4
+        id: modelo
+        with:
+          path: derived/desktop-model.gguf
+          key: desktop-modelo-${{ runner.os }}-${{ matrix.arch }}-qwen3-06b-q8-v1
+      - run: python -B tools/modelo_teste_desktop.py
+      - uses: actions/cache/save@v4
+        if: steps.modelo.outputs.cache-hit != 'true'
+        with:
+          path: derived/desktop-model.gguf
+          key: desktop-modelo-${{ runner.os }}-${{ matrix.arch }}-qwen3-06b-q8-v1
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2124701' -OutFile derived/webview-runtime.exe
+          $sig = Get-AuthenticodeSignature derived/webview-runtime.exe
+          if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'O componente WebView2 não possui a assinatura Microsoft esperada.' }
+      - run: python -B brasil/build_desktop.py
+      - run: python -B tools/testar_desktop.py
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem derived/desktop-release/*instalar.exe | Select-Object -First 1
+          $target = Join-Path $env:RUNNER_TEMP 'Aplicativo instalado ação'
+          $p = Start-Process $installer.FullName -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=`"$target`"") -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or -not (Test-Path "$target/UltimoLivro.exe")) { throw 'O instalador não instalou o aplicativo.' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-resultados-${{ matrix.artifact }}
+          path: |
+            derived/desktop-results/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ultimo-livro-${{ matrix.artifact }}
+          path: derived/desktop-release/*
