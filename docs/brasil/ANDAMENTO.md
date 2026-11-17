@@ -172,6 +172,15 @@ Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTO
   textos de licença e fontes das versões efetivamente incorporadas. A aprovação
   funcional do Windows não equivale à conclusão dessa revisão da distribuição.
 
+O run [44136068914](https://github.com/Moises-mfg/lastbook/actions/runs/44136068914)
+confirmou o novo empacotamento no Windows x64 e no Mac Intel. O Windows passou
+na cópia instalada em caminho com acentos. O aplicativo Intel foi executado
+diretamente no DMG montado somente para leitura. Em ambos, a janela enviou uma
+pergunta ao motor local, apresentou a resposta e abriu a referência no leitor ZIM.
+O GitHub cancelou o job Apple Silicon antes de executar etapas por falta de runner.
+O commit posterior de tradução dos alertas está em validação no
+[run 44190095078](https://github.com/Moises-mfg/lastbook/actions/runs/44190095078).
+
 O site recebeu a seção de downloads por sistema, com requisitos e estados reais,
 e passou nos sete testes DOM. Publicação privada confirmada; fonte da hospedagem
 `b6f8b27c8d153aecabb651128a9e9af0b98f1771`. O roteamento dos subagentes também está
