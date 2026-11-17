@@ -54,9 +54,15 @@ jobs:
       - if: steps.motor.outputs.cache-hit != 'true'
         run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
-      - run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+      - name: Instalar dependências gráficas do teste Linux
+        timeout-minutes: 6
+        run: |
+          apt_options=(-o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          sudo apt-get "${apt_options[@]}" -q update
+          sudo apt-get "${apt_options[@]}" -qy install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 gir1.2-soup-3.0 xvfb
+      - name: Abrir a janela do pacote Linux extraído
+        timeout-minutes: 3
+        run: |
           dpkg-deb --extract derived/brasil-build/*.deb /tmp/ultimo-livro-pacote
           ULTIMO_LIVRO_TEST_ROOT=/tmp/ultimo-livro-pacote/opt/ultimo-livro WEBKIT_DISABLE_DMABUF_RENDERER=1 xvfb-run -a /usr/bin/python3 -B brasil/tests/smoke_gtk.py
       - uses: actions/cache/restore@v4
