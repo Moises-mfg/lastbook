@@ -19,3 +19,14 @@ build/
 *.dmg
 *.exe
 *.zip
+
+# Dados pessoais e motores locais da edição brasileira
+/brasil/runtime/
+/site-brasil/dist/
+/site-brasil/.sites-*
+/site-brasil/.openai/
+*.sqlite
+*.part
+*.deb
+*.tar.gz
+.venv/

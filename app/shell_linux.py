@@ -49,6 +49,7 @@ from gi.repository import Gdk, Gio, GLib, Gtk, Soup, WebKit2   # noqa: E402
 import bridge as B   # noqa: E402
 
 APP_ID = 'org.lastbook.Lastbook'
+APP_TITLE = 'Lastbook'
 SCHEME = 'lastbook'
 HOME = B.ORIGIN_MAC + '/'
 SIZE = (1280, 860)
@@ -75,7 +76,7 @@ def _gtk():
     global _gtk_ok
     if _gtk_ok is None:
         GLib.set_prgname('lastbook')
-        GLib.set_application_name('Lastbook')
+        GLib.set_application_name(APP_TITLE)
         try:
             r = Gtk.init_check(None)
             _gtk_ok = bool(r[0] if isinstance(r, tuple) else r)
@@ -383,7 +384,7 @@ class Shell:
         except Exception:
             pass
 
-        w = self.window = Gtk.ApplicationWindow(application=app, title='Lastbook')
+        w = self.window = Gtk.ApplicationWindow(application=app, title=APP_TITLE)
         w.set_default_size(*SIZE)
         w.set_size_request(*MIN_SIZE)
         _icon(w)

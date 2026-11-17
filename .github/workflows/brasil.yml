@@ -1,0 +1,31 @@
+name: Brasil · testes e pacote Linux
+on:
+  push:
+    branches: [main]
+    paths: ['brasil/**', 'app/bridge.py', 'app/shell_linux.py', 'engine/setup/**', 'site-brasil/**', '.github/workflows/brasil.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  testar:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -B -m unittest discover -s brasil/tests -v
+      - run: node --check brasil/web/app.js && node --check site-brasil/app.js
+      - run: python site-brasil/build.py
+  pacote:
+    runs-on: ubuntu-24.04
+    needs: testar
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash brasil/build_runtime.sh
+      - run: bash brasil/build_deb.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ultimo-livro-linux-amd64-alpha
+          path: derived/brasil-build/*
