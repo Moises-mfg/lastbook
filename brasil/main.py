@@ -9,11 +9,13 @@ import urllib.parse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'app'))
+sys.path.insert(0, str(ROOT / 'lib'))
 from brasil.core import Store
 from engine.setup.api import SetupHandler, _send_json
 
 WEB = Path(__file__).parent / 'web'
 STORE = None
+PICK_FILE = None
 
 
 class Handler(SetupHandler):
@@ -25,6 +27,21 @@ class Handler(SetupHandler):
             p = (WEB / path[4:]).resolve()
             if WEB.resolve() in p.parents and p.is_file():
                 return self._static(p)
+        if path == '/api/brasil/mapa':
+            from brasil.arquivos import map_info
+            try: return _send_json(self,map_info(STORE.file_path('mapa')))
+            except ValueError as e: return _send_json(self,{'error':str(e)},400)
+        if path == '/api/brasil/tile':
+            from brasil.arquivos import map_tile
+            try:
+                q=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                tile=map_tile(STORE.file_path('mapa'),*(int(q[k][0]) for k in ('z','x','y')))
+                if tile is None: return _send_json(self,{'error':'Sem cobertura.'},404)
+                data,mime=tile
+                self.send_response(200);self.send_header('Content-Type',mime);self.send_header('Content-Length',str(len(data)));self.end_headers()
+                if self.command != 'HEAD': self.wfile.write(data)
+                return
+            except (ValueError,KeyError,IndexError): return _send_json(self,{'error':'Imagem não disponível.'},400)
         if path == '/api/brasil/state':
             return _send_json(self, STORE.state())
         if path == '/api/brasil/job':
@@ -44,7 +61,7 @@ class Handler(SetupHandler):
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError('Pedido inválido.')
-            routes = {'/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
+            routes = {'/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
                       '/api/brasil/ask': STORE.ask, '/api/brasil/download-model': lambda b: STORE.download_model()}
             fn = routes.get(self._path())
             if not fn:
@@ -57,7 +74,7 @@ class Handler(SetupHandler):
 
 
 def main():
-    global STORE
+    global STORE, PICK_FILE
     base = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'ultimo-livro'
     STORE = Store(base)
     if '--diagnostico' in sys.argv:
@@ -65,6 +82,22 @@ def main():
         return
     import bridge
     import shell_linux
+    import threading
+    from gi.repository import GLib, Gtk
+    def pick_file(kind):
+        if kind not in ('zim','mapa'): raise ValueError('Tipo de arquivo inválido.')
+        event=threading.Event();out={}
+        def choose():
+            dialog=Gtk.FileChooserNative.new('Abrir enciclopédia ZIM' if kind=='zim' else 'Abrir mapa MBTiles',shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
+            try:
+                if dialog.run()==Gtk.ResponseType.ACCEPT: out['path']=dialog.get_filename()
+            finally: dialog.destroy();event.set()
+            return False
+        GLib.idle_add(choose)
+        if not event.wait(300): raise ValueError('A seleção de arquivo expirou. Tente novamente.')
+        if not out.get('path'): return {'cancelado':True}
+        return STORE.import_file(kind,out['path'])
+    PICK_FILE=pick_file
     shell_linux.APP_ID = 'br.org.ultimolivro.App'
     shell_linux.APP_TITLE = 'O Último Livro'
     shell_linux.GO = [('Biblioteca', '#biblioteca'), ('Preparação', '#compras'), ('Assistente', '#ia')]

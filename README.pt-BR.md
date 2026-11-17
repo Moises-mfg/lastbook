@@ -4,11 +4,14 @@ Adaptação independente e aberta do [LastBook](https://github.com/Immortal-Prot
 **Versão alpha em desenvolvimento, não um produto pronto para emergências.**
 
 Alvo inicial: Linux x86_64, Ubuntu 24.04 ou posterior, notebook i3 com 8 GB de RAM.
+O pacote `.deb` publicado tem como alvo Ubuntu 24.04 e Python 3.12.
 A geração do i3 e o desempenho da IA ainda precisam ser validados em equipamento real.
 
 ## O que já funciona
 
 - Janela Linux usando o transporte local sem porta do LastBook.
+- Leitura e busca em um ZIM local por vez, com artigos em texto.
+- Visualização de mapas MBTiles raster locais, com zoom e deslocamento.
 - Cinco guias iniciais em português, com referências, e busca sem internet.
 - Checklist persistente, salvo em SQLite no computador.
 - Seleção dos quatro perfis, idiomas e estados, salva localmente.
@@ -56,7 +59,16 @@ bash brasil/build_deb.sh
 O `.deb` é gerado em `derived/brasil-build/`. Para distribuição Ubuntu 24.04,
 compile o motor nessa versão do Ubuntu. Um binário compilado em versão mais nova
 pode depender de bibliotecas indisponíveis na mais antiga. A automação brasileira
-usa Ubuntu 24.04. Guias e checklist funcionam em pacotes sem o motor.
+usa Ubuntu 24.04. Guias e checklist funcionam em pacotes sem o motor. O pacote completo também inclui
+python-libzim 3.13.1, com licença GPL e componentes indicados em THIRD_PARTY_NOTICES.md.
+Para executar a leitura de ZIM pelo código-fonte, instale libzim==3.13.1 em um
+ambiente Python compatível ou em brasil/vendor.
+
+Mapas aceitos: `.mbtiles` raster com metadado format=png/jpg/jpeg/webp; mapas vetoriais
+ainda não são aceitos. A atribuição do pacote é exibida. Não baixamos tiles públicos
+do OpenStreetMap. Enciclopédias: selecione seu `.zim` já baixado; esta versão mostra
+texto dos artigos e não executa seus scripts. Dados externos não são copiados: o
+disco de origem precisa permanecer conectado.
 
 ## Documentação
 

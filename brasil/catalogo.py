@@ -32,7 +32,7 @@ GUIAS = [
      'texto':'Combine previamente contatos e horários de comunicação. Guarde números importantes também em papel. LoRa é uma tecnologia de rádio, não acesso à internet. Meshtastic e MeshCore são ecossistemas diferentes; um nó isolado não cria uma rede. Antes de comprar, verifique a homologação do equipamento e as regras brasileiras. Teste a cobertura com outras pessoas antes de depender dela.',
      'fonte':'Anatel · equipamentos de radiação restrita', 'url':'https://informacoes.anatel.gov.br/legislacao/resolucoes/2017/936-resolucao-680'},
     {'id':'wikipedia','titulo':'Escolha sua Wikipedia offline','categoria':'Conhecimento',
-     'texto':'Os arquivos ZIM podem conter enciclopédias inteiras. A variante mini guarda introduções e quadros; nopic guarda artigos sem imagens; maxi inclui imagens. Escolha idiomas e variantes conforme espaço e necessidade. Esta versão registra suas escolhas e permite pesquisar arquivos ZIM locais quando o leitor está instalado. Os pacotes brasileiros ainda não estão publicados.',
+     'texto':'Os arquivos ZIM podem conter enciclopédias inteiras. A variante mini guarda introduções e quadros; nopic guarda artigos sem imagens; maxi inclui imagens. Escolha idiomas e variantes conforme espaço e necessidade. Esta versão registra suas escolhas e permite pesquisar um arquivo ZIM local por vez. O pacote completo inclui o leitor. O download integrado dos pacotes brasileiros ainda não está disponível.',
      'fonte':'Kiwix · variantes da Wikipedia', 'url':'https://get.kiwix.org/en/faq-items/what-do-mini-nopic-and-maxi-mean-in-the-wikipedia-zim-files/'},
 ]
 COMPRAS = [

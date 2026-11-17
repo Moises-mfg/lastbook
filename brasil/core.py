@@ -10,6 +10,7 @@ import threading
 import unicodedata
 
 from engine.setup import hardware, download
+from .arquivos import read_zim, map_info
 from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 
 GiB = 2**30
@@ -95,7 +96,48 @@ class Store:
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
                 'modelo': self.model_path().is_file(), 'download_bytes': MODEL_SIZE},
-                'aviso': 'Versão inicial: mapas e pacotes de Wikipedia para download ainda não publicados.'}
+                'arquivos': self.files(), 'aviso': 'Versão inicial: mapas e pacotes de Wikipedia para download ainda não publicados.'}
+
+    def files(self):
+        with self.db() as db:
+            rows = db.execute("SELECT key,value FROM settings WHERE key LIKE 'arquivo:%'").fetchall()
+        return {k.split(':',1)[1]: json.loads(v)['nome'] for k,v in rows}
+
+    def file_path(self, kind):
+        with self.db() as db:
+            row = db.execute('SELECT value FROM settings WHERE key=?', ('arquivo:'+kind,)).fetchone()
+        if not row:
+            raise ValueError('Selecione primeiro um arquivo local.')
+        path = Path(json.loads(row[0])['caminho'])
+        if not path.is_file():
+            raise ValueError('Arquivo não encontrado. Reconecte o disco ou selecione novamente.')
+        return path
+
+    def import_file(self, kind, path):
+        path = Path(path).resolve()
+        if kind not in ('zim','mapa') or not path.is_file():
+            raise ValueError('Arquivo inválido.')
+        if kind == 'zim':
+            if path.suffix.lower() != '.zim': raise ValueError('Escolha um arquivo .zim.')
+            read_zim(path)
+        else:
+            if path.suffix.lower() != '.mbtiles': raise ValueError('Escolha um arquivo .mbtiles.')
+            map_info(path)
+        with self.db() as db:
+            db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', ('arquivo:'+kind,json.dumps({'nome':path.name,'caminho':str(path)})))
+        return {'nome':path.name}
+
+    def search_zim(self, body):
+        query=body.get('busca','')
+        if not isinstance(query,str) or not 1<=len(query.strip())<=200:
+            raise ValueError('Escreva uma busca de até 200 caracteres.')
+        return read_zim(self.file_path('zim'),query=query)
+
+    def article_zim(self, body):
+        entry=body.get('entrada','')
+        if not isinstance(entry,str) or not 1<=len(entry)<=2000:
+            raise ValueError('Artigo inválido.')
+        return read_zim(self.file_path('zim'),entry=entry)
 
     def runner(self):
         bundled = Path(__file__).parent / 'runtime' / 'llama-completion'

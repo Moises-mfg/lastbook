@@ -9,6 +9,7 @@ OPT="$STAGE/opt/ultimo-livro"
 mkdir -p "$OPT/brasil" "$OPT/app" "$OPT/engine/setup" "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/share/applications" "$STAGE/usr/share/doc/ultimo-livro" "$OUT"
 cp "$ROOT"/brasil/*.py "$OPT/brasil/"
 cp -r "$ROOT/brasil/web" "$OPT/brasil/"
+if [ -d "$ROOT/brasil/vendor" ]; then cp -r "$ROOT/brasil/vendor" "$OPT/lib"; fi
 if [ -d "$ROOT/brasil/runtime" ]; then cp -r "$ROOT/brasil/runtime" "$OPT/brasil/"; fi
 cp "$ROOT/app/bridge.py" "$ROOT/app/shell_linux.py" "$OPT/app/"
 cp "$ROOT/engine/__init__.py" "$ROOT/engine/paths.py" "$OPT/engine/"
@@ -31,7 +32,7 @@ Package: ultimo-livro
 Version: $VERSION
 Architecture: amd64
 Maintainer: Comunidade O Último Livro
-Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, gir1.2-soup-3.0, libgomp1
+Depends: python3 (>= 3.12), python3 (<< 3.13), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, gir1.2-soup-3.0, libgomp1, libstdc++6, libzstd1, zlib1g
 Section: education
 Priority: optional
 Homepage: https://github.com/Moises-mfg/lastbook

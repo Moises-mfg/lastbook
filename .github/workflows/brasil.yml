@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install --only-binary=:all: libzim==3.13.1
       - run: python -B -m unittest discover -s brasil/tests -v
       - run: node --check brasil/web/app.js && node --check site-brasil/app.js
       - run: python site-brasil/build.py
@@ -23,6 +24,9 @@ jobs:
     needs: testar
     steps:
       - uses: actions/checkout@v4
+      - run: |
+          python3 -m venv derived/brasil-deps
+          derived/brasil-deps/bin/pip install --only-binary=:all: --no-compile --target brasil/vendor libzim==3.13.1
       - run: bash brasil/build_runtime.sh
       - run: bash brasil/build_deb.sh
       - uses: actions/upload-artifact@v4

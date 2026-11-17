@@ -30,3 +30,5 @@ build/
 *.deb
 *.tar.gz
 .venv/
+
+/brasil/vendor/

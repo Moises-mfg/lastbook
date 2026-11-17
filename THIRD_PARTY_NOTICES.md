@@ -65,3 +65,22 @@ allow. The Vulkan loader (`vulkan-1.dll`) comes with the graphics driver and is 
 The manuals, videos, encyclopedias and map data in the library packs are not part of this repository. Each pack has a
 Sources and permissions page with the publisher and terms of every item. The offline map uses OpenStreetMap data
 (ODbL, © OpenStreetMap contributors) and US government data such as USGS, NOAA and USACE, as credited on the map.
+
+## Edição brasileira experimental
+
+A edição em `brasil/` reutiliza a bridge e o shell Linux do LastBook (MIT).
+Os guias iniciais são resumos editoriais com referências e não cópias das páginas.
+O pacote completo inclui python-libzim 3.13.1 e seus componentes GPL indicados na
+lista acima. O código da adaptação está disponível no mesmo repositório, e as
+licenças do wheel são preservadas em `/opt/ultimo-livro/lib/`.
+
+O motor opcional usa llama.cpp (MIT), revisão
+`dde879bc4f954b809892fd0d660515f42536394a`, compilável com `brasil/build_runtime.sh`.
+Fonte exata: https://github.com/ggml-org/llama.cpp/tree/dde879bc4f954b809892fd0d660515f42536394a
+A licença do motor acompanha os binários. O modelo Qwen3-0.6B-GGUF, Apache-2.0,
+é baixado separadamente do repositório oficial Qwen, revisão
+`23749fefcc72300e3a2ad315e1317431b06b590a`; não está embutido no instalador.
+Model card e licença: https://huggingface.co/Qwen/Qwen3-0.6B-GGUF
+Enciclopédias e mapas importados permanecem sob as licenças de seus fornecedores.
+O aplicativo mostra as atribuições do mapa MBTiles e não redistribui os arquivos
+importados. A extração de artigos em texto é uma limitação da versão alpha.

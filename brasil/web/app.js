@@ -14,7 +14,7 @@
     if (!S) return;
     const page = location.hash.slice(1) || 'biblioteca';
     document.querySelectorAll('nav a').forEach(a => { a.removeAttribute('aria-current'); if (a.hash === '#' + page) a.setAttribute('aria-current','page'); });
-    if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'ia') ia(); else biblioteca();
+    if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'ia') ia(); else biblioteca();
   }
   function biblioteca() {
     $('#conteudo').innerHTML = '<p class="tag">Sua base de conhecimento</p><h1>O essencial, mesmo<br>sem conexão.</h1><p class="intro">Guias curtos para começar a preparação da sua casa. Consulte a fonte e adapte o plano às necessidades da sua família.</p><label for="busca">Buscar nos guias locais</label><input id="busca" type="search" placeholder="Água, energia, comunicação…"><div class="cards" id="guias"></div>';
@@ -50,6 +50,39 @@
       e.preventDefault();
       try { S.escolhas = await api('choices',{perfil:$('[name=perfil]:checked').value,modelo:$('#modelo').value,mapa:$('#mapa').value,wikis:[...document.querySelectorAll('[name=wiki]:checked')].map(e=>e.value),estados:[...document.querySelectorAll('[name=estado]:checked')].map(e=>e.value)}); notice('Escolhas salvas neste computador. Nenhum download iniciado.'); } catch(e) { failure(e); }
     };
+  }
+  async function importar(tipo) {
+    const result = await api('import',{tipo});
+    if (!result.cancelado) { S=await api('state'); notice('Arquivo local aberto. O original permanece na pasta escolhida.'); route(); }
+  }
+  function enciclopedias() {
+    $('#conteudo').innerHTML = `<p class="tag">Conhecimento offline</p><h1>Sua enciclopédia,<br>no seu computador.</h1><p class="intro">Abra um arquivo ZIM já baixado. Esta primeira versão pesquisa uma enciclopédia por vez e mostra os artigos em texto, sem imagens.</p><button id="abrirZim">Abrir enciclopédia .zim</button><p>Arquivo: ${esc(S.arquivos.zim || 'nenhum selecionado')}</p><form id="buscarZim"><label for="termoZim">Pesquisar na enciclopédia</label><input id="termoZim" type="search" required maxlength="200"><div class="acoes"><button${!S.arquivos.zim ? ' disabled' : ''}>Pesquisar</button></div></form><div id="resultadosZim"></div>`;
+    $('#abrirZim').onclick=()=>importar('zim').catch(failure);
+    $('#buscarZim').onsubmit=async e=>{
+      e.preventDefault(); const button=$('#buscarZim button');button.disabled=true;
+      try {
+        const results=await api('search-zim',{busca:$('#termoZim').value});
+        $('#resultadosZim').innerHTML=results.length ? results.map((r,i)=>`<p><button class="secundario" data-zim="${i}">${esc(r.titulo)}</button></p>`).join('') : '<p>Nenhum artigo encontrado.</p>';
+        document.querySelectorAll('[data-zim]').forEach(b=>b.onclick=async()=>{
+          try{const article=await api('article-zim',{entrada:results[Number(b.dataset.zim)].entrada});$('#resultadosZim').innerHTML='<article><h2>'+esc(article.titulo)+'</h2><p class="resposta">'+esc(article.texto)+'</p></article>';}catch(e){failure(e);}
+        });
+      }catch(e){failure(e);}finally{button.disabled=false;}
+    };
+  }
+  async function mapas() {
+    $('#conteudo').innerHTML=`<p class="tag">Orientação offline</p><h1>Mapas que<br>ficam com você.</h1><p class="intro">Abra um arquivo MBTiles raster (PNG, JPEG ou WebP). Mapas vetoriais e rotas ainda estão em desenvolvimento. Não há geolocalização ou informações em tempo real.</p><button id="abrirMapa">Abrir mapa .mbtiles</button><p>Arquivo: ${esc(S.arquivos.mapa || 'nenhum selecionado')}</p><div id="mapaLocal"></div>`;
+    $('#abrirMapa').onclick=()=>importar('mapa').catch(failure);
+    if(!S.arquivos.mapa)return;
+    try{
+      const info=await api('mapa');let {z,x,y}=info;
+      function draw(){
+        const n=2**z;x=((x%n)+n)%n;y=Math.max(0,Math.min(n-1,y));
+        $('#mapaLocal').innerHTML=`<div class="acoes"><button data-move="-1,0" aria-label="Oeste">←</button><button data-move="0,-1" aria-label="Norte">↑</button><button data-move="0,1" aria-label="Sul">↓</button><button data-move="1,0" aria-label="Leste">→</button><button id="mais" aria-label="Aproximar">+</button><button id="menos" aria-label="Afastar">−</button></div><div class="mapa-quadro"><div class="mapa-imagens">${[-1,0,1].flatMap(dy=>[-1,0,1].map(dx=>`<img alt="" src="/api/brasil/tile?z=${z}&x=${((x+dx)%n+n)%n}&y=${y+dy}" width="256" height="256">`)).join('')}</div></div><p>Nível ${z}. Áreas sem imagens podem estar fora da cobertura do arquivo.</p><p class="fonte">${esc(info.atribuicao)}</p>`;
+        document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.move.split(',').map(Number);x+=dx;y+=dy;draw();});
+        $('#mais').disabled=z>=Math.min(info.maxzoom,22);$('#menos').disabled=z<=info.minzoom;
+        $('#mais').onclick=()=>{x*=2;y*=2;z++;draw();};$('#menos').onclick=()=>{x=Math.floor(x/2);y=Math.floor(y/2);z--;draw();};
+      }draw();
+    }catch(e){failure(e);}
   }
   function ia() {
     $('#conteudo').innerHTML = `<p class="tag">Assistente local · experimental</p><h1>Pergunte aos<br>guias da biblioteca.</h1><p class="intro">O modelo roda neste computador. Respostas podem conter erros: confira as referências, principalmente em situações de emergência.</p><div class="painel"><p>Motor local: <b>${S.ia.motor ? 'disponível' : 'não instalado'}</b> · Modelo: <b>${S.ia.modelo ? 'disponível' : 'não baixado'}</b></p><p>Qwen3 0.6B Q8 · cerca de 640 MB · CPU · contexto de 2.048 tokens.</p><button id="baixar" class="secundario">Baixar ou retomar modelo</button><p>Somente este botão acessa a internet para obter o modelo. O download verifica a integridade do arquivo.</p></div><form id="pergunta"><label for="texto">Sua pergunta</label><textarea id="texto" maxlength="1500" required placeholder="Como começar a organizar minha preparação?"></textarea><div class="acoes"><button id="enviar"${!S.ia.motor || !S.ia.modelo ? ' disabled' : ''}>Perguntar à IA</button><button type="button" class="secundario" id="buscar">Consultar guias sem IA</button></div></form><div id="resposta" class="resposta" aria-live="polite"></div>`;

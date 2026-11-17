@@ -37,3 +37,20 @@ em `app/main.py`; seus dados não são migrados automaticamente.
 
 Nenhuma senha, documento de identidade, credencial ou informação bancária deve ser
 adicionada a este repositório.
+
+## Verificações realizadas nesta primeira implementação
+
+- Testes automatizados de persistência, validação, API pela bridge sem servidor,
+  leitura/busca de ZIM real criado para testes e coordenadas TMS de mapa raster.
+- Janela WebKitGTK nativa abriu os cinco guias em português.
+- Modelo oficial Qwen3 0.6B Q8 baixado e conferido por SHA-256; resposta real em CPU.
+- Rastreamento da execução de inferência não registrou chamadas socket/connect/bind/listen.
+- CI Ubuntu 24.04 compilou motor e pacote da primeira base com sucesso.
+- Site publicado privadamente via Sites; navegador integrado indisponível neste
+  ambiente, portanto a revisão visual do site no navegador permanece pendente.
+
+A Wikipedia PT mini publicada no catálogo Kiwix em maio de 2026 aparece com cerca
+  de 1,6 GB, nopic 6,6 GB e maxi 19 GB (valores arredondados do catálogo, consultado
+  em 16/11/2026). Isso atualiza a incerteza de tamanhos registrada no planejamento
+  original. O aplicativo ainda não baixa essas enciclopédias; abre arquivos locais.
+  Fonte: https://download.kiwix.org/zim/wikipedia/
