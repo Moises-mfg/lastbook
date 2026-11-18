@@ -20,6 +20,6 @@ recursos=RECURSOS
 mapas={ident:{k:v for k,v in p.items() if k in ('id','name','size','scope','uf','code')} for ident,p in mapas.items()}
 (root/'catalogo.js').write_text('// Gerado dos catálogos de brasil/. Não editar manualmente.\nwindow.ULTIMO_LIVRO_CATALOGO = '+json.dumps(public,ensure_ascii=False)+';\nwindow.ULTIMO_LIVRO_MAPAS = '+json.dumps(mapas,ensure_ascii=False,separators=(',',':'))+';\nwindow.ULTIMO_LIVRO_FONTES = '+json.dumps(recursos,ensure_ascii=False)+';\nwindow.ULTIMO_LIVRO_ACERVO = '+json.dumps(acervo,ensure_ascii=False)+';\n', encoding='utf-8')
 (root/'dist').mkdir(exist_ok=True)
-for name in ('index.html','style.css','app.js','catalogo.js','downloads.js'):
+for name in ('index.html','style.css','app.js','catalogo.js','downloads.js','plano-familiar.html','plano-familiar.css','plano-familiar.js'):
     shutil.copyfile(root/name,root/'dist'/name)
 print('Site estático gerado em site-brasil/dist')

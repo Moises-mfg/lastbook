@@ -59,11 +59,11 @@ def run_mac(server,base):
             return str(panel.URL().path()) if panel.runModal()==AppKit.NSModalResponseOK else None
         return finish_import(server,kind,on_ui(choose))
     server.PICK_FILE=pick
-    def choose_backup(title, saving):
+    def choose_file(title, saving, filename='ultimo-livro-backup.json'):
         def choose():
             if saving:
                 panel = AppKit.NSSavePanel.savePanel()
-                panel.setNameFieldStringValue_('ultimo-livro-backup.json')
+                panel.setNameFieldStringValue_(filename)
                 panel.setPrompt_('Salvar')
             else:
                 panel = AppKit.NSOpenPanel.openPanel()
@@ -75,7 +75,8 @@ def run_mac(server,base):
             return str(panel.URL().path()) if panel.runModal() == AppKit.NSModalResponseOK else None
         return on_ui(choose)
 
-    register_backup(server, choose_backup)
+    register_backup(server, choose_file)
+    server.PREPARO_FILE = choose_file
     def external(ident):
         url=resource_url(ident)
         if not on_ui(lambda:AppKit.NSWorkspace.sharedWorkspace().openURL_(Foundation.NSURL.URLWithString_(url)),15):raise ValueError('Não foi possível abrir o navegador.')
@@ -140,24 +141,28 @@ def run_windows(server,base):
             finally:dialog.Dispose()
         return finish_import(server,kind,on_ui(choose))
     server.PICK_FILE=pick
-    def choose_backup(title, saving):
+    def choose_file(title, saving, filename='ultimo-livro-backup.json'):
         def choose():
             forms = shell.net().Forms
             dialog = forms.SaveFileDialog() if saving else forms.OpenFileDialog()
             try:
                 dialog.Title = title
-                dialog.Filter = 'Backup JSON|*.json'
+                extension = Path(filename).suffix[1:] if filename else ''
+                dialog.Filter = {'json':'Backup JSON|*.json', 'html':'Documento HTML|*.html',
+                                 'geojson':'Camada GeoJSON|*.geojson;*.json'}.get(
+                    extension, 'Fotos|*.jpg;*.jpeg;*.png;*.webp')
                 if saving:
-                    dialog.DefaultExt = 'json'
+                    dialog.DefaultExt = extension
                     dialog.AddExtension = True
                     dialog.OverwritePrompt = True
-                    dialog.FileName = 'ultimo-livro-backup.json'
+                    dialog.FileName = filename
                 return str(dialog.FileName) if dialog.ShowDialog(current['shell'].form) == forms.DialogResult.OK else None
             finally:
                 dialog.Dispose()
         return on_ui(choose)
 
-    register_backup(server, choose_backup)
+    register_backup(server, choose_file)
+    server.PREPARO_FILE = choose_file
     def external(ident):
         os.startfile(resource_url(ident))
         return {'mensagem':'Endereço aberto no navegador. A página externa precisa de conexão.'}

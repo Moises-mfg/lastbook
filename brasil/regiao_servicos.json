@@ -1,0 +1,70 @@
+{
+  "4208203": {
+    "saude": [
+      {
+        "nome": "UNIDADE BASICA DE SAUDE FAZENDA II",
+        "endereco": "RUA JOSE CORREIA, 163 - FAZENDA, Itajaí - SC",
+        "lat": -26.9311984,
+        "lon": -48.6450245
+      },
+      {
+        "nome": "UNIDADE BASICA DE SAUDE SAO PEDRO",
+        "endereco": "FRANCISCO BOAVENTURA DA SILVA, 54 - ITAIPAVA, Itajaí - SC",
+        "lat": -26.9434755,
+        "lon": -48.711094
+      },
+      {
+        "nome": "UNIDADE BASICA DE SAUDE SAO JUDAS",
+        "endereco": "RUA PEDRO JOAQUIM VIEIRA, 179 - SAO JUDAS, Itajaí - SC",
+        "lat": -26.9124179,
+        "lon": -48.67927720972776
+      },
+      {
+        "nome": "UNIDADE BASICA DE SAUDE SAO JOAO II",
+        "endereco": "RUA JUCA CESARIO, 89 - SAO JOAO, Itajaí - SC",
+        "lat": -26.8983003,
+        "lon": -48.6821726
+      },
+      {
+        "nome": "UNIDADE BASICA DE SAUDE SAO FRANCISCO DE ASSIS",
+        "endereco": "JOAO ANTONIO MARTINS, 1300 - SANTA REGINA, Itajaí - SC",
+        "lat": -26.8636334,
+        "lon": -48.7423385
+      }
+    ],
+    "abrigos": [
+      {
+        "nome": "Parque Dom Bosco",
+        "endereco": "Rua Brusque, nº 1333 - Dom Bosco, Itajaí - SC"
+      },
+      {
+        "nome": "Salão Paroquial do São Judas",
+        "endereco": "Rua Indaial, s/nº - São Judas, Itajaí - SC"
+      },
+      {
+        "nome": "Centro de Convivência do Idoso",
+        "endereco": "Rua Carolina Vailatti, nº 1391 - São Judas, Itajaí - SC"
+      },
+      {
+        "nome": "Ginásio do Colégio Salesiano",
+        "endereco": "Rua Felipe Schmidt, nº 87 - Centro, Itajaí - SC"
+      },
+      {
+        "nome": "Ginásio Colégio São Jose",
+        "endereco": "Rua Silva, nº 365 - Centro, Itajaí - SC"
+      },
+      {
+        "nome": "Clube Náutico Almirante Barroso",
+        "endereco": "Rua Almirante Barroso, nº 280 - Centro, Itajaí - SC"
+      },
+      {
+        "nome": "Salão Paroquial Nossa Senhora da Paz",
+        "endereco": "Av. José Eugênio Muller, nº 605 - Vila Operária, Itajaí - SC"
+      }
+    ],
+    "fonte_saude": "https://apidadosabertos.saude.gov.br/cnes/estabelecimentos?codigo_municipio=420820&codigo_tipo_unidade=2&status=1&limit=20",
+    "data_saude": "2025-09-03",
+    "fonte_abrigos": "https://defesacivil.itajai.sc.gov.br/wp-content/uploads/2025/12/Plano-de-Contingencia-de-Inundacao-ALTERADO-EM-22-12-25.pdf",
+    "data_abrigos": "2025-12-22"
+  }
+}

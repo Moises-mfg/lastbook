@@ -10,7 +10,7 @@ legal=ROOT/'derived/desktop-licenses'
 if not (legal/'MANIFESTO.json').is_file():raise ValueError('As licenças/fontes precisam ser coletadas antes do empacotamento.')
 datas.append((str(legal),'licenses'))
 for package in json.loads((legal/'DISTRIBUICOES-PYTHON.json').read_text(encoding='utf-8')):datas+=copy_metadata(package)
-for name in ('pacotes.json','mapas_catalogo.json'):datas.append((str(ROOT/'brasil'/name),'brasil'))
+for name in ('pacotes.json','mapas_catalogo.json','regiao_atlas.json','regiao_servicos.json'):datas.append((str(ROOT/'brasil'/name),'brasil'))
 binaries=[]
 for file in (ROOT/'brasil/runtime').iterdir():
     (binaries if file.suffix in ('.exe','.dll','.dylib') or '.so' in file.name or file.name=='llama-completion' else datas).append((str(file),'brasil/runtime'))

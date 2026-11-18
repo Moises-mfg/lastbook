@@ -17,7 +17,8 @@ python3 site-brasil/build.py
 
 Se já tiver o repositório, entre nele, atualize o branch `main` e execute só o
 comando Python. A pasta gerada é `site-brasil/dist/`, com `index.html`,
-`style.css`, `app.js`, `catalogo.js` e `downloads.js`. Os instaladores continuam
+`style.css`, `app.js`, `catalogo.js`, `downloads.js`, `plano-familiar.html`,
+`plano-familiar.css` e `plano-familiar.js`. Os instaladores continuam
 disponíveis nas releases do GitHub.
 
 Para ver o resultado antes de publicar, execute
@@ -34,7 +35,9 @@ Para ver o resultado antes de publicar, execute
 4. Clique em **Deploy site**. Quando a publicação terminar, copie do painel o
    endereço HTTPS que termina em `.pages.dev`. Esse é o endereço que você pode divulgar.
 5. Abra o endereço em janela anônima e no celular. Confira os links dos instaladores
-   e teste o configurador, a exportação do plano JSON e o checklist.
+   e teste o configurador, a exportação do plano JSON e o checklist. Abra também
+   o plano familiar pela seção de preparação, preencha campos e confira a prévia
+   de impressão em A4 e a opção de salvar PDF do navegador.
 
 O envio direto recebe os arquivos já gerados. Para publicar automaticamente a
 cada alteração no GitHub, o Cloudflare Pages exige um projeto separado criado
