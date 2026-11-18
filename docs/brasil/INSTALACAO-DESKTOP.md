@@ -2,9 +2,10 @@
 
 ## Estado e requisitos
 
-A [alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)
-está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
-(macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
+A [página da alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)
+lista os pacotes já validados para download. Os sistemas suportados são Linux
+x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon (macOS 13.3 ou posterior)
+e Windows x64 (Windows 10 versão 1809 ou posterior).
 
 O instalador Windows inclui o WebView2 Runtime. Os pacotes Mac e Windows
 incluem Python e o motor local. Modelos GGUF, enciclopédias e mapas são baixados

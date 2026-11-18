@@ -88,7 +88,7 @@ test('downloads apresentam plataformas, requisitos e apenas links de pacotes pub
   assert.match(cards[1].textContent,/Apple Silicon/);assert.match(cards[2].textContent,/Intel/);
   assert.match(cards[3].querySelector('.download-requisitos').textContent,/Windows 10 versão 1809 ou posterior, x64/);
   assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
-  assert.equal(cards[1].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha9_macos-arm64.dmg');
+  assert.equal(cards[1].querySelector('a').href,files.replace('alpha.9','alpha.8')+'ultimo-livro_0.4.0-alpha8_macos-arm64.dmg');
   assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha9_macos-x64.dmg');
   assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9');
   assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/blob/main/docs/brasil/INSTALACAO-DESKTOP.md"]'));
@@ -150,8 +150,9 @@ test('alpha 9 oferece checksum e evidências sem inventar execuções de CI',()=
   for(const card of d.querySelectorAll('#downloads-lista article')) {
     const links=[...card.querySelectorAll('.download-evidencias a')];
     assert.equal(links.length,2);
-    assert.equal(links[0].href,base+'download/v0.4.0-alpha.9/SHA256SUMS');
-    assert.equal(links[1].href,base+'tag/v0.4.0-alpha.9');
+    const version = card.dataset.platform === 'macos-arm64' ? 'v0.4.0-alpha.8' : 'v0.4.0-alpha.9';
+    assert.equal(links[0].href,base+'download/'+version+'/SHA256SUMS');
+    assert.equal(links[1].href,base+'tag/'+version);
   }
   assert.equal(d.querySelectorAll('a[href*="/actions/runs/"]').length,0);
   dom.window.close();

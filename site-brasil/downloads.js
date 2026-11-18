@@ -2,6 +2,8 @@
 // Habilite uma plataforma somente após validar o pacote e publicar uma URL real.
 const release09 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9';
 const files09 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.9';
+const release08 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8';
+const files08 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.8';
 window.ULTIMO_LIVRO_DOWNLOADS = [
   {
     id: 'linux', name: 'Linux', architecture: 'Intel / AMD x86_64',
@@ -12,10 +14,10 @@ window.ULTIMO_LIVRO_DOWNLOADS = [
   },
   {
     id: 'macos-arm64', name: 'macOS · Apple Silicon', architecture: 'ARM64',
-    version: 'v0.4.0-alpha.9', available: true, releaseUrl: release09, checksumUrl: files09 + '/SHA256SUMS', evidenceUrl: release09,
-    downloadUrl: files09 + '/ultimo-livro_0.4.0-alpha9_macos-arm64.dmg',
+    version: 'v0.4.0-alpha.8', available: true, releaseUrl: release08, checksumUrl: files08 + '/SHA256SUMS', evidenceUrl: release08,
+    downloadUrl: files08 + '/ultimo-livro_0.4.0-alpha8_macos-arm64.dmg',
     requirements: 'macOS 13.3 ou posterior, em Mac com Apple Silicon.',
-    instructions: 'Confira o chip em Sobre Este Mac. Abra o DMG e mova o aplicativo para Aplicativos.'
+    instructions: 'A alpha 9 para Apple Silicon aguarda teste. A alpha 8 está disponível. Abra o DMG e mova o aplicativo para Aplicativos.'
   },
   {
     id: 'macos-x64', name: 'macOS · Intel', architecture: 'x86_64',
