@@ -1,14 +1,14 @@
 # O Último Livro — Brasil
 
 Aplicativo de preparação e biblioteca offline em português, baseado no LastBook.
-Alpha 0.4 disponível para Linux, Windows e macOS, com pacotes separados para Mac Intel e Apple Silicon.
+A alpha 10 está disponível para Linux, Windows e Mac Intel. A alpha 8 está disponível para Mac com Apple Silicon.
 
-**[Baixar a 0.4 alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)** ·
+**[Baixar a 0.4 alpha 10](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.10)** ·
 [Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
 
 IA local em CPU com histórico de conversa, edições da Wikipedia (enciclopédia) à escolha, mapas de todos
 os 5.571 municípios brasileiros e 27 unidades federativas, guias PDF offline com texto selecionável,
-checklist e diretório de fontes e comunidades. Na primeira abertura, Minha
+plano familiar, inventário, preparação regional e diretório de fontes e comunidades. Na primeira abertura, Minha
 instalação mostra o hardware detectado, sugere um dos quatro perfis e permite
 escolher os downloads.
 
@@ -21,7 +21,7 @@ Para usar uma cidade, o aplicativo recebe apenas seu recorte; não é necessári
 baixar manualmente os sete volumes da release de dados. Os mapas não oferecem
 rotas automáticas nem informações em tempo real. O leitor de ZIM apresenta texto.
 
-O site tem comparador, checklist, diretório e plano JSON importável no aplicativo.
+O site tem comparador, checklist, diretório, configurador de instalação e formulário de plano familiar para impressão.
 Seu código está em `site-brasil/`. [Passo a passo para publicar o site](site-brasil/PUBLICACAO.md).
 
 [Como começar com domínio e afiliados](docs/brasil/DOMINIO-E-AFILIADOS.md) ·

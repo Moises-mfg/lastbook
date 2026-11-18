@@ -65,7 +65,7 @@ test('navegação local encontra seções e scripts não carregam terceiros',()=
   const dom=start(),d=dom.window.document;
   for(const a of d.querySelectorAll('a[href^="#"]'))assert.ok(d.querySelector(a.getAttribute('href')),a.outerHTML);
   for(const script of d.querySelectorAll('script[src]'))assert.equal(new URL(script.src).origin,'https://ultimo-livro.invalid');
-  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9"]'));
+  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.10"]'));
   dom.window.close();
 });
 
@@ -80,19 +80,19 @@ test('downloads apresentam plataformas, requisitos e apenas links de pacotes pub
     assert.ok(card.querySelector('.download-instrucoes').textContent.length>30);
   }
   const linux=cards[0];
-  assert.match(linux.textContent,/v0\.4\.0-alpha\.9 · Alpha disponível/);
+  assert.match(linux.textContent,/v0\.4\.0-alpha\.10 · Alpha disponível/);
   assert.match(linux.querySelector('.download-requisitos').textContent,/Ubuntu 24\.04–26\.04 x86_64/);
-  const files='https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.9/';
-  assert.equal(linux.querySelector('a').href,files+'ultimo-livro_0.4.0-alpha9_amd64.deb');
+  const files='https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.10/';
+  assert.equal(linux.querySelector('a').href,files+'ultimo-livro_0.4.0-alpha10_amd64.deb');
   for(const mac of cards.slice(1,3))assert.match(mac.querySelector('.download-requisitos').textContent,/macOS 13\.3 ou posterior/);
   assert.match(cards[1].textContent,/Apple Silicon/);assert.match(cards[2].textContent,/Intel/);
   assert.match(cards[3].querySelector('.download-requisitos').textContent,/Windows 10 versão 1809 ou posterior, x64/);
   assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
-  assert.equal(cards[1].querySelector('a').href,files.replace('alpha.9','alpha.8')+'ultimo-livro_0.4.0-alpha8_macos-arm64.dmg');
-  assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha9_macos-x64.dmg');
-  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9');
+  assert.equal(cards[1].querySelector('a').href,files.replace('alpha.10','alpha.8')+'ultimo-livro_0.4.0-alpha8_macos-arm64.dmg');
+  assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha10_macos-x64.dmg');
+  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.10');
   assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/blob/main/docs/brasil/INSTALACAO-DESKTOP.md"]'));
-  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/tree/v0.4.0-alpha.9"]'));
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/tree/v0.4.0-alpha.10"]'));
   const scripts=[...d.querySelectorAll('script[src]')].map(s=>s.getAttribute('src'));
   assert.ok(scripts.indexOf('downloads.js')<scripts.indexOf('app.js'));
   dom.window.close();
@@ -144,13 +144,13 @@ test('acervo publicado é derivado dos catálogos reais do aplicativo',()=>{
   dom.window.close();
 });
 
-test('alpha 9 oferece checksum e evidências sem inventar execuções de CI',()=>{
+test('alpha 10 oferece checksum e evidências sem inventar execuções de CI',()=>{
   const dom=start(),d=dom.window.document;
   const base='https://github.com/Moises-mfg/o-ultimo-livro/releases/';
   for(const card of d.querySelectorAll('#downloads-lista article')) {
     const links=[...card.querySelectorAll('.download-evidencias a')];
     assert.equal(links.length,2);
-    const version = card.dataset.platform === 'macos-arm64' ? 'v0.4.0-alpha.8' : 'v0.4.0-alpha.9';
+    const version = card.dataset.platform === 'macos-arm64' ? 'v0.4.0-alpha.8' : 'v0.4.0-alpha.10';
     assert.equal(links[0].href,base+'download/'+version+'/SHA256SUMS');
     assert.equal(links[1].href,base+'tag/'+version);
   }

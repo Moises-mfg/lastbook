@@ -2,8 +2,10 @@
 
 ## Estado e requisitos
 
-A [página da alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)
-lista os pacotes já validados para download. Os sistemas suportados são Linux
+A [página da alpha 10](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.10)
+lista os pacotes já validados para download. Para Apple Silicon, use a
+[alpha 8](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8).
+Os sistemas suportados são Linux
 x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon (macOS 13.3 ou posterior)
 e Windows x64 (Windows 10 versão 1809 ou posterior).
 
@@ -28,7 +30,7 @@ ou abra o PDF no leitor do sistema. O **Assistente local** retoma os turnos rece
 para responder a perguntas de seguimento. As conversas e as referências ficam no
 computador. Use **Nova conversa** para limpar o histórico.
 
-Na alpha 9, **Minha instalação** mostra os componentes da seleção,
+**Minha instalação** mostra os componentes da seleção,
 seus tamanhos, o que já está instalado e o espaço necessário antes de baixar.
 A **Biblioteca** reúne a busca em guias, PDFs, Wikipedia (enciclopédia) e lugares
 dos mapas vetoriais instalados. Em **Verificar uso offline**, o aplicativo testa
