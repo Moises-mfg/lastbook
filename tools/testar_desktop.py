@@ -34,13 +34,13 @@ def main():
             exe=mount/'O Último Livro.app/Contents/MacOS/UltimoLivro'
         env=dict(os.environ,ULTIMO_LIVRO_DATA=str(folder),ULTIMO_LIVRO_TEST_MODEL=str(ROOT/'derived/desktop-model.gguf'))
         process=subprocess.Popen([str(exe),'--autoteste',str(report)],env=env)
-        try:code=process.wait(timeout=360)
+        try:code=process.wait(timeout=450)
         except subprocess.TimeoutExpired:
-            process.kill();process.wait(timeout=15);raise RuntimeError('O teste da janela excedeu 360 segundos.')
+            process.kill();process.wait(timeout=15);raise RuntimeError('O teste da janela excedeu 450 segundos.')
         if not report.exists():
             log=folder/'aplicativo.log';print(log.read_text(encoding='utf-8',errors='replace')[-15000:] if log.exists() else 'Sem registro de inicialização.');raise RuntimeError('O aplicativo não produziu o relatório.')
         result=json.loads(report.read_text(encoding='utf-8'));print(json.dumps(result,ensure_ascii=False,indent=2))
-        if code!=0 or not result.get('ok') or not result.get('ia'):raise RuntimeError('O aplicativo não passou no teste completo.')
+        if code!=0 or not result.get('ok') or not result.get('ia') or not result.get('chat_contextual'):raise RuntimeError('O aplicativo não passou no teste completo.')
         print(args.rotulo+': janela, Wikipedia, mapas, preferências, checklist e IA local aprovados.')
     finally:
         log=folder/'aplicativo.log'

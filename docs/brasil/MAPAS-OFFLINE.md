@@ -3,7 +3,7 @@
 O leitor vetorial oferece consulta local, busca de ruas e lugares, zoom e camadas.
 O catálogo cobre 5.571 municípios, 27 unidades federativas, visão geral e Brasil
 detalhado. Os arquivos de dados são distribuídos separadamente na
-[release de mapas](https://github.com/Moises-mfg/lastbook/releases/tag/mapas-br-2026-11-16).
+[release de mapas](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/mapas-br-2026-11-16).
 O aplicativo não consulta a rede ao abrir; downloads começam por ação explícita.
 
 ## Fontes e limites

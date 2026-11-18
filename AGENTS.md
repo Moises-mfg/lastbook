@@ -1,6 +1,6 @@
 # Roteamento de modelos — O Último Livro
 
-Aplicar somente a este projeto e ao fork `Moises-mfg/lastbook`, incluindo site e
+Aplicar somente a este projeto e ao fork `Moises-mfg/o-ultimo-livro`, incluindo site e
 aplicativos Linux, macOS e Windows. Usar recursos nativos do Codex, sem contratar
 APIs ou plugins pagos.
 

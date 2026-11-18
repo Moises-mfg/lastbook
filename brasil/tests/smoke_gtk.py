@@ -49,7 +49,7 @@ def build(self, app):
     place='Campinas' if actual else 'Hospital de Teste'
     zoom='Nível 13' if actual else 'Nível 16'
     steps=[
-        ("({cards:document.querySelectorAll('[data-guide]').length})",lambda d: d['cards']==5,"location.hash='instalacao'"),
+        ("({first:!!document.querySelector('#somenteGuias')})",lambda d:d['first'],"true"),
         ("({profiles:document.querySelectorAll('[name=perfil]').length,wikis:document.querySelectorAll('[name=wiki]').length,install:!!document.querySelector('#instalar')})",lambda d:d=={'profiles':4,'wikis':5,'install':True},"document.querySelector('#modelo').value='sem-ia';document.querySelector('#escolhas').requestSubmit()"),
         ("({saved:document.querySelector('#status').textContent.includes('Escolhas salvas')})",lambda d:d['saved'],"location.hash='downloads'"),
         ("({packages:document.querySelectorAll('[data-package]').length})",lambda d:d['packages']>=8,"location.hash='ia'"),

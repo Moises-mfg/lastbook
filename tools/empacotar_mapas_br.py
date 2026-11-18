@@ -14,7 +14,7 @@ ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'derived/mapas-br'
 LIMIT=1800*1024*1024
 VERSION='mapas-br-2026-11-16'
-BASE_URL=f'https://github.com/Moises-mfg/lastbook/releases/download/{VERSION}/'
+BASE_URL=f'https://github.com/Moises-mfg/o-ultimo-livro/releases/download/{VERSION}/'
 
 
 def pack(entries,output,limit=LIMIT):

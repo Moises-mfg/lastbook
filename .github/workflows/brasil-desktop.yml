@@ -1,7 +1,7 @@
 name: Brasil · aplicativos macOS e Windows
 on:
   push:
-    branches: [main, feat/macos-windows, 'fix/**']
+    branches: [main, 'feat/**', 'fix/**']
     paths: ['brasil/**', 'app/bridge.py', 'app/shell_macos.py', 'app/shell_windows.py', 'app/process_tree.py', 'engine/setup/**', 'tools/*desktop.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/workflows/brasil-desktop.yml']
   workflow_dispatch:
 permissions:
@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install -r brasil/requirements_desktop.txt
-      - run: python -B -m unittest brasil.tests.test_core brasil.tests.test_arquivos brasil.tests.test_api brasil.tests.test_mapas brasil.tests.test_fontes brasil.tests.test_plataforma brasil.tests.test_processos -v
+      - run: python -B -m unittest brasil.tests.test_core brasil.tests.test_conversa brasil.tests.test_arquivos brasil.tests.test_api brasil.tests.test_mapas brasil.tests.test_fontes brasil.tests.test_plataforma brasil.tests.test_processos -v
       - uses: actions/cache/restore@v4
         id: motor
         with:

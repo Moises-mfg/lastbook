@@ -41,12 +41,14 @@ def seed(server):
     mapa_vetor.add_feature(db,3,'road','primary','Avenida Brasil',7,[[(-48.01,-16.01),(-47.99,-15.99)]])
     mapa_vetor.finish(db,{'name':'Mapa de teste','bounds':[-48.02,-16.02,-47.98,-15.98],'attribution':'Dados sintéticos do autoteste'});db.close()
     server.STORE.import_file('mapa',path)
-    plan=folder/'plano.json';plan.write_text(json.dumps({'versao':1,'perfil':'personalizada','modelo':'sem-ia','wikis':['pt-mini'],'mapa':'municipio','municipios':['3509502'],'estados':['SP']}),encoding='utf-8')
-    server.STORE.import_plan(plan)
+
 
 STEPS=[
-    ("document.querySelectorAll('[data-guide]').length===5","location.hash='instalacao'",'biblioteca'),
-    ("document.querySelectorAll('[name=perfil]').length===4&&document.querySelectorAll('[name=wiki]').length===5","document.querySelector('#escolhas').requestSubmit()",'quatro perfis e cinco Wikipedias'),
+    ("document.querySelector('#somenteGuias')&&document.querySelector('#recomendacaoInstalacao')&&document.querySelectorAll('[name=perfil]').length===4&&document.querySelectorAll('[name=wiki]').length===5","document.querySelector('#somenteGuias').click()",'primeira abertura em Minha instalação'),
+    ("location.hash==='#biblioteca'&&document.querySelectorAll('[data-guide]').length===5&&document.querySelectorAll('[data-pdf]').length===3","document.querySelector('[data-pdf=offline]').click()",'biblioteca sem baixar'),
+    ("document.querySelectorAll('.paginas-pdf img').length===2&&document.querySelector('.paginas-pdf img')?.naturalWidth>0","location.hash='instalacao'",'página do guia PDF incluída no pacote'),
+    ("document.querySelector('#escolhas')&&document.querySelector('#modelo')?.value==='sem-ia'","const mapa=document.querySelector('#mapa');mapa.value='municipio';mapa.dispatchEvent(new Event('change',{bubbles:true}));const busca=document.querySelector('#buscaMunicipio');busca.value='Campinas';busca.dispatchEvent(new Event('input'))",'configuração sem IA'),
+    ("document.querySelector('[data-city=\\\"3509502\\\"]')","document.querySelector('[data-city=\\\"3509502\\\"]').click();document.querySelector('#escolhas').requestSubmit()",'seleção de município'),
     ("document.querySelector('#status').textContent.includes('Escolhas salvas')","location.hash='enciclopedias'",'preferências persistentes'),
     ("!!document.querySelector('#buscarZim button')&&!document.querySelector('#buscarZim button').disabled","document.querySelector('#termoZim').value='Brasil';document.querySelector('#buscarZim').requestSubmit()",'leitor ZIM'),
     ("document.querySelector('[data-zim]')?.textContent==='Brasil'","document.querySelector('[data-zim]').click()",'busca ZIM'),
@@ -125,12 +127,19 @@ class Check:
                 assert job['estado']=='concluido',job
                 assert 'Brasília' in job['resposta'],job
                 assert job['fontes'] and job['fontes'][0]['tipo']=='zim'
-                self.wait_ui("document.querySelector('#resposta')?.textContent.includes('Brasília')&&document.querySelectorAll('#fontesResposta button').length>0")
-                self.ui_value("document.querySelector('#fontesResposta button').click();true")
+                self.wait_ui("document.querySelector('.turno-chat .resposta')?.textContent.includes('Brasília')&&document.querySelector('.referencias-chat button')&&!document.querySelector('#enviar').disabled")
+                self.ui_value("document.querySelector('#texto').value='Qual é o nome dela?';document.querySelector('#pergunta').requestSubmit();true")
+                self.wait_ui("document.querySelectorAll('.turno-chat').length===2&&document.querySelector('.turno-chat:last-child .resposta')?.textContent.includes('Brasília')", timeout=180)
+                assert len(Store(store.folder).chat_history()) == 2
+                self.ui_value("location.hash='biblioteca';true")
+                self.wait_ui("document.querySelector('[data-pdf]')")
+                self.ui_value("location.hash='ia';true")
+                self.wait_ui("document.querySelectorAll('.turno-chat').length===2&&document.querySelector('.referencias-chat button')")
+                self.ui_value("document.querySelector('.referencias-chat button').click();true")
                 self.wait_ui("document.querySelector('#conteudo h1')?.textContent==='Brasil'&&document.querySelector('.resposta')?.textContent.includes('Brasília')")
                 self.ui_value("location.hash='mapas';true")
                 self.wait_ui("document.querySelector('#mapaCanvas')&&document.querySelector('#mapaEstado')?.textContent.includes('consulta local')")
-                result['ia']=job;result['motor']=str(store.runner());result['ia_pela_interface']=True;result['referencia_abrivel']=True
+                result['ia']=job;result['motor']=str(store.runner());result['ia_pela_interface']=True;result['referencia_abrivel']=True;result['chat_contextual']=True
             # A inferência não pode ter fechado/reiniciado a página.
             def verify_view(value,error):
                 if error or value is not True:self.save(False,{'erro':'A interface não permaneceu disponível após a IA.','detalhe':str(error)})

@@ -30,7 +30,7 @@ class MapSupport:
     def chosen_map_ids(self,choices=None):
         choices=choices or self.choices() or {'mapa':'municipio','estados':[],'municipios':[]}
         known=pacotes.maps_catalog()
-        if not known:return []
+        if not known or choices['mapa']=='sem-mapas':return []
         if choices['mapa']=='brasil':return ['map-br-full']
         ids=['map-br-base']
         ids+=['map-uf-'+uf for uf in choices.get('estados',[])] if choices['mapa']=='estado' else ['map-city-'+code for code in choices.get('municipios',[])]
