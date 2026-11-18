@@ -109,8 +109,13 @@ class Check:
             if model:=os.environ.get('ULTIMO_LIVRO_TEST_MODEL'):
                 from . import pacotes
                 store=self.server.STORE;target=store.package_path(pacotes.catalog()['qwen3-0.6b']);target.parent.mkdir(parents=True,exist_ok=True)
-                try:os.link(model,target)
-                except OSError:shutil.copyfile(model,target)
+                try:
+                    os.link(model, target)
+                except OSError:
+                    if sys.platform.startswith('linux'):
+                        target.symlink_to(Path(model).resolve())
+                    else:
+                        shutil.copyfile(model, target)
                 # A pergunta precisa atravessar a interface e o transporte local.
                 self.ui_value("location.hash='instalacao';true")
                 self.wait_ui("document.querySelector('#escolhas')&&document.querySelector('#modelo')")
