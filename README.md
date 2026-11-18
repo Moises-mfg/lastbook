@@ -6,7 +6,7 @@ Alpha 0.4 disponível para Linux, Windows e macOS, com pacotes separados para Ma
 **[Baixar a 0.4 alpha 6](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.6)** ·
 [Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
 
-IA local em CPU com histórico de conversa, Wikipedias selecionáveis, mapas de todos
+IA local em CPU com histórico de conversa, edições da Wikipedia (enciclopédia) à escolha, mapas de todos
 os 5.571 municípios brasileiros e 27 unidades federativas, guias PDF offline,
 checklist e diretório de fontes e comunidades. Na primeira abertura, Minha
 instalação mostra o hardware detectado, sugere um dos quatro perfis e permite
@@ -22,7 +22,7 @@ baixar manualmente os sete volumes da release de dados. Os mapas não oferecem
 rotas automáticas nem informações em tempo real. O leitor de ZIM apresenta texto.
 
 O site tem comparador, checklist, diretório e plano JSON importável no aplicativo.
-Seu código está em `site-brasil/`.
+Seu código está em `site-brasil/`. [Passo a passo para publicar o site](site-brasil/PUBLICACAO.md).
 
 [Como começar com domínio e afiliados](docs/brasil/DOMINIO-E-AFILIADOS.md) ·
 [Mapas: fontes, construção e validação](docs/brasil/MAPAS-OFFLINE.md) ·
