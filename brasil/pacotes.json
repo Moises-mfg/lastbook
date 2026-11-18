@@ -82,7 +82,7 @@
       "license": "Apache-2.0",
       "source": "Qwen oficial",
       "ram_gib": 8,
-      "available_gib": 3,
+      "available_gib": 2.5,
       "context": 2048
     },
     "qwen3-4b": {

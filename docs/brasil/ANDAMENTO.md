@@ -185,3 +185,18 @@ O site recebeu a seção de downloads por sistema, com requisitos e estados reai
 e passou nos sete testes DOM. Publicação privada confirmada; fonte da hospedagem
 `b6f8b27c8d153aecabb651128a9e9af0b98f1771`. O roteamento dos subagentes também está
 registrado em `AGENTS.md`; esse arquivo não troca automaticamente o modelo principal.
+
+### Alpha 5 e Apple Silicon
+
+O teste do DMG Apple Silicon na alpha 4 abriu a janela, mas a IA recusou uma
+pergunta com cerca de 2,91 GiB disponíveis. O motor do perfil Leve teve pico
+de cerca de 1,44 GiB no mesmo runner. A alpha 5 reduz de 3 para 2,5 GiB a
+exigência de memória disponível só do modelo Qwen3 0.6B. A recomendação de
+8 GB de RAM instalada continua, e o teste em um i3 físico segue na issue #3.
+
+O [job Apple Silicon da alpha 5](https://github.com/Moises-mfg/lastbook/actions/runs/44197109394/job/134441324708)
+passou com o DMG montado somente para leitura. A janela do pacote enviou a
+pergunta à IA local e abriu a referência ZIM. O pico medido do motor foi de
+1.542.193.152 bytes. Os checksums do DMG e do ZIP de fontes foram conferidos.
+O [teste Linux da alpha 5](https://github.com/Moises-mfg/lastbook/actions/runs/44197166750)
+também passou na janela do pacote extraído.

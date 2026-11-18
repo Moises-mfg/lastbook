@@ -2,16 +2,18 @@
 
 ## Estado e requisitos
 
-A [versão 0.4 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.4)
-está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel (macOS 13.3 ou
-posterior) e Windows x64 (Windows 10 versão 1809 ou posterior). O DMG para Apple
-Silicon segue em validação nativa. No Windows, o instalador inclui o WebView2
-Runtime standalone. Os pacotes Mac e Windows incluem Python e o motor local.
-Modelos GGUF, enciclopédias e mapas são baixados por ação explícita no aplicativo.
+A [alpha 5](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5)
+está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
+(macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
+
+O instalador Windows inclui o WebView2 Runtime. Os pacotes Mac e Windows
+incluem Python e o motor local. Modelos GGUF, enciclopédias e mapas são baixados
+por ação explícita no aplicativo. O perfil Leve recomenda 8 GB de RAM instalada.
+A IA do perfil Leve exige 2,5 GiB livres no momento da resposta.
 
 ## Escolha do pacote
 
-No macOS, confira em **Sobre Este Mac** se o processador é Apple Silicon (ARM) ou Intel e escolha o DMG da arquitetura correta quando estiver disponível. No Windows, use o instalador para a instalação comum por usuário ou extraia o ZIP portátil em uma pasta onde sua conta possa gravar. O ZIP não instala o WebView2 Runtime: se ele não estiver disponível no computador, a interface pode não iniciar até que o runtime seja instalado por um meio confiável.
+No macOS, confira em **Sobre Este Mac** se o processador é Apple Silicon (ARM) ou Intel e escolha o DMG da arquitetura correspondente. No Windows, use o instalador para a instalação comum por usuário ou extraia o ZIP portátil em uma pasta onde sua conta possa gravar. O ZIP não instala o WebView2 Runtime: se ele não estiver disponível no computador, a interface pode não iniciar até que o runtime seja instalado por um meio confiável.
 
 ## Dados e backups
 
