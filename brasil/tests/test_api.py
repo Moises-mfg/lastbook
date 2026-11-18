@@ -47,6 +47,23 @@ class BridgeAPI(unittest.TestCase):
         status,_=self.call('POST','/api/brasil/choices',{'estados':['US']})
         self.assertEqual(status,400)
 
+    def test_install_preview_does_not_save_choices(self):
+        body = {'perfil':'leve', 'modelo':'sem-ia', 'mapa':'sem-mapas', 'wikis':['pt-mini']}
+        status, data = self.call('POST','/api/brasil/install-preview',body)
+        self.assertEqual(status, 200)
+        preview = json.loads(data)
+        self.assertEqual([package['id'] for package in preview['pacotes']], ['pt-mini'])
+        self.assertGreater(preview['necessario_bytes'], preview['download_bytes'])
+        self.assertIsNone(main.STORE.choices())
+
+    def test_search_and_check_are_local_bridge_operations(self):
+        status, data = self.call('POST','/api/brasil/search-offline',{'busca':'documentos'})
+        self.assertEqual(status, 200)
+        self.assertTrue(json.loads(data)['pdfs'])
+        status, _ = self.call('POST','/api/brasil/check-offline',{},key=False)
+        self.assertEqual(status, 403)
+        self.assertEqual(self.call('POST','/api/brasil/stop-answer',{})[0], 400)
+
     def test_refuses_static_traversal(self):
         status,_=self.call('GET','/ui/../../brasil/core.py')
         self.assertIn(status,(400,403,404))

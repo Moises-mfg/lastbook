@@ -23,6 +23,7 @@ WEB = Path(__file__).parent / 'web'
 STORE = None
 PICK_FILE = None
 OPEN_RESOURCE = None
+BACKUP_FILE = None
 
 
 class Handler(SetupHandler):
@@ -56,7 +57,11 @@ class Handler(SetupHandler):
             state = STORE.state()
             state['guias_pdf'] = guias_pdf.catalog()
             state['hardware']['processadores_logicos'] = os.cpu_count()
+            state['backup_disponivel'] = BACKUP_FILE is not None
             return _send_json(self, state)
+        if path == '/api/brasil/memory':
+            from brasil.plataforma import available_memory
+            return _send_json(self, {'ram_disponivel_bytes': available_memory()})
         if path == '/api/brasil/chat':
             return _send_json(self, {'history': STORE.chat_history()})
         if path == '/api/brasil/job':
@@ -80,6 +85,18 @@ class Handler(SetupHandler):
                       '/api/brasil/ask': STORE.ask, '/api/brasil/clear-chat': lambda b: STORE.clear_chat(),
                       '/api/brasil/open-pdf': lambda b: guias_pdf.open_pdf(b.get('id')),
                       '/api/brasil/download-model': lambda b: STORE.download_model()}
+            routes['/api/brasil/install-preview'] = STORE.preview_install
+            routes['/api/brasil/stop-answer'] = lambda b: STORE.stop_answer()
+            if self._path() == '/api/brasil/search-offline':
+                from brasil.busca_offline import search
+                return _send_json(self, search(STORE, body))
+            if self._path() == '/api/brasil/check-offline':
+                from brasil.verificar_offline import check
+                return _send_json(self, STORE.start_job(lambda: check(STORE)))
+            if self._path() == '/api/brasil/backup':
+                if BACKUP_FILE is None:
+                    raise ValueError('O backup pela interface está disponível no Linux.')
+                return _send_json(self, BACKUP_FILE(body))
             fn = routes.get(self._path())
             if not fn:
                 return _send_json(self, {'error': 'Operação não encontrada.'}, 404)
@@ -93,7 +110,7 @@ class Handler(SetupHandler):
 
 
 def main():
-    global STORE, PICK_FILE, OPEN_RESOURCE
+    global STORE, PICK_FILE, OPEN_RESOURCE, BACKUP_FILE
     from brasil.plataforma import data_folder
     base=data_folder()
     STORE = Store(base)
@@ -107,20 +124,54 @@ def main():
     import shell_linux
     import threading
     from gi.repository import GLib, Gtk
-    def pick_file(kind):
-        if kind not in ('zim','mapa','plano'): raise ValueError('Tipo de arquivo inválido.')
-        event=threading.Event();out={}
+    def choose_path(title, save=False):
+        event = threading.Event()
+        out = {}
+
         def choose():
-            dialog=Gtk.FileChooserNative.new({'zim':'Abrir enciclopédia ZIM','mapa':'Abrir mapa .ulmap ou MBTiles','plano':'Importar plano JSON'}[kind],shell_linux.SHELL.window,Gtk.FileChooserAction.OPEN,'Abrir','Cancelar')
+            action = Gtk.FileChooserAction.SAVE if save else Gtk.FileChooserAction.OPEN
+            dialog = Gtk.FileChooserNative.new(title, shell_linux.SHELL.window,
+                                               action, 'Salvar' if save else 'Abrir', 'Cancelar')
+            if save:
+                dialog.set_current_name('ultimo-livro-backup.json')
+                dialog.set_do_overwrite_confirmation(True)
             try:
-                if dialog.run()==Gtk.ResponseType.ACCEPT: out['path']=dialog.get_filename()
-            finally: dialog.destroy();event.set()
+                if dialog.run() == Gtk.ResponseType.ACCEPT:
+                    out['path'] = dialog.get_filename()
+            finally:
+                dialog.destroy()
+                event.set()
             return False
+
         GLib.idle_add(choose)
-        if not event.wait(300): raise ValueError('A seleção de arquivo expirou. Tente novamente.')
-        if not out.get('path'): return {'cancelado':True}
-        return STORE.import_plan(out['path']) if kind=='plano' else STORE.import_file(kind,out['path'])
-    PICK_FILE=pick_file
+        if not event.wait(300):
+            raise ValueError('A seleção de arquivo expirou. Tente novamente.')
+        return out.get('path')
+
+    def pick_file(kind):
+        titles = {'zim': 'Abrir enciclopédia ZIM', 'mapa': 'Abrir mapa .ulmap ou MBTiles',
+                  'plano': 'Importar plano JSON'}
+        if kind not in titles:
+            raise ValueError('Tipo de arquivo inválido.')
+        path = choose_path(titles[kind])
+        if not path:
+            return {'cancelado': True}
+        return STORE.import_plan(path) if kind == 'plano' else STORE.import_file(kind, path)
+
+    def backup_file(body):
+        from brasil.backup import export_backup, restore_backup
+        action = body.get('acao')
+        include_chat = body.get('incluir_chat', False)
+        if action not in ('exportar', 'restaurar') or type(include_chat) is not bool:
+            raise ValueError('Operação de backup inválida.')
+        saving = action == 'exportar'
+        path = choose_path('Salvar backup do O Último Livro' if saving else 'Abrir backup do O Último Livro', saving)
+        if not path:
+            return {'cancelado': True}
+        return export_backup(STORE, path, include_chat) if saving else restore_backup(STORE, path)
+
+    PICK_FILE = pick_file
+    BACKUP_FILE = backup_file
     def open_resource(ident):
         from brasil.fontes import resource_url
         url=resource_url(ident);event=threading.Event();result={}

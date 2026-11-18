@@ -38,7 +38,7 @@ def run(root, model, temporary):
         gi.require_foreign('cairo')
     except ImportError as error:
         raise RuntimeError('A captura requer python3-gi-cairo, além de python3-cairo.') from error
-    from gi.repository import GLib, WebKit2
+    from gi.repository import GLib, Gtk, WebKit2
     import shell_linux
     from brasil import main
     from brasil.smoke_desktop import Check, seed
@@ -46,6 +46,39 @@ def run(root, model, temporary):
     for module in (main, shell_linux, sys.modules[Check.__module__]):
         if not Path(module.__file__).resolve().is_relative_to(root):
             raise RuntimeError('Um módulo foi carregado fora da raiz selecionada: ' + module.__file__)
+    from unittest.mock import patch
+
+    backup_path = temporary / 'Backup de teste.json'
+    os.environ['ULTIMO_LIVRO_TEST_BACKUP'] = str(backup_path)
+    original_chooser = Gtk.FileChooserNative.new
+
+    class BackupChooser:
+        def __init__(self, action):
+            self.action = action
+            self.confirm_overwrite = False
+
+        def set_current_name(self, name):
+            assert self.action == Gtk.FileChooserAction.SAVE and name.endswith('.json')
+
+        def set_do_overwrite_confirmation(self, enabled):
+            self.confirm_overwrite = enabled
+
+        def run(self):
+            if self.action == Gtk.FileChooserAction.SAVE:
+                assert self.confirm_overwrite
+            return Gtk.ResponseType.ACCEPT
+
+        def get_filename(self):
+            return str(backup_path)
+
+        def destroy(self):
+            pass
+
+    def choose_backup(title, parent, action, accept, cancel):
+        if title in ('Salvar backup do O Último Livro', 'Abrir backup do O Último Livro'):
+            return BackupChooser(action)
+        return original_chooser(title, parent, action, accept, cancel)
+
     original_build = shell_linux.Shell.build
     original_quit = shell_linux.quit_app
     # O encerramento normal do shell usa os._exit; o teste precisa coletar o
@@ -123,7 +156,8 @@ def run(root, model, temporary):
 
     shell_linux.Shell.build = build
     try:
-        main.main()
+        with patch.object(Gtk.FileChooserNative, 'new', side_effect=choose_backup):
+            main.main()
     finally:
         if main.STORE is not None:
             main.STORE.close()
@@ -154,7 +188,8 @@ def main():
         if not REPORT.exists():
             raise RuntimeError('O aplicativo não produziu relatório.')
         result = json.loads(REPORT.read_text(encoding='utf-8'))
-        required = ('ok', 'ia_pela_interface', 'referencia_abrivel', 'chat_contextual', 'captura_da_janela')
+        required = ('ok', 'ia_pela_interface', 'referencia_abrivel', 'chat_contextual', 'captura_da_janela',
+                    'busca_offline', 'verificacao_offline', 'ia_interrompivel', 'backup_offline')
         if not all(result.get(field) is True for field in required) or not result.get('ia'):
             raise RuntimeError('A janela, IA, referência ou captura não passou na validação.')
         if not REPORT.with_suffix('.png').is_file():
