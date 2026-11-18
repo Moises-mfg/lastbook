@@ -1,10 +1,124 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Biblioteca e preparação offline em português. Alpha para Linux, Windows e macOS. Projeto aberto, começando por notebooks com 8 GB de RAM."><title>O Último Livro — conhecimento que fica</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="cabecalho"><a class="logo" href="#inicio"><span>Ú</span> O Último Livro</a><nav aria-label="Principal"><a href="#como-funciona">O projeto</a><a href="#downloads">Downloads</a><a href="#instalacoes">Instalações</a><a href="#preparacao">Prepare sua casa</a><a href="#fontes">Fontes e comunidades</a><a href="https://github.com/Moises-mfg/o-ultimo-livro">Código aberto ↗</a></nav></header>
+<header class="cabecalho"><a class="logo" href="#inicio"><span>Ú</span> O Último Livro</a><nav aria-label="Principal"><a href="#como-funciona">O projeto</a><a href="#downloads">Downloads</a><a href="#instalacoes">Instalações</a><a href="#preparacao">Se prepare enquanto há tempo</a><a href="#fontes">Fontes e comunidades</a><a href="https://github.com/Moises-mfg/o-ultimo-livro">Código aberto ↗</a></nav></header>
 <main><section id="inicio" class="hero"><div><p class="tag">FEITO PARA O BRASIL · CÓDIGO ABERTO</p><h1>A conexão pode cair.<br><em>O conhecimento fica.</em></h1><p class="lead">Guias, organização e um assistente local para preparar sua casa. Uma biblioteca que continua com você quando a internet não está disponível.</p><div class="acoes"><a class="btn" href="#downloads">Escolha seu sistema ↓</a><a class="texto" href="#instalacoes">Encontre sua instalação ↓</a></div><p class="legenda">Alpha para Linux, Windows e macOS. Downloads verificados de IA, Wikipedias e mapas por município ou estado; dados baixados separadamente. Alvo inicial: i3, 8 GB de RAM.</p></div><div class="visual" aria-label="Representação das camadas da biblioteca offline"><div class="orbita o1"></div><div class="orbita o2"></div><div class="orbita o3"></div><span class="ponto p1">01 / CONHECIMENTO</span><span class="ponto p2">02 / PREPARAÇÃO</span><span class="ponto p3">03 / IA LOCAL</span><div class="livro">Ú<span>UM LUGAR PARA<br>O QUE IMPORTA.</span></div><p>SEM CONTA. SEM TELEMETRIA.</p></div></section>
 <section id="downloads" class="secao" aria-labelledby="downloads-titulo"><div class="cab-secao"><p class="tag">APLICATIVOS DE DESKTOP</p><h2 id="downloads-titulo">Leve a biblioteca<br>para o seu computador.</h2><p>A versão 0.4 alpha está disponível para Linux, Windows e macOS. No Mac, escolha Apple Silicon ou Intel conforme o chip.</p></div><p><a href="https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8">Pacotes e checksums da alpha 8 ↗</a></p><div id="downloads-lista" class="downloads-grid"></div><noscript><p>O quadro de plataformas requer JavaScript. <a href="https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8">Baixe os pacotes da alpha 8 no GitHub</a>.</p></noscript><p class="legenda">Comece pelo perfil Leve em computadores com 8 GB de RAM; a velocidade da IA depende do processador e de testes no equipamento. Reserve espaço para o aplicativo e para os conteúdos escolhidos no comparador abaixo. Modelos, enciclopédias e mapas são baixados separadamente, quando você pedir no aplicativo.</p><div class="acoes"><a class="texto" href="https://github.com/Moises-mfg/o-ultimo-livro/blob/main/docs/brasil/INSTALACAO-DESKTOP.md">Instruções de instalação, backup e limites ↗</a><a class="texto" href="https://github.com/Moises-mfg/o-ultimo-livro/tree/v0.4.0-alpha.8">Código-fonte no GitHub ↗</a></div></section>
 <section id="como-funciona" class="secao"><div class="cab-secao"><p class="tag">01 / UM PASSO DE CADA VEZ</p><h2>Preparação começa<br>com informação acessível.</h2></div><div class="colunas"><article><span class="numero">01</span><h3>Consulte sem internet</h3><p>A versão alpha já traz guias curtos em português e busca local. Nenhuma assinatura é necessária para ler.</p></article><article><span class="numero">02</span><h3>Organize o que já tem</h3><p>Monte seu checklist antes de comprar. No aplicativo, os dados ficam no seu computador.</p></article><article><span class="numero">03</span><h3>Escolha o que carregar</h3><p>Escolha entre quatro perfis. Modelos e enciclopédias têm tamanhos reais e downloads verificados. Mapas brasileiros podem ser escolhidos por município, estado ou Brasil.</p></article></div></section>
 <section id="instalacoes" class="secao configurador"><div class="cab-secao"><p class="tag">02 / DO SEU TAMANHO</p><h2>Seu computador.<br>Sua biblioteca.</h2><p>Monte seu plano e importe-o no aplicativo. RAM não garante velocidade: a IA precisa ser testada no processador real.</p></div><div class="painel"><label for="ram">Memória do computador</label><select id="ram"><option value="8">8 GB · notebook básico</option><option value="16">16 GB · uso intermediário</option><option value="32">32 GB ou mais</option></select><fieldset><legend>Perfil desejado</legend><div id="perfis"></div></fieldset><label for="modelo-site">Modelo de IA</label><select id="modelo-site"><option value="qwen3-0.6b">Qwen3 0.6B · menor</option><option value="qwen3-4b">Qwen3 4B · intermediário</option><option value="qwen3-14b">Qwen3 14B · maior</option><option value="sem-ia">Somente biblioteca</option></select><label for="variante-pt">Wikipedia (enciclopédia) em português</label><select id="variante-pt"><option value="pt-mini">Mini · introduções e quadros</option><option value="pt-nopic">Artigos sem imagens</option><option value="pt-maxi">Arquivo completo, incluindo imagens</option></select><div id="resumo" aria-live="polite"></div><label for="estado">Estado de interesse</label><select id="estado"></select><label for="mapa-site">Mapas desejados</label><select id="mapa-site"><option value="municipio">Município e entorno + visão geral do Brasil</option><option value="estado">Estado e entorno + visão geral do Brasil</option><option value="brasil">Brasil detalhado</option></select><div id="escolha-municipio"><label for="municipio-site">Município</label><select id="municipio-site"><option value="">Escolha primeiro o estado</option></select></div><p class="legenda">Recortes em retângulos que incluem o entorno. Ruas, água, localidades e serviços para consulta; sem rotas automáticas ou informação em tempo real. © contribuidores do OpenStreetMap, Geofabrik e IBGE.</p><fieldset><legend>Idiomas da Wikipedia</legend><label><input type="checkbox" name="idioma" value="pt" checked> Português</label><label><input type="checkbox" name="idioma" value="en"> Inglês</label><label><input type="checkbox" name="idioma" value="es"> Espanhol</label></fieldset><button id="exportar">Salvar meu plano (.json) ↓</button><p class="legenda">O plano é gerado neste navegador e pode ser importado em Minha instalação no aplicativo 0.3 ou posterior. O download só começa no aplicativo, quando você pedir. Os tamanhos incluem IA, enciclopédias e mapas escolhidos. O mapa nacional precisa de espaço extra para montagem.</p></div></section>
-<section id="preparacao" class="secao"><div class="cab-secao"><p class="tag">03 / COMECE EM CASA</p><h2>Primeiro, confira<br>o que você já tem.</h2><p>Um ponto de partida, adaptável à família e aos riscos locais. Esta lista é salva somente neste navegador; você pode limpá-la a qualquer momento.</p></div><div class="painel"><div id="checklist"></div><button id="limpar" class="secundario">Limpar minhas marcações</button><p class="legenda">Sem publicidade ou links de afiliados nesta versão. Quando houver comissões, elas serão identificadas.</p></div></section>
+<section id="preparacao" class="secao" aria-labelledby="preparacao-titulo">
+  <div class="cab-secao">
+    <h2 id="preparacao-titulo">Se prepare enquanto há tempo</h2>
+    <p>Comece por água, iluminação e um plano de saída. Use o checklist para organizar o que já tem e compare equipamentos conforme o risco da sua região.</p>
+  </div>
+  <nav class="preparacao-atalhos" aria-label="Tópicos de preparação">
+    <a href="#checklist-casa">Checklist da casa</a>
+    <a href="#energia-emergencia">Energia e luz</a>
+    <a href="#agua-primeiros-socorros">Água e primeiros socorros</a>
+    <a href="#evacuacao">Comunicação e evacuação</a>
+  </nav>
+  <div class="painel" id="checklist-casa">
+    <h3>O que você já tem</h3>
+    <p>As marcações ficam neste navegador.</p>
+    <div id="checklist"></div>
+    <button id="limpar" class="secundario">Limpar minhas marcações</button>
+  </div>
+  <p id="divulgacao-comercial" class="legenda">Os links de loja são referências para comparar preços. Nesta edição, nenhuma compra gera comissão para O Último Livro.</p>
+  <section id="energia-emergencia" class="preparacao-guia" aria-labelledby="energia-titulo">
+    <h3 id="energia-titulo">Energia solar, da opção mais simples à residencial</h3>
+    <p><strong>W</strong> indica a potência que o equipamento consegue fornecer. <strong>Wh</strong> indica quanta energia a bateria guarda. Some os aparelhos que pretende ligar ao mesmo tempo e confira a potência de partida de geladeiras e bombas. A autonomia real depende do consumo, das perdas e do sol disponível para recarga.</p>
+    <p class="legenda">Preços de referência consultados em <time datetime="2026-11-18">18 de novembro de 2026</time>. Frete, estoque, vendedor e tensão podem variar. Alguns anúncios do Mercado Livre puderam ser identificados pelo índice de busca, com abertura automatizada bloqueada.</p>
+    <div class="preparacao-cards">
+      <article>
+        <h4>Celular e iluminação USB</h4>
+        <p class="preparacao-preco">Cerca de R$ 490 pelo painel e pela bateria</p>
+        <p>Exemplo de custo somando um painel USB genérico anunciado de 21–28 W e um power bank ELG de 20.000 mAh (74 Wh). Compare conectores e potência efetiva. Mantenha a bateria à sombra, em local seco e arejado.</p>
+        <p><a data-loja="mercado-livre" href="https://www.mercadolivre.com.br/carregador-de-painel-solar-portatil-2-usbtipo-c-21-w28-w/p/MLB2046133321">Painel USB no Mercado Livre</a>
+          · <a data-loja="nagem" href="https://nagemedu.com.br/produto/detalhes/613177/Carregador%2BPortatil%2BELG%2B20.000mAh%2B22%2C5W%2BDisplay%2BDigital%2BUSB-C%2B2xUSB-A%2BPreto">Power bank na Nagem</a></p>
+      </article>
+      <article>
+        <h4>Estação compacta para pequenos aparelhos</h4>
+        <p class="preparacao-preco">R$ 3.399 na referência · oferta esgotada</p>
+        <p>EcoFlow RIVER 2, com bateria de 256 Wh, saída de 300 W e painel portátil de 110 W. Compare para luz, roteador ou notebook. Confirme a tensão com o vendedor, pois a página apresenta informações divergentes.</p>
+        <p><a data-loja="ecoflow" href="https://br.ecoflow.com/products/river-2-110w-portable-solar-panel">Ficha e preço na EcoFlow Brasil</a></p>
+      </article>
+      <article>
+        <h4>Estação portátil com reserva maior</h4>
+        <p class="preparacao-preco">R$ 9.799 na referência · oferta esgotada</p>
+        <p>EcoFlow DELTA 2, com cerca de 1 kWh, saída de 1.800 W e painel de 220 W no exemplo. Confira o consumo e a partida do aparelho antes de contar com essa estação para refrigeração.</p>
+        <p><a data-loja="ecoflow" href="https://br.ecoflow.com/products/delta-2-220w-portable-solar-panel">Ficha e preço na EcoFlow Brasil</a></p>
+      </article>
+      <article>
+        <h4>Sistema fixo com bateria</h4>
+        <p class="preparacao-preco">R$ 14.346,37 à vista pelos componentes do kit</p>
+        <p>Exemplo Unipower com bateria de 4,8 kWh, inversor de 5 kW em 220 V e quatro painéis de 545 W. A oferta consultada deixa instalação, estrutura, cabos e proteções por conta do comprador. Peça orçamento para os circuitos que quer manter ligados no apagão.</p>
+        <p><a data-loja="minha-casa-solar" href="https://www.minhacasasolar.com.br/kit-solar-all-in-one-5kw-48-220v-com-litio-4-8kw-unipower-e-4-paineis-545w-84343">Ver componentes na Minha Casa Solar</a></p>
+      </article>
+    </div>
+    <div class="painel">
+      <h4>Gerador a gasolina para uso ocasional</h4>
+      <p class="preparacao-preco">Cerca de R$ 1,3 mil a R$ 1,4 mil pelo equipamento</p>
+      <p>O Toyama TG2500CXH, no exemplo, entrega 2,0 kVA nominais e 2,2 kVA máximos. As versões 127 V e 220 V são distintas. Considere combustível, ruído, manutenção e a reputação do vendedor.</p>
+      <p>Use o gerador ao ar livre e longe de portas, janelas e entradas de ar para evitar intoxicação por monóxido de carbono. Nunca alimente a casa por uma tomada comum. Para ligar circuitos da casa, contrate um profissional qualificado.</p>
+      <p><a data-loja="mercado-livre" href="https://www.mercadolivre.com.br/gerador-portatil-tg2500cxh-gasolina-22kw-3600rpm-127v-toyama/p/MLB20634524">Consultar 127 V no Mercado Livre</a>
+        · <a data-loja="magalu" href="https://www.magazineluiza.com.br/gerador-a-gasolina-monofasico-220-v-partida-manual-22-kva-toyama-tg2500cxh-220/p/feb97d1j66/cj/cjge/">Consultar 220 V no Magalu</a></p>
+      <p class="preparacao-fontes"><a href="https://toyama.com.br/produto/gerador-a-gasolina-tg2500cxh-220/">Ficha da Toyama</a>
+        · <a href="https://www.branco.com.br/pt-br/news/geradores-de-energia-como-escolher-o-ideal-para-a-minha-necessidade">Orientações do fabricante Branco</a></p>
+    </div>
+  </section>
+  <section id="agua-primeiros-socorros" class="preparacao-guia" aria-labelledby="agua-titulo">
+    <h3 id="agua-titulo">Água e primeiros socorros</h3>
+    <div class="preparacao-cards">
+      <article>
+        <h4>Reserva de água</h4>
+        <p>Guarde água potável em recipientes próprios para alimentos, bem fechados e protegidos do sol. Inclua água para os animais e revise a reserva periodicamente.</p>
+        <p>Para calcular sua reserva, a Defesa Civil do Paraná usa 2 litros de água potável por pessoa por dia no kit pessoal. Preveja água adicional para higiene e preparo de alimentos.</p>
+      </article>
+      <article>
+        <h4>Filtro portátil</h4>
+        <p>Compare o que o modelo remove, sua vazão, a vida útil do refil e se ele pode filtrar água para mais de uma pessoa. Filtros de trilha comuns podem reter bactérias e protozoários sem remover vírus ou contaminantes químicos.</p>
+        <p>Use água de fonte segura. O Ministério da Saúde orienta evitar água de enchente para consumo, alimentação e higiene.</p>
+        <p><a data-loja="mercado-livre" href="https://produto.mercadolivre.com.br/MLB-1614242539-filtro-sawyer-mini-original-lacrado-importado-eua-_JM">Ver Sawyer MINI no Mercado Livre</a></p>
+        <p class="preparacao-fontes"><a href="https://www.sawyer.com/product/mini-water-filtration-system-teal">Ficha do fabricante</a> · <a href="https://miniapps.saude.gov.br/guia-clima/como-podemos-contribuir/populacao-em-geral/enchentes-e-inundacoes">Orientações para enchentes</a></p>
+      </article>
+      <article>
+        <h4>Kit de primeiros socorros</h4>
+        <p>Comece por luvas descartáveis, gaze estéril, curativos adesivos, atadura, fita e tesoura sem ponta. Guarde a lista de alergias e as receitas da família junto aos medicamentos de uso contínuo.</p>
+        <p>Confira a lista de itens e as validades antes de comprar um kit montado.</p>
+        <p><a data-loja="raia" href="https://www.drogaraia.com.br/needs-compressa-10-unidades.html">Consultar gaze estéril na Raia</a>
+        · <a data-loja="mercado-livre" href="https://www.mercadolivre.com.br/kit-primeiros-socorros-completo-com-bolsa-organizadora/up/MLBU4548904061">Consultar kit montado no Mercado Livre</a></p>
+        <p class="preparacao-fontes"><a href="https://www12.senado.leg.br/noticias/especiais/especial-cidadania/como-prestar-os-primeiros-socorros/itens-basicos-de-um-kit-de-primeiros-socorros">Material básico de primeiros socorros</a></p>
+      </article>
+    </div>
+    <p class="preparacao-fontes">Referências
+      <a href="https://www.defesacivil.pr.gov.br/Pagina/Kit-de-Emergencia-pessoal">Defesa Civil do Paraná</a> e
+      <a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-z/e/enchentes/cuidados-com-a-agua/cuidados-com-a-agua">Ministério da Saúde sobre água em enchentes</a>.
+    </p>
+  </section>
+  <section id="evacuacao" class="preparacao-guia" aria-labelledby="evacuacao-titulo">
+    <h3 id="evacuacao-titulo">Comunicação e evacuação</h3>
+    <div class="preparacao-cards">
+      <article>
+        <h4>Apagões e tempestades</h4>
+        <p>Lanterna de cabeça, pilhas de reserva, rádio a pilha e carregador portátil cobrem as necessidades mais imediatas. Separe também cabos compatíveis com os aparelhos da casa.</p>
+        <p><a data-loja="decathlon" href="https://www.decathlon.com.br/lanterna-de-trekking-para-cabeca-hl50-50-lumens-preta-preto-8788378-quechua/p">Lanterna a pilhas na Decathlon</a>
+        · <a data-loja="decathlon" href="https://www.decathlon.com.br/lanterna-frontal-recarregavel-150-lumenes-ul500-usb-cinzento-cinza-8787357-simond/p">Lanterna USB-C na Decathlon</a></p>
+      </article>
+      <article>
+        <h4>Enchentes, deslizamentos e saída rápida</h4>
+        <p>Combine um ponto de encontro e planeje como ajudar crianças, idosos, pessoas com deficiência e animais. Deixe documentos, lista de contatos, chaves e remédios em uma bolsa fácil de pegar. Conheça as rotas oficiais do seu município. Para receber alertas por SMS, envie o CEP de interesse para 40199.</p>
+        <p><a data-loja="decathlon" href="https://www.decathlon.com.br/bolsa-impermeavel-ipx6-10l-laranja-preto-8826348-decathlon/p">Bolsa para documentos na Decathlon</a> · <a data-loja="decathlon" href="https://www.decathlon.com.br/apito-de-plastico-preto-incolor-8027254-kipsta/p">Apito na Decathlon</a></p>
+      </article>
+      <article>
+        <h4>Comida, higiene e proteção</h4>
+        <p>Separe alimentos que você já consome e consegue preparar em um apagão, abridor manual, sabão, sacos resistentes, luvas de trabalho, óculos de proteção e calçado firme. Revise necessidades de bebês, animais e pessoas com dietas específicas.</p>
+        <p class="preparacao-fontes"><a href="https://www.gov.br/saude/pt-br/acesso-a-informacao/faq/enchentes-e-inundacoes-leptospirose/como-posso-me-proteger">Ministério da Saúde sobre proteção em enchentes</a></p>
+      </article>
+    </div>
+    <p class="preparacao-fontes">
+      <a href="https://www.gov.br/pt-br/servicos/solicitar-cadastro-para-recebimento-de-avisos-e-alertas-de-desastres">Como receber alertas da Defesa Civil</a>
+      · <a href="#fontes">Fontes e comunidades para estudar enquanto há conexão</a>
+    </p>
+  </section>
+</section>
 <section class="secao"><div class="cab-secao"><p class="tag">04 / CONFIANÇA SE CONSTRÓI</p><h2>Fontes abertas.<br>Limites claros.</h2></div><div class="colunas"><article><h3>Conheça a origem</h3><p>Adaptação independente do LastBook. Código MIT; enciclopédias, mapas e outros materiais têm licenças próprias.</p><a href="https://github.com/Immortal-Protocols/lastbook">Projeto original ↗</a></article><article><h3>Aprenda com fontes oficiais</h3><p>Confira recomendações regionais antes de agir. Uma IA não substitui treinamento prático nem instruções de autoridades.</p><a href="https://www.defesacivil.pr.gov.br/Pagina/Kit-de-Emergencia-pessoal">Defesa Civil: kit pessoal ↗</a><br><a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/e/enchentes/cuidados-com-a-agua/cuidados-com-a-agua">Saúde: cuidados com a água ↗</a></article><article><h3>Acompanhe a construção</h3><p>O projeto agora integra seleção e download da Wikipedia (enciclopédia) e de modelos de IA. Os mapas cobrem os 5.571 municípios brasileiros e 27 unidades federativas. Os testes da IA em notebooks modestos continuam.</p><a href="https://github.com/Moises-mfg/o-ultimo-livro/issues">Veja o andamento ↗</a></article></div></section>
-<section id="fontes" class="secao"><div class="cab-secao"><p class="tag">APRENDA ENQUANTO HÁ CONEXÃO</p><h2>Conheça fontes.<br>Encontre comunidades.</h2><p>Referências oficiais, projetos abertos e criadores com identificação de autoria. As páginas externas precisam de conexão; seus conteúdos e vídeos não estão incluídos na biblioteca offline. Não temos comissão ou parceria com as fontes listadas.</p></div><label for="tema-fonte">Tema</label><select id="tema-fonte"><option value="">Todos os temas</option></select><div class="colunas" id="fontes-lista"></div></section><section class="perguntas secao"><p class="tag">PERGUNTAS FREQUENTES</p><details><summary>Já está tudo pronto para emergências?</summary><p>Não. É uma versão alpha para avaliação. Guias, checklist, enciclopédias selecionáveis e mapas vetoriais brasileiros e mapas raster MBTiles locais funcionam. O download de modelos e Wikipedias é verificado. Mapas brasileiros têm downloads por região, busca de lugares e consulta offline. Não dependa desta versão como seu único recurso.</p></details><details><summary>Meu i3 com 8 GB vai rodar?</summary><p>Esse é o alvo do perfil Leve. Leitura e checklist são a prioridade. A IA Qwen3 0.6B é experimental e usa CPU; velocidade e qualidade precisam de teste na sua geração de i3.</p></details><details><summary>Preciso de internet depois de instalar?</summary><p>Guias e checklist funcionam offline. Os downloads iniciais dos modelos, enciclopédias e mapas requerem internet e uma ação explícita. Depois, a consulta desses arquivos é local. O aplicativo não exige conta, telemetria ou acesso a um serviço de IA na nuvem.</p></details><details><summary>Quais dados este site coleta?</summary><p>Não temos formulário de cadastro, anúncios, analytics ou cookies de rastreamento. O checklist usa armazenamento local do navegador. Ao acessar GitHub ou fontes externas, aplicam-se as políticas desses serviços. A hospedagem pode processar dados técnicos necessários para entregar as páginas.</p></details></section></main>
+<section id="fontes" class="secao"><div class="cab-secao"><p class="tag">APRENDA ENQUANTO HÁ CONEXÃO</p><h2>Conheça fontes.<br>Encontre comunidades.</h2><p>Referências oficiais, projetos abertos e criadores com identificação de autoria. As páginas externas precisam de conexão; seus conteúdos e vídeos não estão incluídos na biblioteca offline. Não temos comissão ou parceria com as fontes listadas.</p></div><label for="tema-fonte">Tema</label><select id="tema-fonte"><option value="">Todos os temas</option></select><div class="colunas" id="fontes-lista"></div></section><section class="perguntas secao"><p class="tag">PERGUNTAS FREQUENTES</p><details><summary>Já está tudo pronto para emergências?</summary><p>Não. É uma versão alpha para avaliação. Guias, checklist, enciclopédias selecionáveis e mapas vetoriais brasileiros e mapas raster MBTiles locais funcionam. O download de modelos e Wikipedias é verificado. Mapas brasileiros têm downloads por região, busca de lugares e consulta offline. Não dependa desta versão como seu único recurso.</p></details><details><summary>Meu i3 com 8 GB vai rodar?</summary><p>Esse é o alvo do perfil Leve. Leitura e checklist são a prioridade. A IA Qwen3 0.6B é experimental e usa CPU; velocidade e qualidade precisam de teste na sua geração de i3.</p></details><details><summary>Preciso de internet depois de instalar?</summary><p>Guias e checklist funcionam offline. Os downloads iniciais dos modelos, enciclopédias e mapas requerem internet e uma ação explícita. Depois, a consulta desses arquivos é local. O aplicativo não exige conta, telemetria ou acesso a um serviço de IA na nuvem.</p></details><details><summary>Quais dados este site coleta?</summary><p>O site não usa formulário de cadastro, analytics ou cookies de rastreamento. Os links de compra abrem o site da respectiva loja. O checklist usa armazenamento local do navegador. Ao acessar GitHub ou fontes externas, aplicam-se as políticas desses serviços. A hospedagem pode processar dados técnicos necessários para entregar as páginas.</p></details></section></main>
 <footer><a class="logo" href="#inicio">O Último Livro</a><p>Brasil · projeto independente em desenvolvimento<br>Nome provisório. Sem vínculo oficial com o projeto LastBook.</p><a href="https://github.com/Moises-mfg/o-ultimo-livro/blob/main/LICENSE">Licença e código ↗</a></footer><script src="catalogo.js"></script><script src="downloads.js"></script><script src="app.js"></script></body></html>
