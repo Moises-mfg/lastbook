@@ -44,7 +44,7 @@ def seed(server):
 
 
 STEPS=[
-    ("document.querySelector('#somenteGuias')&&document.querySelector('#recomendacaoInstalacao')&&document.querySelectorAll('[name=perfil]').length===4&&document.querySelectorAll('[name=wiki]').length===5","document.querySelector('#somenteGuias').click()",'primeira abertura em Minha instalação'),
+    ("document.querySelector('#somenteGuias')&&document.querySelector('#resumoPacotes')?.textContent.includes('Mini')&&document.querySelector('#recomendacaoInstalacao')&&document.querySelectorAll('[name=perfil]').length===4&&document.querySelectorAll('[name=wiki]').length===5","document.querySelector('#somenteGuias').click()",'primeira abertura em Minha instalação'),
     ("location.hash==='#biblioteca'&&document.querySelectorAll('[data-guide]').length===5&&document.querySelectorAll('[data-pdf]').length===3","document.querySelector('[data-pdf=offline]').click()",'biblioteca sem baixar'),
     ("document.querySelectorAll('.paginas-pdf img').length===2&&document.querySelector('.paginas-pdf img')?.naturalWidth>0","location.hash='instalacao'",'página do guia PDF incluída no pacote'),
     ("document.querySelector('#escolhas')&&document.querySelector('#modelo')?.value==='sem-ia'","const mapa=document.querySelector('#mapa');mapa.value='municipio';mapa.dispatchEvent(new Event('change',{bubbles:true}));const busca=document.querySelector('#buscaMunicipio');busca.value='Campinas';busca.dispatchEvent(new Event('input'))",'configuração sem IA'),
@@ -109,8 +109,13 @@ class Check:
             if model:=os.environ.get('ULTIMO_LIVRO_TEST_MODEL'):
                 from . import pacotes
                 store=self.server.STORE;target=store.package_path(pacotes.catalog()['qwen3-0.6b']);target.parent.mkdir(parents=True,exist_ok=True)
-                try:os.link(model,target)
-                except OSError:shutil.copyfile(model,target)
+                try:
+                    os.link(model, target)
+                except OSError:
+                    if sys.platform.startswith('linux'):
+                        target.symlink_to(Path(model).resolve())
+                    else:
+                        shutil.copyfile(model, target)
                 # A pergunta precisa atravessar a interface e o transporte local.
                 self.ui_value("location.hash='instalacao';true")
                 self.wait_ui("document.querySelector('#escolhas')&&document.querySelector('#modelo')")
@@ -137,6 +142,46 @@ class Check:
                 self.wait_ui("document.querySelectorAll('.turno-chat').length===2&&document.querySelector('.referencias-chat button')")
                 self.ui_value("document.querySelector('.referencias-chat button').click();true")
                 self.wait_ui("document.querySelector('#conteudo h1')?.textContent==='Brasil'&&document.querySelector('.resposta')?.textContent.includes('Brasília')")
+                if sys.platform.startswith('linux'):
+                    self.ui_value("location.hash='biblioteca';true")
+                    self.wait_ui("!!document.querySelector('#buscaBiblioteca')")
+                    self.ui_value("document.querySelector('#busca').value='Brasil';document.querySelector('#buscaBiblioteca').requestSubmit();true")
+                    self.wait_ui("[...document.querySelectorAll('#buscaResultados button')].some(b=>b.textContent.startsWith('Brasil · '))")
+                    self.ui_value("[...document.querySelectorAll('#buscaResultados button')].find(b=>b.textContent.startsWith('Brasil · ')).click();true")
+                    self.wait_ui("document.querySelector('#conteudo h1')?.textContent==='Brasil'")
+                    self.ui_value("document.querySelector('#voltarZim').click();true")
+                    self.wait_ui("document.querySelector('#busca')?.value==='Brasil'&&document.querySelector('#buscaResultados button')")
+                    self.ui_value("document.querySelector('#busca').value='Hospital';document.querySelector('#buscaBiblioteca').requestSubmit();true")
+                    self.wait_ui("[...document.querySelectorAll('#buscaResultados button')].some(b=>b.textContent.startsWith('Hospital de Teste · '))")
+                    self.ui_value("[...document.querySelectorAll('#buscaResultados button')].find(b=>b.textContent.startsWith('Hospital de Teste · ')).click();true")
+                    self.wait_ui("document.querySelector('#mapaDetalhe')?.textContent.includes('Hospital de Teste')")
+                    self.ui_value("location.hash='offline';true")
+                    self.wait_ui("document.querySelector('#verificarOffline')&&!document.querySelector('#verificarOffline').disabled")
+                    self.ui_value("document.querySelector('#verificarOffline').click();true")
+                    self.wait_ui("document.querySelectorAll('#resultadoOffline li').length===4", timeout=115)
+                    assert {item['estado'] for item in store.job['verificacao_offline']} == {'ok'}, store.job
+                    self.wait_ui("document.querySelector('#exportarBackup')&&document.querySelector('#restaurarBackup')")
+                    if backup_path := os.environ.get('ULTIMO_LIVRO_TEST_BACKUP'):
+                        self.ui_value("document.querySelector('#incluirChat').checked=true;document.querySelector('#exportarBackup').click();true")
+                        self.wait_ui("document.querySelector('#status').textContent.includes('Backup exportado')")
+                        saved = json.loads(Path(backup_path).read_text(encoding='utf-8'))
+                        assert len(saved['conversas']) == 2 and saved['escolhas']['modelo'] == 'qwen3-0.6b'
+                        assert {'id': 'luz', 'feito': True} in saved['checklist']
+                        store.check({'id':'luz', 'feito':False})
+                        store.clear_chat()
+                        self.ui_value("window.confirm=()=>true;document.querySelector('#restaurarBackup').click();true")
+                        self.wait_ui("document.querySelector('#status').textContent.includes('Backup restaurado')")
+                        assert next(i for i in store.checklist() if i['id']=='luz')['feito']
+                        assert len(store.chat_history()) == 2
+                        result['backup_offline'] = True
+                    self.ui_value("location.hash='ia';true")
+                    self.wait_ui("document.querySelector('#memoriaIA')?.textContent.includes('RAM disponível')&&!document.querySelector('#enviar').disabled")
+                    self.ui_value("document.querySelector('#texto').value='Explique a história da capital do Brasil em detalhes.';document.querySelector('#pergunta').requestSubmit();true")
+                    self.wait_ui("document.querySelector('#pararResposta')&&!document.querySelector('#pararResposta').disabled")
+                    self.ui_value("document.querySelector('#pararResposta').click();true")
+                    self.wait_ui("document.querySelector('#status').textContent.includes('Resposta interrompida')&&document.querySelector('#texto').value.includes('Explique')")
+                    assert len(Store(store.folder).chat_history()) == 2
+                    result.update(busca_offline=True, verificacao_offline=True, ia_interrompivel=True)
                 self.ui_value("location.hash='mapas';true")
                 self.wait_ui("document.querySelector('#mapaCanvas')&&document.querySelector('#mapaEstado')?.textContent.includes('consulta local')")
                 result['ia']=job;result['motor']=str(store.runner());result['ia_pela_interface']=True;result['referencia_abrivel']=True;result['chat_contextual']=True

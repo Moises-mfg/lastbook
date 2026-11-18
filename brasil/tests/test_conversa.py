@@ -1,4 +1,6 @@
 import tempfile
+import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -45,3 +47,29 @@ class Conversa(unittest.TestCase):
             reopened.job = {'estado': 'concluido'}
             self.assertEqual(reopened.clear_chat(), {'history': []})
             self.assertFalse(Store(folder).chat_history())
+
+    def test_cancelar_resposta_antes_de_iniciar_motor_preserva_historico(self):
+        with tempfile.TemporaryDirectory() as folder:
+            store = Store(folder)
+            store.remember_chat('Pergunta anterior', 'Resposta anterior', [])
+            ready, release = threading.Event(), threading.Event()
+
+            def wait_for_cancel(spec, control):
+                ready.set()
+                release.wait(2)
+                control.check()
+
+            with patch.object(store, 'ready_model', side_effect=wait_for_cancel):
+                store.ask({'pergunta': 'Outra pergunta'})
+                try:
+                    self.assertTrue(ready.wait(2))
+                    store.stop_answer()
+                finally:
+                    release.set()
+                deadline = time.monotonic() + 2
+                while store.job['estado'] == 'executando' and time.monotonic() < deadline:
+                    time.sleep(.01)
+                self.assertEqual(store.job['estado'], 'cancelado')
+                self.assertEqual(len(store.chat_history()), 1)
+                with self.assertRaises(ValueError):
+                    store.stop_answer()

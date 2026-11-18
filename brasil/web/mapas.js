@@ -4,7 +4,7 @@ window.ULMapas=(()=>{
   let current=null;
   const C={background:'#d8e7e9',land:'#edf0df',water:'#b7dbe4',road:'#fffdf2',edge:'#c2b8a2',label:'#233c33'};
   function close(){if(current){current.alive=false;current.abort.abort();if(current.raf)cancelAnimationFrame(current.raf);current=null;}}
-  function open(meta,{api,notice}){
+  function open(meta,{api,notice,focus}){
     close();const canvas=document.querySelector('#mapaCanvas');if(!canvas)return;
     const s=current={alive:true,abort:new AbortController(),z:meta.z,cx:meta.x+.5,cy:meta.y+.5,cache:new Map(),pending:new Set(),labels:[],hits:[],raf:0,mask:new Set(['road','water','place','poi'])};
     const $=id=>document.querySelector(id),ctx=canvas.getContext('2d'),vector=meta.formato==='ulmap';
@@ -67,6 +67,14 @@ window.ULMapas=(()=>{
       const scale=2**(z-s.z),dx=(px-canvas.clientWidth/2)/256,dy=(py-canvas.clientHeight/2)/256;
       s.cx=(s.cx+dx)*scale-dx;s.cy=(s.cy+dy)*scale-dy;s.z=z;bound();schedule();
     }
+    function center(hit) {
+      s.z = Math.max(meta.minzoom, Math.min(meta.maxzoom, hit.tipo === 'place' ? 12 : 15));
+      const n = 2**s.z;
+      s.cx = (hit.lon + 180) / 360 * n;
+      s.cy = (1 - Math.asinh(Math.tan(hit.lat * Math.PI / 180)) / Math.PI) / 2 * n;
+      bound();
+      schedule();
+    }
     function bound(){const n=2**s.z;s.cx=((s.cx%n)+n)%n;s.cy=Math.max(0,Math.min(n,s.cy));}
     for(const b of document.querySelectorAll('[data-map-move]'))b.onclick=()=>{const [x,y]=b.dataset.mapMove.split(',').map(Number);s.cx+=x;s.cy+=y;bound();schedule();};
     $('#mapaMais').onclick=()=>zoom(1);$('#mapaMenos').onclick=()=>zoom(-1);
@@ -77,7 +85,8 @@ window.ULMapas=(()=>{
     canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const b=canvas.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;const hit=s.hits.find(p=>Math.hypot(p.x-x,p.y-y)<12);if(hit){const names={hospital:'Hospital',clinic:'Clínica',pharmacy:'Farmácia',fire_station:'Bombeiros',drinking_water:'Água potável',shelter:'Abrigo',school:'Escola',fuel:'Combustível',police:'Polícia',supermarket:'Supermercado',veterinary:'Veterinário'};$('#mapaDetalhe').textContent=(hit.name||'Ponto sem nome')+' · '+(names[hit.cls]||hit.cls)+'. Registro do mapa; atendimento e condições atuais não são garantidos.';}}drag=null;},{signal:s.abort.signal});
     canvas.addEventListener('keydown',e=>{const keys={ArrowLeft:[-.5,0],ArrowRight:[.5,0],ArrowUp:[0,-.5],ArrowDown:[0,.5]};if(keys[e.key]){e.preventDefault();s.cx+=keys[e.key][0];s.cy+=keys[e.key][1];bound();schedule();}else if(e.key==='+'||e.key==='='){e.preventDefault();zoom(1);}else if(e.key==='-'){e.preventDefault();zoom(-1);}},{signal:s.abort.signal});
     document.querySelectorAll('[data-map-layer]').forEach(box=>box.onchange=()=>{box.checked?s.mask.add(box.dataset.mapLayer):s.mask.delete(box.dataset.mapLayer);s.cache.clear();schedule();});
-    if($('#mapaBusca'))$('#mapaBusca').onsubmit=async e=>{e.preventDefault();try{const hits=await api('map-search',{busca:$('#mapaTermo').value});const out=$('#mapaResultados');out.replaceChildren();if(!hits.length)out.textContent='Nenhum lugar encontrado neste mapa.';for(const hit of hits){const b=document.createElement('button');b.type='button';b.className='secundario';b.textContent=hit.nome;b.onclick=()=>{s.z=hit.tipo==='place'?12:15;const n=2**s.z;s.cx=(hit.lon+180)/360*n;s.cy=(1-Math.asinh(Math.tan(hit.lat*Math.PI/180))/Math.PI)/2*n;schedule();};out.append(b);}}catch(e){notice(e.message);}};
+    if($('#mapaBusca'))$('#mapaBusca').onsubmit=async e=>{e.preventDefault();try{const hits=await api('map-search',{busca:$('#mapaTermo').value});const out=$('#mapaResultados');out.replaceChildren();if(!hits.length)out.textContent='Nenhum lugar encontrado neste mapa.';for(const hit of hits){const b=document.createElement('button');b.type='button';b.className='secundario';b.textContent=hit.nome;b.onclick=()=>center(hit);out.append(b);}}catch(e){notice(e.message);}};
+    if (focus) center(focus);
     window.addEventListener('resize',schedule,{signal:s.abort.signal});schedule();
   }
   return {open,close};

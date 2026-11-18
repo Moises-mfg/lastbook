@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from brasil.core import Store, recommend, validate_choices, GiB
+from brasil import pacotes
 
 class CoreTests(unittest.TestCase):
     def test_hardware_conservative_without_gpu_or_known_ram(self):
@@ -50,6 +51,25 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(s.model_spec()['id'], 'qwen3-4b')
             self.assertEqual(s.model_path().name, 'Qwen3-4B-Q4_K_M.gguf')
             self.assertNotEqual(s.model_path().name, 'Qwen3-0.6B-Q8_0.gguf')
+
+    def test_preview_disk_space_counts_only_pending_packages(self):
+        with tempfile.TemporaryDirectory() as path:
+            store = Store(path)
+            item = dict(pacotes.catalog()['pt-mini'], size=11)
+            target = store.package_path(item)
+            target.parent.mkdir()
+            target.write_bytes(b'12345678901')
+            with store.db() as db:
+                db.execute('INSERT INTO settings VALUES (?,?)', ('verified:pt-mini', item['sha256']))
+            choices = {'modelo':'sem-ia', 'wikis':['pt-mini'], 'mapa':'sem-mapas'}
+            with patch('brasil.core.pacotes.all_catalog', return_value={'pt-mini':item}):
+                installed = store.preview_install(choices)
+                self.assertEqual(installed['necessario_bytes'], 0)
+                self.assertTrue(installed['pacotes'][0]['instalado'])
+                target.write_bytes(b'truncated')
+                pending = store.preview_install(choices)
+                self.assertFalse(pending['pacotes'][0]['instalado'])
+                self.assertEqual(pending['necessario_bytes'], GiB + 11)
 
     def test_question_validation(self):
         with tempfile.TemporaryDirectory() as path:

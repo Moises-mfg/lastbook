@@ -10,3 +10,6 @@
 .turno-chat { margin-block: 1rem; }
 .mensagem-chat { white-space: pre-wrap; overflow-wrap: anywhere; }
 .referencias-chat { margin-top: .7rem; }
+
+/* Mantém a navegação alcançável em janelas baixas. */
+@media (min-width: 721px) { aside { overflow-y: auto; } }

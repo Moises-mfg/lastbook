@@ -27,9 +27,43 @@ ou abra o PDF no leitor do sistema. O **Assistente local** retoma os turnos rece
 para responder a perguntas de seguimento. As conversas e as referências ficam no
 computador. Use **Nova conversa** para limpar o histórico.
 
+Na alpha 7 para Linux, **Minha instalação** mostra os componentes da seleção,
+seus tamanhos, o que já está instalado e o espaço necessário antes de baixar.
+A **Biblioteca** reúne a busca em guias, PDFs, Wikipedia (enciclopédia) e lugares
+dos mapas vetoriais instalados. Em **Verificar uso offline**, o aplicativo testa
+a leitura local e executa uma inferência curta quando a IA está configurada.
+
+O assistente mostra a RAM disponível para o modelo. Use **Parar resposta**
+para interromper a geração e recuperar a pergunta sem gravar uma resposta parcial.
+
 ## Dados e backups
 
 Os dados ficam em `~/Library/Application Support/UltimoLivro` no macOS, `%LOCALAPPDATA%\UltimoLivro` no Windows e, no Linux, em `$XDG_DATA_HOME/ultimo-livro` (ou `~/.local/share/ultimo-livro` se `XDG_DATA_HOME` não estiver definido). Se `ULTIMO_LIVRO_DATA` estiver definida, ela substitui o diretório padrão em qualquer sistema. Para fazer backup, feche o aplicativo e copie essa pasta para um local seguro; para restaurar, feche o aplicativo e recoloque os dados na pasta correspondente. Preserve os arquivos GGUF, Wikis e mapas se quiser manter os downloads locais. Arquivos importados permanecem na pasta ou no disco de origem: copie-os também e, se o caminho mudar, importe-os novamente no aplicativo.
+
+No Linux, abra **Verificar uso offline → Backup e recuperação**. Escolha
+**Exportar backup** e selecione a pasta do pendrive ou outro destino. O arquivo
+inclui o checklist e as escolhas de instalação. A opção de incluir o chat
+também grava perguntas e respostas. Ao restaurar, um backup com chat substitui
+o histórico atual. Use os botões de importação para reconectar arquivos grandes
+de enciclopédias ou mapas onde já estão salvos.
+
+## Medir a IA em um i3 com 8 GB
+
+Com o perfil Leve e o modelo de 0,6 bilhão de parâmetros já baixado, execute
+a partir do repositório no notebook Linux:
+
+```bash
+python3 tools/medir_ia_linux.py \
+  --raiz /opt/ultimo-livro \
+  --modelo "${XDG_DATA_HOME:-$HOME/.local/share}/ultimo-livro/models/Qwen3-0.6B-Q8_0.gguf" \
+  --saida /tmp/medicao-ultimo-livro-i3.json
+```
+
+O relatório registra processador, RAM instalada, RAM disponível, tempo até
+concluir duas respostas e o maior RSS observado no motor de IA. A medição
+usa dados de teste e um modelo já baixado. O RSS se refere ao motor de IA,
+enquanto a janela e os demais processos ficam fora da medição. Anote também
+se estava na tomada ou na bateria e confira manualmente as duas respostas.
 
 ## Assinatura e limites
 

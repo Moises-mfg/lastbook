@@ -23,6 +23,10 @@ from .catalogo import PERFIS, MODELOS, ESTADOS, WIKIS, MAPAS, GUIAS, COMPRAS
 GiB = 2**30
 
 
+class AnswerStopped(Exception):
+    """A pessoa interrompeu a resposta atual."""
+
+
 def normalize(text):
     return ''.join(c for c in unicodedata.normalize('NFD', text.casefold()) if not unicodedata.combining(c))
 
@@ -74,6 +78,7 @@ class Store(MapSupport):
         self.job = {'estado': 'parado'}
         self.control = None
         self.proc = None
+        self.answer_stop = None
         self.closing = threading.Event()
         with self.db() as db:
             pending = db.execute("SELECT value FROM settings WHERE key='pending-install'").fetchone()
@@ -130,11 +135,12 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.4.0-alpha.6', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
-                 'livre_bytes': shutil.disk_usage(self.folder).free}, 'recomendado': recommend(h.get('ram_bytes')),
+        return {'versao': '0.4.0-alpha.7', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+                 'livre_bytes': shutil.disk_usage(self.folder).free,
+                 'ram_disponivel_bytes': plataforma.available_memory()}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
-                'modelo': self.model_path().is_file(), 'download_bytes': self.model_spec()['size'], 'nome': self.model_spec()['file']},
+                'modelo': self.model_path().is_file(), 'ram_necessaria_gib': self.model_spec()['available_gib'], 'download_bytes': self.model_spec()['size'], 'nome': self.model_spec()['file']},
                 'recursos': RECURSOS, 'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
 
     def files(self):
@@ -244,26 +250,52 @@ class Store(MapSupport):
     def package_path(self, item):
         return self.folder / ({'model':'models','zim':'encyclopedias','map':'maps'}[item['kind']]) / item['file']
 
-    def package_state(self):
-        selected_maps=set(self.chosen_map_ids())
+    def package_state(self, choices=None):
+        selected_maps = set(self.chosen_map_ids(choices))
         with self.db() as db:
             installed = {k.split(':', 1)[1]: v for k, v in db.execute("SELECT key,value FROM settings WHERE key LIKE 'verified:%'")}
-        return {ident: dict(item, instalado=(item['sha256'] == installed.get(ident) and self.package_path(item).is_file()),
-                           parcial_bytes=pacotes.partial_bytes(self.package_path(item),item))
-                for ident, item in pacotes.all_catalog().items() if item['kind']!='map' or ident in selected_maps}
+        result = {}
+        for ident, item in pacotes.all_catalog().items():
+            if item['kind'] == 'map' and ident not in selected_maps:
+                continue
+            path = self.package_path(item)
+            try:
+                verified = item['sha256'] == installed.get(ident) and path.stat().st_size == item['size'] and path.is_file()
+                partial = 0 if verified else pacotes.partial_bytes(path, item)
+            except FileNotFoundError:
+                verified = False
+                partial = 0
+            result[ident] = dict(item, instalado=verified, parcial_bytes=partial)
+        return result
 
-    def install_plan(self):
-        choices = self.choices() or validate_choices({'perfil': 'leve'})
+    def storage_plan(self, items):
+        pending = [item for item in items if not item['instalado']]
+        remaining = sum(max(0, item['size'] - item['parcial_bytes']) for item in pending)
+        assembly = sum(item['size'] for item in pending if 'parts' in item)
+        reserve = GiB if pending else 0
+        free = shutil.disk_usage(self.folder).free
+        required = remaining + assembly + reserve
+        return {'download_bytes': remaining, 'montagem_bytes': assembly, 'reserva_bytes': reserve,
+                'livre_bytes': free, 'necessario_bytes': required, 'espaco_suficiente': free >= required}
+
+    def install_plan(self, choices=None):
+        choices = choices or self.choices() or validate_choices({'perfil': 'leve'})
         ids = list(choices['wikis'])
         if choices['modelo'] != 'sem-ia':
             ids.insert(0, choices['modelo'])
-        ids+=self.chosen_map_ids(choices)
-        known = self.package_state()
+        ids += self.chosen_map_ids(choices)
+        known = self.package_state(choices)
         items = [known[ident] for ident in ids]
-        remaining = sum(max(0, p['size'] - p['parcial_bytes']) for p in items if not p['instalado'])
-        return {'pacotes': items, 'download_bytes': remaining, 'livre_bytes': shutil.disk_usage(self.folder).free,
-                'necessario_bytes': remaining + sum(p['size'] for p in items if 'parts' in p and not p['instalado']) + (GiB if remaining else 0),
-                'aviso_mapas': 'Mapas regionais selecionados incluídos no total.' if pacotes.maps_catalog() else 'Mapas ainda não publicados para esta versão.'}
+        return dict(self.storage_plan(items), pacotes=items,
+                    aviso_mapas='Mapas regionais selecionados incluídos no total.' if pacotes.maps_catalog()
+                    else 'Mapas ainda não publicados para esta versão.')
+
+    def preview_install(self, body):
+        plan = self.install_plan(validate_choices(body))
+        fields = ('id', 'kind', 'name', 'size', 'instalado', 'parcial_bytes')
+        plan['pacotes'] = [{key: item[key] for key in fields if key in item}
+                           for item in plan['pacotes']]
+        return plan
 
     def install_packages(self, ids):
         known=pacotes.all_catalog()
@@ -277,10 +309,12 @@ class Store(MapSupport):
             self.control = download.Control()
             if self.closing.is_set():
                 self.control.stop('paused')
-            needed=[p for p in items if not self.package_path(p).is_file() or self.package_path(p).stat().st_size!=p['size']]
-            remaining=sum(max(0,p['size']-pacotes.partial_bytes(self.package_path(p),p)) for p in needed)
-            assembly=sum(p['size'] for p in needed if 'parts' in p)
-            if shutil.disk_usage(self.folder).free < remaining + assembly + GiB:
+            pending = []
+            for item in items:
+                target = self.package_path(item)
+                if not target.is_file() or target.stat().st_size != item['size']:
+                    pending.append(dict(item, instalado=False, parcial_bytes=pacotes.partial_bytes(target, item)))
+            if not self.storage_plan(pending)['espaco_suficiente']:
                 raise ValueError('Espaço insuficiente. Libere espaço antes de baixar os pacotes escolhidos.')
             for index, item in enumerate(items):
                 self.control.check()
@@ -308,7 +342,12 @@ class Store(MapSupport):
 
     def install_selected(self, body):
         plan = self.install_plan()
-        return self.install_packages([item['id'] for item in plan['pacotes']])
+        if not plan['espaco_suficiente']:
+            raise ValueError('O espaço livre não cobre os componentes escolhidos. Reduza a seleção ou libere espaço.')
+        pending = [item['id'] for item in plan['pacotes'] if not item['instalado']]
+        if not pending:
+            raise ValueError('Todos os componentes escolhidos já estão instalados.')
+        return self.install_packages(pending)
 
     def resume_install(self, body):
         with self.db() as db:
@@ -334,16 +373,20 @@ class Store(MapSupport):
     def model_path(self):
         return self.package_path(self.model_spec())
 
-    def start_job(self, work):
+    def start_job(self, work, *, answer_stop=None):
         with self.lock:
             if self.job['estado'] in ('executando', 'baixando'):
                 raise ValueError('Aguarde a operação atual terminar.')
-            self.job = {'estado': 'executando'}
+            self.answer_stop = answer_stop
+            self.job = {'estado': 'executando', 'cancelavel': answer_stop is not None}
         def run():
             try:
                 result = work()
                 with self.lock:
                     self.job = {'estado': 'concluido', **result}
+            except AnswerStopped:
+                with self.lock:
+                    self.job = {'estado': 'cancelado', 'mensagem': 'Resposta interrompida. Você pode editar e enviar a pergunta novamente.'}
             except download.Stopped:
                 with self.lock:
                     self.job = {'estado': 'pausado', 'mensagem': 'Download pausado. Você pode retomar depois.'}
@@ -357,11 +400,23 @@ class Store(MapSupport):
         threading.Thread(target=run, daemon=True).start()
         return {'iniciado': True}
 
+    def stop_answer(self):
+        with self.lock:
+            if not self.job.get('cancelavel') or self.answer_stop is None:
+                raise ValueError('Não há resposta em andamento.')
+            self.answer_stop.stop('paused')
+            self.job['cancelavel'] = False
+            if self.proc is not None and self.proc.poll() is None:
+                self.proc.kill()
+        return {'mensagem': 'Interrompendo a resposta…'}
+
     def close(self):
         self.closing.set()
         if self.control:
             self.control.stop('paused')
         with self.lock:
+            if self.answer_stop:
+                self.answer_stop.stop('paused')
             proc = self.proc
         if proc is not None and proc.poll() is None:
             proc.terminate()
@@ -396,6 +451,20 @@ class Store(MapSupport):
         sources.sort(key=lambda source: source['tipo'] != 'zim')
         return [dict(source, ref=f'F{index + 1}') for index, source in enumerate(sources)]
 
+    def ready_model(self, spec, control=None):
+        model, runner = self.package_path(spec), self.runner()
+        if not runner or not model.is_file():
+            raise ValueError('Instale o motor local e baixe o modelo antes de usar a IA. A busca funciona sem eles.')
+        if model.stat().st_size != spec['size']:
+            raise ValueError('Arquivo de modelo incompleto.')
+        available = plataforma.available_memory()
+        if available is None or available < spec['available_gib'] * GiB:
+            minimum = f'{spec["available_gib"]:g}'.replace('.', ',')
+            raise ValueError(f'É preciso ao menos {minimum} GiB de memória disponível para este modelo. Feche outros programas ou escolha um modelo menor.')
+        if not pacotes.verified_file(model, spec, control):
+            raise ValueError('O modelo não passou na verificação de integridade.')
+        return model, runner
+
     def ask(self, body):
         selected = (self.choices() or {}).get('modelo', 'qwen3-0.6b')
         if selected == 'sem-ia':
@@ -404,38 +473,44 @@ class Store(MapSupport):
         if not isinstance(question, str) or not question.strip() or len(question) > 1500:
             raise ValueError('Escreva uma pergunta de até 1.500 caracteres.')
         spec = pacotes.catalog()[selected]
+        control = download.Control()
+        def check_stop():
+            try:
+                control.check()
+            except download.Stopped as error:
+                raise AnswerStopped() from error
+
         def work():
-            model, runner = self.package_path(spec), self.runner()
-            if not runner or not model.is_file():
-                raise ValueError('Instale o motor local e baixe o modelo antes de usar a IA. A busca funciona sem eles.')
-            if model.stat().st_size != spec['size']:
-                raise ValueError('Arquivo de modelo incompleto.')
-            with model.open('rb') as f:
-                if hashlib.file_digest(f, 'sha256').hexdigest() != spec['sha256']:
-                    raise ValueError('O modelo não passou na verificação de integridade.')
-            available=plataforma.available_memory()
-            if available is None or available < spec['available_gib'] * GiB:
-                minimum = f'{spec["available_gib"]:g}'.replace('.', ',')
-                raise ValueError(f'É preciso ao menos {minimum} GiB de memória disponível para este modelo. Feche outros programas ou escolha um modelo menor.')
+            try:
+                model, runner = self.ready_model(spec, control)
+            except download.Stopped as error:
+                raise AnswerStopped() from error
+            check_stop()
             history = self.chat_history()
             references = self.sources_for(question, history)
             prompt, references = build_prompt(question, history, references, spec['context'])
             command = [runner, '-m', str(model), '-c', str(spec['context']), '-n', str(OUTPUT_TOKENS), '-t', '2', '-ngl', '0',
                        '--temp', '0.2', '--seed', '42', '-p', prompt, '--no-conversation', '--no-display-prompt', '--simple-io']
             with self.lock:
-                if self.closing.is_set(): raise ValueError('O aplicativo está fechando.')
+                check_stop()
+                if self.closing.is_set(): raise AnswerStopped()
                 proc = self.proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', **plataforma.subprocess_options())
             try:
                 stdout, stderr = proc.communicate(timeout=180)
             except subprocess.TimeoutExpired:
                 proc.kill(); proc.communicate()
+                check_stop()
                 raise ValueError('A resposta demorou demais. Use a busca ou tente uma pergunta menor.')
             finally:
                 with self.lock: self.proc = None
+            check_stop()
             if proc.returncode:
                 raise ValueError('O motor de IA não conseguiu responder. A biblioteca continua disponível.')
             answer = stdout.replace('[end of text]', '').strip()[-12000:]
             if not answer:
                 raise ValueError('O motor de IA não produziu uma resposta. Tente uma pergunta menor.')
-            return self.remember_chat(question, answer, [{k: v for k, v in source.items() if k != 'texto'} for source in references])
-        return self.start_job(work)
+            with self.lock:
+                check_stop()
+                self.job['cancelavel'] = False
+                return self.remember_chat(question, answer, [{k: v for k, v in source.items() if k != 'texto'} for source in references])
+        return self.start_job(work, answer_stop=control)
