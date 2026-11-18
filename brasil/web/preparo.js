@@ -1,9 +1,10 @@
 'use strict';
 (() => {
   let opening = 0;
+  const rehearsal = new Set();
   const planFields = [
     ['encontro1', 'Primeiro ponto de encontro'], ['encontro2', 'Ponto alternativo de encontro'],
-    ['contato', 'Contato de referência e como falar com ele'], ['apoio', 'Quem precisa de apoio e como ajudar'],
+    ['contato', 'Contato fora da área e como falar com ele'], ['apoio', 'Quem ajuda crianças, idosos, pessoas com deficiência e animais'],
     ['levar', 'O que levar ao sair']
   ];
   const uid = () => globalThis.crypto?.randomUUID?.() || 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
@@ -23,7 +24,6 @@
     const active = () => ticket === opening && shell.isConnected;
     let data, busy = false;
     let editId = null, removing = null;
-    const rehearsal = new Set();
     const q = selector => shell.querySelector(selector);
     const all = selector => [...shell.querySelectorAll(selector)];
     const text = value => esc(value ?? '');
@@ -102,7 +102,7 @@
           <article><span class="tag">3 · Informação</span><h2>Abrir um guia</h2><p>Consulte os guias da biblioteca para a situação que está vivendo.</p><a class="botao" href="#biblioteca">Abrir biblioteca</a></article>
           <article><span class="tag">4 · Contatos</span><h2>Encontrar ajuda</h2><p>Consulte os números de emergência e os canais da Defesa Civil.</p><a class="botao" href="#regiao">Ver contatos oficiais</a></article>
         </div><p class="aviso">Em risco imediato, siga as orientações da Defesa Civil e dos serviços locais. O aplicativo não acompanha alertas nem a segurança das vias em tempo real.</p>
-        <section class="painel"><h2>Ensaio prático</h2><p>Quando estiver em segurança, tente encontrar cada informação sem internet. Marque o que conseguiu nesta visita; não é necessário cronometrar.</p>${[['plano','Achei meu plano familiar'],['contato','Achei o contato de referência'],['mapa','Abri meu mapa'],['guia','Encontrei um guia']].map(([id,label]) => `<label class="linha"><input type="checkbox" data-ensaio="${id}"${rehearsal.has(id) ? ' checked' : ''}>${label}</label>`).join('')}<p id="ensaio-status" role="status">${rehearsal.size} de 4 etapas encontradas.</p></section>`;
+        <section class="painel"><h2>Ensaio prático</h2><p>Em um momento seguro, desligue a internet e tente abrir cada informação. Marque o que encontrou ao voltar para esta tela.</p>${[['plano','Achei meu plano familiar'],['contato','Achei os contatos'],['mapa','Abri meu mapa'],['guia','Encontrei um guia']].map(([id,label]) => `<label class="linha"><input type="checkbox" data-ensaio="${id}"${rehearsal.has(id) ? ' checked' : ''}>${label}</label>`).join('')}<p id="ensaio-status" role="status">${rehearsal.size} de 4 etapas encontradas.</p></section>`;
       all('[data-ensaio]').forEach(input => input.onchange = () => {
         input.checked ? rehearsal.add(input.dataset.ensaio) : rehearsal.delete(input.dataset.ensaio);
         q('#ensaio-status').textContent = `${rehearsal.size} de 4 etapas encontradas.`;

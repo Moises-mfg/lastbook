@@ -77,7 +77,7 @@ def build(self, app):
         ("({loaded:!!document.querySelector('#preparo-form')})",lambda d:d['loaded'],"document.querySelector('[name=encontro1]').value='Ponto de teste';document.querySelector('[name=contato]').value='Contato reservado';document.querySelector('#preparo-form').requestSubmit()"),
         ("({saved:document.querySelector('#status').textContent.includes('salvo')})",lambda d:d['saved'],"document.querySelector('[name=campos][value=encontro1]').click();document.querySelector('#preparo-exportar').requestSubmit()"),
         ("({exported:document.querySelector('#status').textContent.includes('exportado')})",lambda d:d['exported'],"location.hash='rapido'"),
-        ("({actions:document.querySelectorAll('.preparo-quatro article').length,plan:document.querySelector('.preparo-quatro')?.textContent.includes('Ponto de teste')})",lambda d:d['actions']==4 and d['plan'],"location.hash='regiao'"),
+        ("({actions:document.querySelectorAll('.preparo-quatro article').length,plan:document.querySelector('.preparo-quatro')?.textContent.includes('Ponto de teste')})",lambda d:d['actions']==4 and d['plan'],"document.querySelector('[data-ensaio=plano]').click();location.hash='regiao'"),
         ("({alerts:document.querySelector('#regiao-page')?.textContent.includes('40199')})",lambda d:d['alerts'],"document.querySelector('#regiao-termo').value='Itajaí';document.querySelector('#regiao-busca').requestSubmit()"),
         ("({city:document.querySelector('#regiao-resultados button')?.textContent})",lambda d:'Itajaí' in (d['city'] or ''),"document.querySelector('#regiao-resultados button').click()"),
         ("({history:document.querySelector('#regiao-detalhe')?.textContent.includes('registros')})",lambda d:d['history'],"location.hash='recuperacao'"),
@@ -86,6 +86,7 @@ def build(self, app):
         ("({photo:document.querySelector('.preparo-fotos img')?.naturalWidth})",lambda d:d['photo']==1,"location.hash='mapas'"),
         ("({local:document.querySelector('#mapaEstado')?.textContent})",lambda d:'consulta local' in (d['local'] or ''),"document.querySelector('#mapaExportar').click()"),
         ("({crop:document.querySelector('#status').textContent.includes('Recorte salvo')})",lambda d:d['crop'],"location.hash='rapido'"),
+        ("({rehearsed:document.querySelector('#ensaio-status')?.textContent.includes('1 de 4')})",lambda d:d['rehearsed'],"true"),
     ]
     state={'index':0,'attempts':0}
     def tick():
