@@ -169,3 +169,16 @@ def restore_backup(store, path):
     return {'mensagem': 'Backup restaurado. Arquivos grandes podem ser importados separadamente.',
             'chat_incluido': 'conversas' in body, 'checklist': len(body['checklist']),
             'conversas': len(body.get('conversas', []))}
+
+
+def transfer(store, body, choose_path):
+    action = body.get('acao')
+    include_chat = body.get('incluir_chat', False)
+    if action not in ('exportar', 'restaurar') or type(include_chat) is not bool:
+        raise ValueError('Operação de backup inválida.')
+    saving = action == 'exportar'
+    title = 'Salvar backup do O Último Livro' if saving else 'Abrir backup do O Último Livro'
+    path = choose_path(title, saving)
+    if not path:
+        return {'cancelado': True}
+    return export_backup(store, path, include_chat) if saving else restore_backup(store, path)
