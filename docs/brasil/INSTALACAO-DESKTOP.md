@@ -2,7 +2,7 @@
 
 ## Estado e requisitos
 
-A [alpha 5](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.5)
+A [alpha 6](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.6)
 está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
 (macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
 
@@ -14,6 +14,18 @@ A IA do perfil Leve exige 2,5 GiB livres no momento da resposta.
 ## Escolha do pacote
 
 No macOS, confira em **Sobre Este Mac** se o processador é Apple Silicon (ARM) ou Intel e escolha o DMG da arquitetura correspondente. No Windows, use o instalador para a instalação comum por usuário ou extraia o ZIP portátil em uma pasta onde sua conta possa gravar. O ZIP não instala o WebView2 Runtime: se ele não estiver disponível no computador, a interface pode não iniciar até que o runtime seja instalado por um meio confiável.
+
+## Primeira abertura e uso offline
+
+**Minha instalação** mostra a memória detectada, o número de processadores
+lógicos e o espaço livre. Confira a sugestão de perfil e escolha o modelo de IA,
+as Wikipedias e o mapa. O download começa após sua confirmação. Você pode abrir
+a biblioteca imediatamente e escolher os downloads depois.
+
+A **Biblioteca** já inclui três PDFs em português. Leia as páginas no aplicativo
+ou abra o PDF no leitor do sistema. O **Assistente local** retoma os turnos recentes
+para responder a perguntas de seguimento. As conversas e as referências ficam no
+computador. Use **Nova conversa** para limpar o histórico.
 
 ## Dados e backups
 
