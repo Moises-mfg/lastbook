@@ -1,8 +1,5 @@
 name: Brasil · aplicativos macOS e Windows
 on:
-  push:
-    branches: [main, 'feat/**', 'fix/**']
-    paths: ['brasil/**', 'app/bridge.py', 'app/shell_macos.py', 'app/shell_windows.py', 'app/process_tree.py', 'engine/setup/**', 'tools/*desktop.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/workflows/brasil-desktop.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,15 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-26
+          - runner: macos-15
             arch: arm64
             artifact: macos-arm64
-          - runner: macos-26-intel
-            arch: x64
-            artifact: macos-x64
-          - runner: windows-2025
-            arch: x64
-            artifact: windows-x64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     defaults:
@@ -31,6 +22,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 648144e4f2973141283e081f0c5472878a8f62e6
+      - run: test "$(git rev-parse HEAD)" = 648144e4f2973141283e081f0c5472878a8f62e6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
@@ -65,7 +59,7 @@ jobs:
           Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2124701' -OutFile derived/webview-runtime.exe
           $sig = Get-AuthenticodeSignature derived/webview-runtime.exe
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'O componente WebView2 não possui a assinatura Microsoft esperada.' }
-      - run: python -B brasil/build_desktop.py
+      - run: GITHUB_SHA=648144e4f2973141283e081f0c5472878a8f62e6 python -B brasil/build_desktop.py
       - run: python -B tools/medir_memoria_desktop.py
       - if: runner.os == 'macOS'
         name: Registrar memória e liberar cache da compilação no runner
