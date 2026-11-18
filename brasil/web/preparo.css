@@ -1,0 +1,33 @@
+/* Telas locais de preparo; mantém os estilos isolados do mapa e da biblioteca. */
+.preparo { max-width: 1100px; }
+.preparo .preparo-quatro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-block: 28px; }
+.preparo .preparo-lista { display: grid; gap: 18px; margin-block: 24px; }
+.preparo .preparo-lista article h2 { margin-top: 0; font-size: 25px; overflow-wrap: anywhere; }
+.preparo .painel { margin-block: 24px; }
+.preparo .painel h2 { margin-top: 0; }
+.preparo .preparo-campo { display: grid; gap: 7px; margin-bottom: 20px; font-weight: 600; }
+.preparo .preparo-campo input, .preparo .preparo-campo textarea { width: 100%; min-width: 0; background: #fffef8; border: 1px solid #9aa899; padding: 12px 14px; font: inherit; font-weight: normal; color: inherit; border-radius: 3px; }
+.preparo .preparo-campo textarea { min-height: 100px; resize: vertical; }
+.preparo .preparo-dupla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.preparo dl { margin-block: 16px; }
+.preparo dt { font-weight: 600; }
+.preparo dd { margin: 2px 0 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.preparo .preparo-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+.preparo .preparo-vazio { padding: 20px; border: 1px dashed var(--linha); }
+.preparo .preparo-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-block: 20px; }
+.preparo .preparo-fotos figure { margin: 0; min-width: 0; }
+.preparo .preparo-fotos img { width: 100%; height: 160px; object-fit: contain; background: #e8ebdf; border: 1px solid var(--linha); }
+.preparo .preparo-fotos figcaption { font-size: 13px; overflow-wrap: anywhere; }
+.preparo a { color: var(--tinta); text-underline-offset: 3px; }
+.preparo a.botao { color: #fff; }
+.preparo .acoes { align-items: center; }
+.preparo button, .preparo .botao { max-width: 100%; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .preparo .preparo-quatro, .preparo .preparo-dupla { grid-template-columns: 1fr; }
+  .preparo article, .preparo .painel { padding: 18px; }
+}
+@media print {
+  .preparo button, .preparo form, .preparo .acoes, .preparo a.botao { display: none; }
+  .preparo article { break-inside: avoid; }
+  .preparo .preparo-quatro { display: block; }
+}

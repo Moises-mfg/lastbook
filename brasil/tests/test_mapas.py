@@ -49,4 +49,24 @@ class Maps(unittest.TestCase):
         with self.assertRaises(ValueError):reloaded.select_map({'id':'inexistente'})
         with self.assertRaises(ValueError):reloaded.map_catalog_search({'selecionados':'incorreto'})
 
+
+    def test_map_at_uses_registered_raster_bounds(self):
+        def create_map(name,bounds):
+            path = self.root / (name + '.mbtiles')
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE metadata (name,value)')
+                db.executemany('INSERT INTO metadata VALUES (?,?)',[('format','png'),('bounds',bounds)])
+                db.execute('CREATE TABLE tiles (zoom_level,tile_column,tile_row,tile_data)')
+                db.execute('INSERT INTO tiles VALUES (0,0,0,?)',(b'\x89PNG',))
+            with self.store.db() as db:
+                db.execute('INSERT INTO maps (id,path,name) VALUES (?,?,?)',(name,str(path),name))
+        create_map('Mapa A','-49,-18,-47,-15')
+        create_map('Mapa B','-48.1,-16.1,-47.9,-15.9')
+        self.store.select_map({'id':'Mapa A'})
+        self.store.map_at({'lat':-16,'lon':-48})
+        self.assertEqual(self.store.active_map_id(),'Mapa B')
+        with self.assertRaises(ValueError):
+            self.store.map_at({'lat':-26,'lon':-50})
+        self.assertEqual(self.store.active_map_id(),'Mapa B')
+
 if __name__=='__main__':unittest.main()

@@ -18,7 +18,11 @@
     window.ULMapas?.close();
     const page = location.hash.slice(1) || (S.escolhas ? 'biblioteca' : 'instalacao');
     document.querySelectorAll('nav a').forEach(a => { a.removeAttribute('aria-current'); if (a.hash === '#' + page) a.setAttribute('aria-current','page'); });
-    if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'fontes') fontes(); else if (page === 'ia') ia(); else if (page === 'offline') offline(); else biblioteca();
+    if (page === 'regiao') {
+      window.ULRegiao.open({api,esc,notice,failure,openPlace,container:$('#conteudo')});
+    } else if (['rapido','plano-familiar','lugares-salvos','inventario','recuperacao'].includes(page)) {
+      window.ULPreparo.open(page,{api,esc,notice,failure,openPlace,container:$('#conteudo')});
+    } else if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'fontes') fontes(); else if (page === 'ia') ia(); else if (page === 'offline') offline(); else biblioteca();
   }
   function biblioteca() {
     const pdfs = S.guias_pdf || [];
@@ -91,10 +95,13 @@
   }
 
   async function openPlace(place) {
-    await api('select-map', {id:place.mapa_id});
+    if (place.mapa_id) await api('select-map', {id:place.mapa_id});
+    else { const result = await api('map-at', {lat:place.lat,lon:place.lon}); if (result.mensagem) notice(result.mensagem); }
     S = await api('state');
+    if (!(S.mapas_instalados || []).some(map => map.disponivel)) throw Error('Instale ou importe um mapa para visualizar este lugar.');
     mapFocus = place;
-    location.hash = 'mapas';
+    if (location.hash === '#mapas') await mapas();
+    else location.hash = 'mapas';
   }
 
   function situacoesHtml(pdfs) {
@@ -161,7 +168,7 @@
     $('#buscaFonte').oninput=draw;$('#categoriaFonte').onchange=draw;draw();
   }
   function compras() {
-    $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><section class="painel"><h2>Se prepare enquanto há tempo</h2><p>Compare opções de energia, água e primeiros socorros no site. O guia abre no navegador e pode pedir acesso.</p><button data-open-resource="ultimo-livro-preparacao">Abrir guia no navegador · internet</button></section>`;
+    $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><div class="acoes"><a class="botao" href="#plano-familiar">Plano familiar</a><a href="#inventario">Inventário</a><a href="#lugares-salvos">Lugares salvos</a><a href="#recuperacao">Recuperação</a><a href="#regiao">Minha região</a></div><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><section class="painel"><h2>Se prepare enquanto há tempo</h2><p>Compare opções de energia, água e primeiros socorros no site. O guia abre no navegador e pode pedir acesso.</p><button data-open-resource="ultimo-livro-preparacao">Abrir guia no navegador · internet</button></section>`;
     bindResources();
     document.querySelectorAll('[data-item]').forEach(input => input.onchange = async () => {
       input.disabled = true;
@@ -339,11 +346,18 @@
     $('#mapaEscolhido').onchange=async()=>{try{await api('select-map',{id:$('#mapaEscolhido').value});S=await api('state');mapas();}catch(e){failure(e);}};
     if(!maps.length)return;
     try{
-      const info=await api('mapa');if(!$('#mapaLocal'))return;
+      const mapRoot = $('#mapaLocal');
+      const [info,preparo,regiao] = await Promise.all([api('mapa'),api('preparo'),api('regiao')]);
+      if (!mapRoot.isConnected) return;
       const vector=info.formato==='ulmap';
-      $('#mapaLocal').innerHTML=`${vector?'<form id="mapaBusca"><label for="mapaTermo">Localidade, rua ou serviço neste mapa</label><input id="mapaTermo" type="search" required maxlength="160"><button>Buscar offline</button></form><div id="mapaResultados" class="acoes"></div>':''}<div class="acoes"><button data-map-move="-1,0" aria-label="Oeste">←</button><button data-map-move="0,-1" aria-label="Norte">↑</button><button data-map-move="0,1" aria-label="Sul">↓</button><button data-map-move="1,0" aria-label="Leste">→</button><button id="mapaMais" aria-label="Aproximar">+</button><button id="mapaMenos" aria-label="Afastar">−</button></div>${vector?'<div class="mapa-camadas">'+[['road','Ruas'],['water','Água'],['place','Localidades'],['poi','Serviços']].map(([id,label])=>`<label><input type="checkbox" data-map-layer="${id}" checked>${label}</label>`).join('')+'</div>':''}<canvas id="mapaCanvas" tabindex="0" role="img" aria-label="Mapa offline. Setas para mover, mais e menos para aproximar. A busca lista lugares como texto."></canvas><p id="mapaEstado" role="status"></p><p id="mapaDetalhe" aria-live="polite"></p><p class="fonte">${esc(info.nome)}${info.data?' · '+esc(info.data):''}<br>${esc(info.atribuicao)}${info.licenca?' · '+esc(info.licenca):''}<br>${esc(info.licenca_url||'')}</p>`;
-      window.ULMapas.open(info, {api, notice, focus:mapFocus});
-      if (mapFocus) $('#mapaDetalhe').textContent = mapFocus.nome + ' · ' + mapFocus.nome_mapa;
+      const layers = regiao.camadas;
+      const filters = layers.length ? `<div class="mapa-camadas">
+        ${layers.some(layer => layer.tipo !== 'risco') ? '<label><input id="mapaReferencias" type="checkbox" checked> Saúde e abrigos importados</label>' : ''}
+        ${layers.some(layer => layer.tipo === 'risco') ? '<label><input id="mapaRisco" type="checkbox"> Áreas de risco importadas</label>' : ''}
+        </div><ul class="fonte">${layers.map(layer => `<li>${esc(layer.titulo)} · ${esc(layer.data)} · Fonte informada: ${esc(layer.fonte)}</li>`).join('')}</ul>` : '';
+      $('#mapaLocal').innerHTML=`${vector?'<form id="mapaBusca"><label for="mapaTermo">Localidade, rua ou serviço neste mapa</label><input id="mapaTermo" type="search" required maxlength="160"><button>Buscar offline</button></form><div id="mapaResultados" class="acoes"></div>':''}<div class="acoes"><button data-map-move="-1,0" aria-label="Oeste">←</button><button data-map-move="0,-1" aria-label="Norte">↑</button><button data-map-move="0,1" aria-label="Sul">↓</button><button data-map-move="1,0" aria-label="Leste">→</button><button id="mapaMais" aria-label="Aproximar">+</button><button id="mapaMenos" aria-label="Afastar">−</button></div>${vector?'<div class="mapa-camadas">'+[['road','Ruas'],['water','Água'],['place','Localidades'],['poi','Serviços']].map(([id,label])=>`<label><input type="checkbox" data-map-layer="${id}" checked>${label}</label>`).join('')+'</div>':''}${filters}<canvas id="mapaCanvas" tabindex="0" role="img" aria-label="Mapa offline. Setas para mover, mais e menos para aproximar. A busca lista lugares como texto."></canvas><div class="acoes"><button id="mapaExportar" class="secundario">Salvar recorte para impressão</button><a href="#lugares-salvos">Lugares salvos</a><a href="#regiao">Camadas municipais</a></div><p id="mapaEstado" role="status"></p><p id="mapaDetalhe" aria-live="polite"></p><p class="fonte">${esc(info.nome)}${info.data?' · '+esc(info.data):''}<br>${esc(info.atribuicao)}${info.licenca?' · '+esc(info.licenca):''}<br>${esc(info.licenca_url||'')}</p>`;
+      window.ULMapas.open(info, {api, notice, focus:mapFocus, places:preparo.lugares, layers});
+      if (mapFocus) $('#mapaDetalhe').textContent = mapFocus.nome + ' · ' + (mapFocus.nome_mapa || 'Lugar salvo');
       mapFocus = undefined;
     }catch(e){failure(e);}
   }
@@ -352,7 +366,7 @@
       <p class="intro">O teste abre os arquivos locais e, quando possível, faz uma resposta curta com a IA. Pode levar alguns segundos. Nenhum download é iniciado.</p>
       <button id="verificarOffline">Verificar agora</button><div id="resultadoOffline" aria-live="polite"></div>
       ${S.backup_disponivel ? `<section class="painel"><h2>Backup e recuperação</h2>
-      <p>Salve suas escolhas e o checklist em um arquivo. Use o seletor de pasta para salvar em um pendrive. Incluir o chat grava perguntas e respostas no backup.</p>
+      <p>Salve escolhas, checklist, plano familiar, lugares, inventário e registros com fotos em um arquivo. Guarde o arquivo em local de confiança. Use o seletor de pasta para salvar em um pendrive. Incluir o chat grava perguntas e respostas no backup.</p>
       <label class="linha"><input type="checkbox" id="incluirChat"> Incluir histórico do chat</label>
       <div class="acoes"><button id="exportarBackup">Exportar backup</button>
       <button id="restaurarBackup" class="secundario">Restaurar backup</button></div>

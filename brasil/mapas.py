@@ -68,8 +68,39 @@ class MapSupport:
         return {'mensagem':'Mapa selecionado.'}
 
     def map_metadata(self):
-        path=self.map_path()
+        return self._map_metadata(self.map_path())
+
+    def _map_metadata(self, path):
         return mapa_vetor.info(path) if path.suffix.lower()=='.ulmap' else map_info(path)
+
+    def map_at(self, body):
+        lat, lon = body.get('lat'), body.get('lon')
+        if type(lat) not in (int,float) or type(lon) not in (int,float) or not (-85 <= lat <= 85 and -180 <= lon <= 180):
+            raise ValueError('Coordenadas fora da área que o visualizador pode mostrar.')
+        active = self.active_map_id()
+        best = None
+        active_without_bounds = False
+        for item in self.installed_maps():
+            if not item['disponivel']:
+                continue
+            ident = item['id']
+            try:
+                bounds = self._map_metadata(self.map_path(ident)).get('bounds')
+            except (ValueError, OSError):
+                continue
+            if bounds is None:
+                active_without_bounds = active_without_bounds or ident == active
+                continue
+            left, bottom, right, top = bounds
+            if left <= lon <= right and bottom <= lat <= top:
+                size = (right-left) * (top-bottom)
+                if best is None or size < best[0]:
+                    best = (size, ident)
+        if best is None:
+            if active_without_bounds:
+                return {'mensagem': 'Este mapa raster não declara seus limites. Confira a cobertura na tela.'}
+            raise ValueError('Nenhum mapa instalado cobre este lugar. Instale o mapa da região.')
+        return self.select_map({'id': best[1]})
 
     def vector_tile(self,z,x,y):return mapa_vetor.tile(self.map_path(),z,x,y)
     def raster_tile(self,z,x,y):return map_tile(self.map_path(),z,x,y)

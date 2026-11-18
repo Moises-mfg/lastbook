@@ -4,7 +4,7 @@ window.ULMapas=(()=>{
   let current=null;
   const C={background:'#d8e7e9',land:'#edf0df',water:'#b7dbe4',road:'#fffdf2',edge:'#c2b8a2',label:'#233c33'};
   function close(){if(current){current.alive=false;current.abort.abort();if(current.raf)cancelAnimationFrame(current.raf);current=null;}}
-  function open(meta,{api,notice,focus}){
+  function open(meta,{api,notice,focus,places=[],layers=[]}){
     close();const canvas=document.querySelector('#mapaCanvas');if(!canvas)return;
     const s=current={alive:true,abort:new AbortController(),z:meta.z,cx:meta.x+.5,cy:meta.y+.5,cache:new Map(),pending:new Set(),labels:[],hits:[],raf:0,mask:new Set(['road','water','place','poi'])};
     const $=id=>document.querySelector(id),ctx=canvas.getContext('2d'),vector=meta.formato==='ulmap';
@@ -49,8 +49,28 @@ window.ULMapas=(()=>{
       ctx.setTransform(ratio,0,0,ratio,0,0);ctx.fillStyle=C.background;ctx.fillRect(0,0,width,height);
       const left=s.cx-width/512,top=s.cy-height/512,right=s.cx+width/512,bottom=s.cy+height/512;
       const labels=[];s.hits=[];let truncated=false;
-      for(let y=Math.floor(top);y<=Math.floor(bottom);y++)for(let x=Math.floor(left);x<=Math.floor(right);x++){
-        const tile=load(s.z,x,y);if(!tile||tile.failed)continue;const px=(x-left)*256,py=(y-top)*256;ctx.drawImage(tile.image,px,py,256,256);
+      s.drawnTiles = 0;
+      s.missingTiles = 0;
+      const limits = meta.bounds && [
+        project(meta.bounds[0],meta.bounds[3],0,0).map(value => value/256),
+        project(meta.bounds[2],meta.bounds[1],0,0).map(value => value/256),
+      ];
+      for(let y=Math.floor(top);y<Math.ceil(bottom);y++)for(let x=Math.floor(left);x<Math.ceil(right);x++){
+        const outside = limits && (x+1 <= limits[0][0] || x >= limits[1][0] || y+1 <= limits[0][1] || y >= limits[1][1]);
+        const tile=outside ? null : load(s.z,x,y),px=(x-left)*256,py=(y-top)*256;
+        if (!tile || tile.failed) {
+          if (outside || tile?.failed || y < 0 || y >= 2**s.z) {
+            s.missingTiles++;
+            ctx.fillStyle = '#eeeae2';
+            ctx.fillRect(px,py,256,256);
+            ctx.fillStyle = '#604a3c';
+            ctx.font = '13px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sem dados locais',px+128,py+128);
+          }
+          continue;
+        }
+        ctx.drawImage(tile.image,px,py,256,256);s.drawnTiles++;
         labels.push(...tile.labels.map(l=>({...l,x:l.x+px,y:l.y+py})));s.hits.push(...tile.pois.map(p=>({...p,x:p.x+px,y:p.y+py})));truncated||=tile.truncated;
       }
       const boxes=[],seen=new Set();ctx.font='12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -60,8 +80,91 @@ window.ULMapas=(()=>{
         if(boxes.some(a=>!(b[0]>a[2]||b[2]<a[0]||b[1]>a[3]||b[3]<a[1])))continue;
         seen.add(l.name);boxes.push(b);ctx.lineWidth=3;ctx.strokeStyle='#fafbf3';ctx.strokeText(l.name,l.x,l.y,230);ctx.fillStyle=C.label;ctx.fillText(l.name,l.x,l.y,230);
       }
-      if($('#mapaEstado'))$('#mapaEstado').textContent='Nível '+s.z+(s.pending.size?' · carregando dados locais…':' · consulta local')+(truncated?' · aproxime para ver mais detalhes':'');
+      drawReferences(left,top,width,height);
+      if($('#mapaEstado'))$('#mapaEstado').textContent='Nível '+s.z+(s.pending.size?' · carregando dados locais…':' · consulta local')+(s.missingTiles?' · áreas sem dados locais':'')+(truncated?' · aproxime para ver mais detalhes':'');
     }
+
+    const referenceColors = {saude:'#883145',abrigos:'#233d83',risco:'#9c490b',pessoal:'#075b46'};
+    function project(lon,lat,left,top) {
+      const n = 2**s.z;
+      lat = Math.max(-85,Math.min(85,lat));
+      const x = (lon+180)/360*n;
+      const y = (1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n;
+      return [(x-left)*256,(y-top)*256];
+    }
+    function drawReferences(left,top,width,height) {
+      for (const layer of layers) {
+        if (layer.tipo !== 'risco' || !$('#mapaRisco')?.checked) continue;
+        ctx.fillStyle = '#e9832180';
+        ctx.strokeStyle = referenceColors.risco;
+        ctx.lineWidth = 2;
+        for (const {geometry} of layer.features) {
+          const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+          ctx.beginPath();
+          for (const polygon of polygons) for (const ring of polygon) {
+            ctx.moveTo(...project(...ring[0],left,top));
+            for (let i = 1; i < ring.length; i++) ctx.lineTo(...project(...ring[i],left,top));
+            ctx.closePath();
+          }
+          ctx.fill('evenodd');
+          ctx.stroke();
+        }
+      }
+      const points = places.map(place => ({name:place.nome,lng:place.lon,lat:place.lat,cls:'pessoal'}));
+      for (const layer of layers) {
+        if (layer.tipo === 'risco' || !$('#mapaReferencias')?.checked) continue;
+        for (const {nome,geometry} of layer.features) {
+          const [lng,lat] = geometry.coordinates;
+          points.push({name:nome,lng,lat,cls:layer.tipo});
+        }
+      }
+      if (focus && !points.some(point => point.name === focus.nome && point.lng === focus.lon && point.lat === focus.lat)) {
+        points.push({name:focus.nome,lng:focus.lon,lat:focus.lat,cls:'selecionado'});
+      }
+      for (const point of points) {
+        const [x,y] = project(point.lng,point.lat,left,top);
+        if (x < 0 || x > width || y < 0 || y > height) continue;
+        ctx.fillStyle = referenceColors[point.cls] || '#222';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x,y,7,0,2*Math.PI);
+        ctx.fill();
+        ctx.stroke();
+        if (s.z >= 12 || point.name === focus?.nome) {
+          ctx.font='bold 12px system-ui';
+          ctx.strokeText(point.name,x,y-15,200);
+          ctx.fillText(point.name,x,y-15,200);
+        }
+        s.hits.unshift({...point,x,y});
+      }
+    }
+    $('#mapaRisco')?.addEventListener('change',schedule);
+    $('#mapaReferencias')?.addEventListener('change',schedule);
+    $('#mapaExportar').onclick = async event => {
+      if (s.pending.size || !s.drawnTiles || s.raf) {
+        notice('Aguarde o mapa carregar ou escolha uma área com dados locais.');
+        return;
+      }
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        const copy = document.createElement('canvas');
+        const scale = Math.min(1,1280/canvas.width,900/canvas.height);
+        copy.width = Math.round(canvas.width*scale);
+        copy.height = Math.round(canvas.height*scale);
+        copy.getContext('2d').drawImage(canvas,0,0,copy.width,copy.height);
+        const fontes = [[meta.nome,meta.data,meta.atribuicao,meta.licenca].filter(Boolean).join(' · ').slice(0,1400)];
+        for (const layer of layers) {
+          if (layer.tipo === 'risco' ? $('#mapaRisco')?.checked : $('#mapaReferencias')?.checked) {
+            fontes.push([layer.titulo,layer.data,'Fonte informada: '+layer.fonte].join(' · '));
+          }
+        }
+        const result = await api('preparo-exportar-mapa',{imagem:copy.toDataURL('image/jpeg',.82).split(',')[1],fontes,cobertura_parcial:s.missingTiles > 0});
+        if (result.mensagem) notice(result.mensagem);
+      } catch(error) { notice(error.message); }
+      finally { button.disabled = false; }
+    };
     function zoom(delta,px=canvas.clientWidth/2,py=canvas.clientHeight/2){
       const z=Math.max(meta.minzoom,Math.min(meta.maxzoom,s.z+delta));if(z===s.z)return;
       const scale=2**(z-s.z),dx=(px-canvas.clientWidth/2)/256,dy=(py-canvas.clientHeight/2)/256;
@@ -82,7 +185,7 @@ window.ULMapas=(()=>{
     let drag=null;
     canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);},{signal:s.abort.signal});
     canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;s.cx-=dx/256;s.cy-=dy/256;drag.moved||=Math.abs(dx)+Math.abs(dy)>3;drag.x=e.clientX;drag.y=e.clientY;bound();schedule();},{signal:s.abort.signal});
-    canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const b=canvas.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;const hit=s.hits.find(p=>Math.hypot(p.x-x,p.y-y)<12);if(hit){const names={hospital:'Hospital',clinic:'Clínica',pharmacy:'Farmácia',fire_station:'Bombeiros',drinking_water:'Água potável',shelter:'Abrigo',school:'Escola',fuel:'Combustível',police:'Polícia',supermarket:'Supermercado',veterinary:'Veterinário'};$('#mapaDetalhe').textContent=(hit.name||'Ponto sem nome')+' · '+(names[hit.cls]||hit.cls)+'. Registro do mapa; atendimento e condições atuais não são garantidos.';}}drag=null;},{signal:s.abort.signal});
+    canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const b=canvas.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;const hit=s.hits.find(p=>Math.hypot(p.x-x,p.y-y)<12);if(hit){const names={saude:'Unidade de saúde cadastrada',abrigos:'Abrigo cadastrado',pessoal:'Lugar salvo',selecionado:'Lugar selecionado',hospital:'Hospital',clinic:'Clínica',pharmacy:'Farmácia',fire_station:'Bombeiros',drinking_water:'Água potável',shelter:'Abrigo',school:'Escola',fuel:'Combustível',police:'Polícia',supermarket:'Supermercado',veterinary:'Veterinário'};$('#mapaDetalhe').textContent=(hit.name||'Ponto sem nome')+' · '+(names[hit.cls]||hit.cls)+(hit.cls==='pessoal'?'':'. Confirme o funcionamento e as condições no local.');}}drag=null;},{signal:s.abort.signal});
     canvas.addEventListener('keydown',e=>{const keys={ArrowLeft:[-.5,0],ArrowRight:[.5,0],ArrowUp:[0,-.5],ArrowDown:[0,.5]};if(keys[e.key]){e.preventDefault();s.cx+=keys[e.key][0];s.cy+=keys[e.key][1];bound();schedule();}else if(e.key==='+'||e.key==='='){e.preventDefault();zoom(1);}else if(e.key==='-'){e.preventDefault();zoom(-1);}},{signal:s.abort.signal});
     document.querySelectorAll('[data-map-layer]').forEach(box=>box.onchange=()=>{box.checked?s.mask.add(box.dataset.mapLayer):s.mask.delete(box.dataset.mapLayer);s.cache.clear();schedule();});
     if($('#mapaBusca'))$('#mapaBusca').onsubmit=async e=>{e.preventDefault();try{const hits=await api('map-search',{busca:$('#mapaTermo').value});const out=$('#mapaResultados');out.replaceChildren();if(!hits.length)out.textContent='Nenhum lugar encontrado neste mapa.';for(const hit of hits){const b=document.createElement('button');b.type='button';b.className='secundario';b.textContent=hit.nome;b.onclick=()=>center(hit);out.append(b);}}catch(e){notice(e.message);}};

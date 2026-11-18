@@ -45,6 +45,15 @@ def build(self, app):
         book=Path(folder.name)/'teste.zim'
         with Creator(book).config_indexing(True,'por') as creator:creator.add_item(TestArticle());creator.set_mainpath('Brasil')
     main.STORE.import_file('zim',book)
+    from base64 import b64decode
+    photo = Path(folder.name)/'teste.png'
+    photo.write_bytes(b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jhG0AAAAASUVORK5CYII='))
+    def escolher_exportacao(title, saving, filename):
+        if not saving and title == 'Adicionar foto':
+            return photo
+        assert saving and filename in ('plano-familiar.html', 'mapa-offline.html')
+        return Path(folder.name)/filename
+    main.PREPARO_FILE = escolher_exportacao
     search='Campinas' if actual else 'Hospital'
     place='Campinas' if actual else 'Hospital de Teste'
     zoom='Nível 13' if actual else 'Nível 16'
@@ -64,7 +73,19 @@ def build(self, app):
         ("({source:document.querySelector('[data-resource]')?.dataset.resource})",lambda d:d['source']=='meshcore-docs',"location.hash='enciclopedias'"),
         ("({ready:!!document.querySelector('#buscarZim button')&&!document.querySelector('#buscarZim button').disabled})",lambda d:d['ready'],"document.querySelector('#termoZim').value='Brasil';document.querySelector('#buscarZim').requestSubmit()"),
         ("({title:document.querySelector('[data-zim]')?.textContent})",lambda d:d['title']=='Brasil',"document.querySelector('[data-zim]').click()"),
-        ("({title:document.querySelector('#conteudo h1')?.textContent,contains:document.querySelector('.resposta')?.textContent.includes('Brasília')})",lambda d:d['title']=='Brasil' and d['contains'],"document.querySelector('#conteudo h1').scrollIntoView({block:'start'})"),
+        ("({title:document.querySelector('#conteudo h1')?.textContent,contains:document.querySelector('.resposta')?.textContent.includes('Brasília')})",lambda d:d['title']=='Brasil' and d['contains'],"location.hash='plano-familiar'"),
+        ("({loaded:!!document.querySelector('#preparo-form')})",lambda d:d['loaded'],"document.querySelector('[name=encontro1]').value='Ponto de teste';document.querySelector('[name=contato]').value='Contato reservado';document.querySelector('#preparo-form').requestSubmit()"),
+        ("({saved:document.querySelector('#status').textContent.includes('salvo')})",lambda d:d['saved'],"document.querySelector('[name=campos][value=encontro1]').click();document.querySelector('#preparo-exportar').requestSubmit()"),
+        ("({exported:document.querySelector('#status').textContent.includes('exportado')})",lambda d:d['exported'],"location.hash='rapido'"),
+        ("({actions:document.querySelectorAll('.preparo-quatro article').length,plan:document.querySelector('.preparo-quatro')?.textContent.includes('Ponto de teste')})",lambda d:d['actions']==4 and d['plan'],"location.hash='regiao'"),
+        ("({alerts:document.querySelector('#regiao-page')?.textContent.includes('40199')})",lambda d:d['alerts'],"document.querySelector('#regiao-termo').value='Itajaí';document.querySelector('#regiao-busca').requestSubmit()"),
+        ("({city:document.querySelector('#regiao-resultados button')?.textContent})",lambda d:'Itajaí' in (d['city'] or ''),"document.querySelector('#regiao-resultados button').click()"),
+        ("({history:document.querySelector('#regiao-detalhe')?.textContent.includes('registros')})",lambda d:d['history'],"location.hash='recuperacao'"),
+        ("({ready:!!document.querySelector('#preparo-form [name=descricao]')})",lambda d:d['ready'],"document.querySelector('[name=descricao]').value='Registro de teste';document.querySelector('#preparo-form').requestSubmit()"),
+        ("({record:!!document.querySelector('[data-photo]')})",lambda d:d['record'],"document.querySelector('[data-photo]').click()"),
+        ("({photo:document.querySelector('.preparo-fotos img')?.naturalWidth})",lambda d:d['photo']==1,"location.hash='mapas'"),
+        ("({local:document.querySelector('#mapaEstado')?.textContent})",lambda d:'consulta local' in (d['local'] or ''),"document.querySelector('#mapaExportar').click()"),
+        ("({crop:document.querySelector('#status').textContent.includes('Recorte salvo')})",lambda d:d['crop'],"location.hash='rapido'"),
     ]
     state={'index':0,'attempts':0}
     def tick():
@@ -74,8 +95,11 @@ def build(self, app):
             try:
                 assert main.STORE.choices()['modelo']=='sem-ia'
                 assert next(i for i in main.STORE.checklist() if i['id']=='luz')['feito']
+                plan = (Path(folder.name)/'plano-familiar.html').read_text(encoding='utf-8')
+                assert 'Ponto de teste' in plan and 'Contato reservado' not in plan
+                assert 'data:image/jpeg;base64,' in (Path(folder.name)/'mapa-offline.html').read_text(encoding='utf-8')
                 result['ok']=True
-                print('Janela: biblioteca, perfis, catálogo, IA desativada, checklist mapa vetorial, diretório e leitura de ZIM OK',flush=True)
+                print('Janela: biblioteca, perfis, catálogo, checklist, mapas, ZIM, plano familiar, acesso rápido, região e recuperação OK',flush=True)
                 self.view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,WebKit2.SnapshotOptions.NONE,None,snapshot,None)
             except Exception as e:print('FALHA:',e,flush=True);app.quit()
             return False

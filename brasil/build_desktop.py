@@ -11,7 +11,7 @@ import sys
 import urllib.request
 import zipfile
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='0.4.0-alpha9'
+VERSION='0.4.0-alpha10'
 
 def webview():
     version='1.0.4314.35';target=ROOT/'derived/webview2';target.mkdir(parents=True,exist_ok=True)

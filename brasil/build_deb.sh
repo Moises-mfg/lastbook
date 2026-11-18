@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION=0.4.0~alpha9
-FILE_VERSION=0.4.0-alpha9
+VERSION=0.4.0~alpha10
+FILE_VERSION=0.4.0-alpha10
 OUT="$ROOT/derived/brasil-build"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 OPT="$STAGE/opt/ultimo-livro"
 mkdir -p "$OPT/brasil" "$OPT/app" "$OPT/engine/setup" "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/share/applications" "$STAGE/usr/share/doc/ultimo-livro" "$OUT"
-cp "$ROOT"/brasil/*.py "$ROOT/brasil/pacotes.json" "$OPT/brasil/"
+cp "$ROOT"/brasil/*.py "$ROOT/brasil/pacotes.json" "$ROOT"/brasil/regiao_*.json "$OPT/brasil/"
 if [ -f "$ROOT/brasil/mapas_catalogo.json" ]; then cp "$ROOT/brasil/mapas_catalogo.json" "$OPT/brasil/"; fi
 cp -r "$ROOT/brasil/web" "$OPT/brasil/"
 if [ -d "$ROOT/brasil/vendor" ]; then cp -r "$ROOT/brasil/vendor" "$OPT/lib"; fi

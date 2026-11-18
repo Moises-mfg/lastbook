@@ -157,3 +157,54 @@ test('alpha 9 oferece checksum e evidências sem inventar execuções de CI',()=
   assert.equal(d.querySelectorAll('a[href*="/actions/runs/"]').length,0);
   dom.window.close();
 });
+
+test('plano familiar oferece folha em branco acessível e link na preparação', () => {
+  const dom = start();
+  assert.ok(dom.window.document.querySelector('#preparacao a[href="plano-familiar.html"]'));
+  dom.window.close();
+  const plan = new JSDOM(readFileSync(new URL('../plano-familiar.html', import.meta.url), 'utf8'));
+  const d = plan.window.document;
+  assert.equal(d.documentElement.lang, 'pt-BR');
+  assert.equal(d.querySelectorAll('form').length, 0);
+  assert.equal(d.querySelectorAll('input, textarea').length, 10);
+  for (const field of d.querySelectorAll('input, textarea')) {
+    assert.ok(d.querySelector(`label[for="${field.id}"]`));
+    assert.equal(field.value, '');
+    assert.equal(field.autocomplete, 'off');
+    assert.ok(field.nextElementSibling.classList.contains('valor-impresso'));
+    for (const id of (field.getAttribute('aria-describedby') || '').split(' ').filter(Boolean)) assert.ok(d.getElementById(id));
+  }
+  for (const asset of d.querySelectorAll('script[src], link[rel="stylesheet"]')) assert.ok(!/^https?:/.test(asset.getAttribute('src') || asset.getAttribute('href')));
+  assert.match(d.getElementById('apoio-ajuda').textContent, /crianças, idosos e pessoas com deficiência/);
+  for (const id of ['encontro-1', 'encontro-2', 'contato-fora', 'animais', 'itens']) assert.ok(d.getElementById(id));
+  plan.window.close();
+});
+
+test('plano familiar imprime como texto sem enviar nem persistir campos', () => {
+  const html = readFileSync(new URL('../plano-familiar.html', import.meta.url), 'utf8');
+  const script = readFileSync(new URL('../plano-familiar.js', import.meta.url), 'utf8');
+  const dom = new JSDOM(html, {url: 'https://ultimo-livro.invalid/plano-familiar.html', runScripts: 'outside-only'});
+  const w = dom.window, d = w.document;
+  const forbidden = () => assert.fail('O plano não deve enviar ou armazenar dados');
+  w.fetch = forbidden; w.XMLHttpRequest = forbidden; w.navigator.sendBeacon = forbidden;
+  for (const key of ['localStorage', 'sessionStorage', 'indexedDB']) Object.defineProperty(w, key, {get: forbidden});
+  Object.defineProperty(d, 'cookie', {get: forbidden, set: forbidden});
+  let prints = 0;
+  w.print = () => { prints++; };
+  w.eval(script);
+  assert.equal(d.getElementById('imprimir-plano').hidden, false);
+  const content = '<img src=x onerror=alert(1)>\n' + 'Contato e trajeto acessível. '.repeat(100);
+  const field = d.getElementById('rotas');
+  field.value = content;
+  field.dispatchEvent(new w.Event('input'));
+  assert.equal(field.nextElementSibling.textContent, content);
+  assert.equal(field.nextElementSibling.children.length, 0);
+  d.getElementById('familia').value = 'Família de teste';
+  w.dispatchEvent(new w.Event('beforeprint'));
+  assert.equal(d.getElementById('familia').nextElementSibling.textContent, 'Família de teste');
+  d.getElementById('imprimir-plano').click();
+  assert.equal(prints, 1);
+  const fresh = new JSDOM(html);
+  assert.equal(fresh.window.document.getElementById('familia').value, '');
+  fresh.window.close(); w.close();
+});

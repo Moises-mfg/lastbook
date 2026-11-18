@@ -43,13 +43,40 @@ dos PDFs ficam disponíveis offline. Os botões de referência abrem as fontes
 no navegador. Em **Minha preparação**, o botão do guia de compras abre
 o site do projeto e pode pedir acesso.
 
+## Preparação familiar e municipal
+
+Em **Plano familiar**, combine dois pontos de encontro, um contato fora da área,
+responsáveis pelo apoio e o que levar. Em **Salvar cópia HTML offline**,
+selecione só os campos que deseja levar no celular ou imprimir. Em **Acesso
+rápido**, ensaie abrir o plano, os contatos, o mapa e os guias com a rede desligada.
+
+Cadastre pontos em **Lugares salvos** e confira a cobertura dos mapas
+instalados. Em **Mapas locais**, use **Salvar recorte para impressão**. O recorte
+pode incluir lugares pessoais, conforme o que estiver visível. Em **Minha
+região**, selecione o município para consultar o histórico do Atlas Digital de
+Desastres de 1991 a 2025 e guias temáticos. As contagens são registros históricos,
+sem previsão ou indicação de rota. A amostra de Itajaí inclui cinco UBS no CNES
+e sete locais de abrigo cadastrados no plano municipal. Confira o atendimento
+e os abrigos em funcionamento com os serviços locais.
+
+Para importar dados locais, use **Minha região → Importar camada GeoJSON**.
+Arquivos em WGS84 (longitude e latitude, EPSG:4326) devem conter uma coleção de
+pontos para saúde ou abrigos, ou de polígonos para risco. Informe a fonte e a
+data de referência e ative a camada no mapa. Preserve o arquivo original para
+reimportar quando necessário. A origem exibida é a informada na importação.
+
+O botão **Recuperação** reúne um guia pós-enchente e registros pessoais com
+datas, protocolos e fotos. Use **Inventário** para anotar quantidade, local e
+data para revisão. O modelo do site pode ser preenchido no navegador e impresso
+em A4, ou salvo pela opção PDF do navegador.
+
 ## Dados e backups
 
 Os dados ficam em `~/Library/Application Support/UltimoLivro` no macOS, `%LOCALAPPDATA%\UltimoLivro` no Windows e, no Linux, em `$XDG_DATA_HOME/ultimo-livro` (ou `~/.local/share/ultimo-livro` se `XDG_DATA_HOME` não estiver definido). Se `ULTIMO_LIVRO_DATA` estiver definida, ela substitui o diretório padrão em qualquer sistema. Para fazer backup, feche o aplicativo e copie essa pasta para um local seguro; para restaurar, feche o aplicativo e recoloque os dados na pasta correspondente. Preserve os arquivos GGUF, Wikis e mapas se quiser manter os downloads locais. Arquivos importados permanecem na pasta ou no disco de origem: copie-os também e, se o caminho mudar, importe-os novamente no aplicativo.
 
 Abra **Verificar uso offline → Backup e recuperação**. Escolha
 **Exportar backup** e selecione a pasta do pendrive ou outro destino. O arquivo
-inclui o checklist e as escolhas de instalação. A opção de incluir o chat
+inclui o checklist, as escolhas de instalação e os registros de preparação com fotos. A opção de incluir o chat
 também grava perguntas e respostas. Ao restaurar, um backup com chat substitui
 o histórico atual. Use os botões de importação para reconectar arquivos grandes
 de enciclopédias ou mapas onde já estão salvos.

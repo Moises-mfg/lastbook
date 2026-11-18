@@ -16,7 +16,7 @@ ABI=f'cp{sys.version_info.major}{sys.version_info.minor}'
 sys.path.insert(0,str(ROOT/'lib'/ABI))
 sys.path.insert(0,str(ROOT/'brasil/vendor'/ABI))
 from brasil.core import Store
-from brasil import guias_pdf
+from brasil import guias_pdf, preparo_local, regiao
 from engine.setup.api import SetupHandler, _send_json
 
 WEB = Path(__file__).parent / 'web'
@@ -24,6 +24,7 @@ STORE = None
 PICK_FILE = None
 OPEN_RESOURCE = None
 BACKUP_FILE = None
+PREPARO_FILE = None
 
 
 class Handler(SetupHandler):
@@ -62,6 +63,30 @@ class Handler(SetupHandler):
         if path == '/api/brasil/memory':
             from brasil.plataforma import available_memory
             return _send_json(self, {'ram_disponivel_bytes': available_memory()})
+        if path == '/api/brasil/regiao':
+            from brasil import regiao_camadas
+            ibge = regiao.municipio_ativo(STORE)
+            return _send_json(self, {'guias': regiao.GUIAS, 'ibge': ibge,
+                                     'camadas': regiao_camadas.listar(STORE, ibge) if ibge else []})
+        if path == '/api/brasil/preparo':
+            return _send_json(self, preparo_local.dados(STORE))
+        if path.startswith('/api/brasil/preparo-foto/'):
+            try:
+                foto = preparo_local.foto_bytes(STORE, path.rsplit('/', 1)[-1])
+            except (ValueError, OSError):
+                foto = None
+            if foto:
+                data, mime = foto
+                self.send_response(200)
+                self.send_header('Content-Type', mime)
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('X-Content-Type-Options', 'nosniff')
+                self.end_headers()
+                if self.command != 'HEAD':
+                    self.wfile.write(data)
+                return
+            return _send_json(self, {'error': 'Foto não encontrada.'}, 404)
         if path == '/api/brasil/chat':
             return _send_json(self, {'history': STORE.chat_history()})
         if path == '/api/brasil/job':
@@ -76,7 +101,8 @@ class Handler(SetupHandler):
             return _send_json(self, {'error': 'Acesso somente neste computador.'}, 403)
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if not 0 < size <= 128*1024:
+            limit = 2*1024*1024 if self._path() == '/api/brasil/preparo-exportar-mapa' else 128*1024
+            if not 0 < size <= limit:
                 raise ValueError('Pedido inválido.')
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
@@ -97,6 +123,45 @@ class Handler(SetupHandler):
                 if BACKUP_FILE is None:
                     raise ValueError('O seletor de arquivos para backup está indisponível.')
                 return _send_json(self, BACKUP_FILE(body))
+            if self._path() == '/api/brasil/preparo':
+                return _send_json(self, preparo_local.salvar(STORE, body))
+            if self._path() == '/api/brasil/map-at':
+                return _send_json(self, STORE.map_at(body))
+            if self._path() == '/api/brasil/regiao-municipio':
+                from brasil import regiao_camadas, regiao_dados
+                ibge = body.get('ibge')
+                municipio = regiao.selecionar_municipio(STORE, ibge)
+                return _send_json(self, {'municipio': municipio, 'historico': regiao_dados.historico(ibge),
+                                         'servicos': regiao.servicos_catalogados(ibge),
+                                         'camadas': regiao_camadas.listar(STORE, ibge)})
+            if self._path() == '/api/brasil/regiao-excluir':
+                from brasil import regiao_camadas
+                return _send_json(self, regiao_camadas.excluir(STORE, body))
+            if self._path() == '/api/brasil/regiao-importar':
+                from brasil import regiao_camadas
+                if PREPARO_FILE is None:
+                    raise ValueError('O seletor de arquivos está indisponível.')
+                path = PREPARO_FILE('Importar camada GeoJSON', False, 'camada.geojson')
+                return _send_json(self, regiao_camadas.importar(STORE, body, path))
+            if self._path() == '/api/brasil/preparo-exportar-mapa':
+                from brasil.regiao_mapa import exportar_recorte
+                if PREPARO_FILE is None:
+                    raise ValueError('O seletor de arquivos está indisponível.')
+                path = PREPARO_FILE('Salvar recorte para impressão', True, 'mapa-offline.html')
+                if not path:
+                    return _send_json(self, {'cancelado': True})
+                return _send_json(self, exportar_recorte(STORE, body, path))
+            if self._path() in ('/api/brasil/preparo-exportar', '/api/brasil/preparo-foto'):
+                if PREPARO_FILE is None:
+                    raise ValueError('O seletor de arquivos está indisponível.')
+                exportar = self._path().endswith('-exportar')
+                path = PREPARO_FILE('Exportar plano familiar' if exportar else 'Adicionar foto',
+                                    exportar, 'plano-familiar.html' if exportar else None)
+                if not path:
+                    return _send_json(self, {'cancelado': True})
+                if exportar:
+                    return _send_json(self, preparo_local.exportar_plano(STORE, body, path))
+                return _send_json(self, preparo_local.adicionar_foto(STORE, body.get('id'), path))
             fn = routes.get(self._path())
             if not fn:
                 return _send_json(self, {'error': 'Operação não encontrada.'}, 404)
@@ -110,7 +175,7 @@ class Handler(SetupHandler):
 
 
 def main():
-    global STORE, PICK_FILE, OPEN_RESOURCE, BACKUP_FILE
+    global STORE, PICK_FILE, OPEN_RESOURCE, BACKUP_FILE, PREPARO_FILE
     from brasil.plataforma import data_folder
     base=data_folder()
     STORE = Store(base)
@@ -124,7 +189,7 @@ def main():
     import shell_linux
     import threading
     from gi.repository import GLib, Gtk
-    def choose_path(title, save=False):
+    def choose_path(title, save=False, filename='ultimo-livro-backup.json'):
         event = threading.Event()
         out = {}
 
@@ -133,7 +198,7 @@ def main():
             dialog = Gtk.FileChooserNative.new(title, shell_linux.SHELL.window,
                                                action, 'Salvar' if save else 'Abrir', 'Cancelar')
             if save:
-                dialog.set_current_name('ultimo-livro-backup.json')
+                dialog.set_current_name(filename)
                 dialog.set_do_overwrite_confirmation(True)
             try:
                 if dialog.run() == Gtk.ResponseType.ACCEPT:
@@ -160,6 +225,7 @@ def main():
 
     from brasil.backup import transfer
     PICK_FILE = pick_file
+    PREPARO_FILE = choose_path
     BACKUP_FILE = lambda body: transfer(STORE, body, choose_path)
     def open_resource(ident):
         from brasil.fontes import resource_url

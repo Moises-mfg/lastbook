@@ -1,7 +1,9 @@
 """Backup portátil dos dados pessoais; arquivos grandes são importados à parte.
 
 O campo opcional ``conversas`` substitui o histórico inteiro quando presente.
-Sua ausência preserva o histórico do destino. Nenhum caminho do arquivo é usado.
+Sua ausência preserva o histórico do destino. O campo opcional ``preparo`` inclui
+as seções pessoais e fotos originais; sua ausência preserva o preparo do destino.
+Nenhum caminho do arquivo é usado.
 """
 import json
 import os
@@ -28,7 +30,7 @@ def _validate(body):
     from .core import validate_choices
 
     required = {'formato', 'versao', 'escolhas', 'checklist'}
-    if not isinstance(body, dict) or not required <= body.keys() or body.keys() - required - {'conversas'}:
+    if not isinstance(body, dict) or not required <= body.keys() or body.keys() - required - {'conversas', 'preparo'}:
         raise ValueError('Estrutura de backup inválida.')
     if body['formato'] != FORMAT or type(body['versao']) is not int or body['versao'] != VERSION:
         raise ValueError('Formato ou versão de backup não suportados.')
@@ -66,7 +68,11 @@ def _validate(body):
                 for key, value in source.items():
                     _text(key)
                     _text(value)
-    return dict(body, escolhas=choices)
+    result = dict(body, escolhas=choices)
+    if 'preparo' in body:
+        from .preparo_local import validar_backup
+        result['preparo'] = validar_backup(body['preparo'])
+    return result
 
 
 def _object(pairs):
@@ -108,6 +114,10 @@ def export_backup(store, path, include_chat=False):
         body = {'formato': FORMAT, 'versao': VERSION,
                 'escolhas': json.loads(row[0]) if row else None,
                 'checklist': [{'id': item['id'], 'feito': bool(done.get(item['id']))} for item in COMPRAS]}
+        from .preparo_local import exportar_backup
+        preparo = exportar_backup(db)
+        if preparo is not None:
+            body['preparo'] = preparo
         if include_chat:
             rows = db.execute('SELECT pergunta,resposta,fontes,criado_em FROM chat_turns ORDER BY id')
             body['conversas'] = [dict(pergunta=q, resposta=a, fontes=json.loads(s), criado_em=t)
@@ -158,6 +168,9 @@ def restore_backup(store, path):
             db.execute('DELETE FROM checklist')
             db.executemany('INSERT INTO checklist (id,done) VALUES (?,?)',
                            [(item['id'], int(item['feito'])) for item in body['checklist']])
+            if 'preparo' in body:
+                from .preparo_local import restaurar_backup
+                restaurar_backup(db, body['preparo'])
             if 'conversas' in body:
                 db.execute('DELETE FROM chat_turns')
                 db.executemany('INSERT INTO chat_turns (pergunta,resposta,fontes,criado_em) VALUES (?,?,?,?)',

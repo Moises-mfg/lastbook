@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Plano familiar de emergência para preencher no navegador ou no papel e imprimir em A4.">
+  <title>Meu plano familiar de emergência — O Último Livro</title>
+  <link rel="stylesheet" href="plano-familiar.css">
+  <script src="plano-familiar.js" defer></script>
+</head>
+<body>
+  <header class="tela">
+    <a href="index.html#preparacao">← Voltar à preparação</a>
+    <p>O Último Livro · preparação da casa</p>
+  </header>
+  <main>
+    <h1>Meu plano familiar de emergência</h1>
+    <div class="tela instrucoes" id="como-usar">
+      <p>Conversem e preencham juntos, ou imprimam a folha em branco para escrever à mão. Compartilhem uma cópia com as pessoas envolvidas e guardem outra em local acessível.</p>
+      <p><strong>Os campos não são enviados nem salvos por esta página.</strong> Ao fechar ou recarregar, o preenchimento pode ser perdido. O navegador pode manter dados da sessão. Guarde a cópia impressa ou o PDF com cuidado, pois pode conter dados pessoais.</p>
+      <p>Para guardar no computador ou celular, abra a impressão e escolha <strong>Salvar como PDF</strong>, se disponível no navegador. Use papel A4 e confira a prévia; textos longos podem ocupar mais páginas.</p>
+      <button type="button" id="imprimir-plano" hidden>Imprimir ou salvar PDF</button>
+      <noscript><p>Use o menu de impressão do navegador para imprimir esta folha em branco.</p></noscript>
+    </div>
+    <p class="orientacao">Combine locais seguros e rotas acessíveis conforme a orientação da Defesa Civil do município. Reveja o plano quando a rotina mudar e pratique a saída com todos.</p>
+    <section aria-labelledby="dados-titulo">
+      <h2 id="dados-titulo">1. Nossa casa e revisão</h2>
+      <div class="campos dupla">
+        <div class="campo"><label for="familia">Família / casa (identificação que preferir)</label><input id="familia" type="text" autocomplete="off"><div class="valor-impresso" aria-hidden="true"></div></div>
+        <div class="campo"><label for="revisao">Data de revisão / próxima revisão</label><input id="revisao" type="text" autocomplete="off"><div class="valor-impresso" aria-hidden="true"></div></div>
+      </div>
+    </section>
+    <section aria-labelledby="encontro-titulo">
+      <h2 id="encontro-titulo">2. Onde nos encontrar e como chegar</h2>
+      <div class="campos dupla">
+        <div class="campo"><label for="encontro-1">Encontro 1 — local seguro perto de casa</label><textarea id="encontro-1" rows="2" autocomplete="off" aria-describedby="encontro-ajuda"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+        <div class="campo"><label for="encontro-2">Encontro 2 — alternativa fora da área de risco</label><textarea id="encontro-2" rows="2" autocomplete="off" aria-describedby="encontro-ajuda"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+      </div>
+      <p class="ajuda" id="encontro-ajuda">Anote endereço, referência e trajeto acessível. Confirmem uma alternativa se o caminho estiver bloqueado; sigam as instruções oficiais.</p>
+      <div class="campo"><label for="rotas">Rotas combinadas e transporte (inclua uma alternativa)</label><textarea id="rotas" rows="2" autocomplete="off"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+    </section>
+    <section aria-labelledby="contatos-titulo">
+      <h2 id="contatos-titulo">3. Com quem falar</h2>
+      <div class="campos dupla">
+        <div class="campo"><label for="contato-fora">Contato fora do bairro — nome e telefone</label><textarea id="contato-fora" rows="2" autocomplete="off"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+        <div class="campo"><label for="contatos">Outros contatos e quem avisa quem</label><textarea id="contatos" rows="2" autocomplete="off"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+      </div>
+      <p class="ajuda">Deixem os números também no papel, caso o celular fique sem bateria.</p>
+    </section>
+    <section aria-labelledby="apoio-titulo">
+      <h2 id="apoio-titulo">4. Quem ajuda quem</h2>
+      <p class="ajuda" id="apoio-ajuda">Combinem com cada pessoa o apoio necessário: crianças, idosos e pessoas com deficiência. Incluam responsável, substituto, busca na escola, mobilidade e comunicação acessível. Para equipamentos médicos elétricos, planejem a falta de energia com a equipe de saúde.</p>
+      <div class="campo"><label for="apoio">Pessoa / apoio necessário / quem ajuda / substituto</label><textarea id="apoio" rows="3" autocomplete="off" aria-describedby="apoio-ajuda"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+    </section>
+    <section aria-labelledby="levar-titulo">
+      <h2 id="levar-titulo">5. Animais e itens essenciais</h2>
+      <div class="campos dupla">
+        <div class="campo"><label for="animais">Animais — quem leva, transporte e destino combinado</label><textarea id="animais" rows="2" autocomplete="off"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+        <div class="campo"><label for="itens">Itens essenciais — onde ficam e quem leva</label><textarea id="itens" rows="2" autocomplete="off" aria-describedby="itens-ajuda"></textarea><div class="valor-impresso" aria-hidden="true"></div></div>
+      </div>
+      <p class="ajuda" id="itens-ajuda">Considere documentos, chaves, água, lanterna, medicamentos de uso habitual e recursos de acessibilidade. Anote só os dados pessoais necessários.</p>
+    </section>
+    <footer>
+      <p><strong>Alertas:</strong> para receber SMS da Defesa Civil, envie o CEP de interesse para <strong>40199</strong>. Cadastrem-se antes de uma emergência, enquanto houver sinal.</p>
+      <p class="fontes">Adaptação independente. Referências: <a href="https://portais.santoandre.sp.gov.br/defesacivil/plano-familiar-de-emergencia/">Defesa Civil de Santo André — plano familiar</a> · <a href="https://www.gov.br/pt-br/servicos/solicitar-cadastro-para-recebimento-de-avisos-e-alertas-de-desastres">Gov.br — alertas da Defesa Civil</a>. O plano complementa as orientações locais.</p>
+    </footer>
+  </main>
+</body>
+</html>

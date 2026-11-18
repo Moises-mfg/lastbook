@@ -77,6 +77,14 @@ def map_info(path):
             z,x,tms_y=map(int,row)
             if not 0<=z<=22: raise ValueError('Nível de mapa inválido.')
             y=2**z-1-tms_y
+            bounds = None
+            if 'bounds' in metadata:
+                try:
+                    left, bottom, right, top = map(float, metadata['bounds'].split(','))
+                    if -180 <= left < right <= 180 and -90 <= bottom < top <= 90:
+                        bounds = [left, bottom, right, top]
+                except (AttributeError, TypeError, ValueError):
+                    pass
             if 'center' in metadata:
                 lon,lat,z0=map(float,metadata['center'].split(','))
                 z=int(z0)
@@ -87,7 +95,7 @@ def map_info(path):
                 y=int((1-math.asinh(math.tan(math.radians(lat)))/math.pi)/2*n)
             return {'nome':metadata.get('name',Path(path).name),'atribuicao':metadata.get('attribution','Verifique as atribuições do fornecedor do mapa.'),
                     'z':z,'x':x,'y':y,'minzoom':int(metadata.get('minzoom',0)),'maxzoom':int(metadata.get('maxzoom',18)),
-                    'formato':metadata['format'].lower()}
+                    'formato':metadata['format'].lower(),'bounds':bounds}
     except (sqlite3.Error, OverflowError, TypeError) as e:
         raise ValueError('Não foi possível abrir o mapa MBTiles.') from e
 
