@@ -2,9 +2,10 @@
 
 ## Estado e requisitos
 
-A [alpha 8](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8)
-está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
-(macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
+A [página da alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)
+lista os pacotes já validados para download. Os sistemas suportados são Linux
+x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon (macOS 13.3 ou posterior)
+e Windows x64 (Windows 10 versão 1809 ou posterior).
 
 O instalador Windows inclui o WebView2 Runtime. Os pacotes Mac e Windows
 incluem Python e o motor local. Modelos GGUF, enciclopédias e mapas são baixados
@@ -27,7 +28,7 @@ ou abra o PDF no leitor do sistema. O **Assistente local** retoma os turnos rece
 para responder a perguntas de seguimento. As conversas e as referências ficam no
 computador. Use **Nova conversa** para limpar o histórico.
 
-Na alpha 8, **Minha instalação** mostra os componentes da seleção,
+Na alpha 9, **Minha instalação** mostra os componentes da seleção,
 seus tamanhos, o que já está instalado e o espaço necessário antes de baixar.
 A **Biblioteca** reúne a busca em guias, PDFs, Wikipedia (enciclopédia) e lugares
 dos mapas vetoriais instalados. Em **Verificar uso offline**, o aplicativo testa
@@ -35,6 +36,12 @@ a leitura local e executa uma inferência curta quando a IA está configurada.
 
 O assistente mostra a RAM disponível para o modelo. Use **Parar resposta**
 para interromper a geração e recuperar a pergunta sem gravar uma resposta parcial.
+
+Na Biblioteca, **Guias por situação** reúne leituras por apagão, enchente,
+falta de água, calor intenso e cuidados com alimentos. Os resumos e o texto
+dos PDFs ficam disponíveis offline. Os botões de referência abrem as fontes
+no navegador. Em **Minha preparação**, o botão do guia de compras abre
+o site do projeto e pode pedir acesso.
 
 ## Dados e backups
 

@@ -27,3 +27,5 @@ body{font-size:16px}.cabecalho,main,footer{max-width:1320px;margin:auto;padding:
 .preparacao-cards ul { padding-left: 1.1rem; }
 .preparacao-preco { font-weight: 700; }
 .preparacao-fontes { font-size: .9rem; }
+
+.acervo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:20px}.acervo-grid article{min-width:0}.acervo-grid h3{font-size:21px}.acervo-grid p,.acervo-grid li{font-size:14px}.acervo-grid ul{padding-left:20px}.acervo-grid li{margin-bottom:12px}.acervo-grid li span{display:block;color:#596a58}.download-evidencias{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:14px;font-size:13px}

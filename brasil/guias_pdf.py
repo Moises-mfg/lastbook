@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import sys
 
+from .guias_pdf_indice import PDF_TEXT
+
 
 GUIDES = (
     ('preparacao', 'Organize a preparação da casa', 'Documentos, contatos e um plano que todos conhecem.'),
@@ -20,7 +22,8 @@ def catalog():
         pages = sorted(GUIDES_PATH.glob(f'{ident}-[1-9].png'))
         if (GUIDES_PATH / f'{ident}.pdf').is_file() and pages:
             guides.append({'id': ident, 'titulo': title, 'descricao': description,
-                           'paginas': [f'/ui/guias/{page.name}' for page in pages]})
+                           'paginas': [f'/ui/guias/{page.name}' for page in pages],
+                           'texto_paginas': list(PDF_TEXT.get(ident, ()))})
     return guides
 
 

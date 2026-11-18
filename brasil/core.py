@@ -15,6 +15,7 @@ from .arquivos import read_zim, map_info
 from . import pacotes, mapa_vetor
 from .mapas import MapSupport
 from .fontes import RECURSOS
+from . import situacoes
 from . import plataforma
 from .sqlite_local import Connection
 from .conversa import build_prompt, OUTPUT_TOKENS
@@ -135,13 +136,13 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.4.0-alpha.8', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.4.0-alpha.9', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free,
                  'ram_disponivel_bytes': plataforma.available_memory()}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,
                 'mapas': MAPAS, 'catalogo': self.package_state(), 'plano': self.install_plan(), 'enciclopedias': self.encyclopedias(), 'guias': GUIAS, 'compras': self.checklist(), 'ia': {'motor': bool(self.runner()),
                 'modelo': self.model_path().is_file(), 'ram_necessaria_gib': self.model_spec()['available_gib'], 'download_bytes': self.model_spec()['size'], 'nome': self.model_spec()['file']},
-                'recursos': RECURSOS, 'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
+                'recursos': RECURSOS, 'situacoes': situacoes.catalog(), 'mapas_instalados': self.installed_maps(), 'mapa_ativo': self.active_map_id(), 'mapas_disponiveis': bool(pacotes.maps_catalog()), 'arquivos': self.files(), 'aviso': 'Modelos, enciclopédias e mapas locais. Nenhum download ocorre ao abrir o aplicativo.'}
 
     def files(self):
         with self.db() as db:
