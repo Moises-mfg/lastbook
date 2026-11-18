@@ -2,7 +2,7 @@
 
 ## Estado e requisitos
 
-A [alpha 5](https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5)
+A [alpha 5](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.5)
 está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
 (macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
 

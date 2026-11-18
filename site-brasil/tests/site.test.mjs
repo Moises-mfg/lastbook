@@ -65,7 +65,7 @@ test('navegação local encontra seções e scripts não carregam terceiros',()=
   const dom=start(),d=dom.window.document;
   for(const a of d.querySelectorAll('a[href^="#"]'))assert.ok(d.querySelector(a.getAttribute('href')),a.outerHTML);
   for(const script of d.querySelectorAll('script[src]'))assert.equal(new URL(script.src).origin,'https://ultimo-livro.invalid');
-  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5"]'));
+  assert.ok(d.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.5"]'));
   dom.window.close();
 });
 
@@ -82,7 +82,7 @@ test('downloads apresentam plataformas, requisitos e apenas links de pacotes pub
   const linux=cards[0];
   assert.match(linux.textContent,/v0\.4\.0-alpha\.5 · Alpha disponível/);
   assert.match(linux.querySelector('.download-requisitos').textContent,/Ubuntu 24\.04–26\.04 x86_64/);
-  const files='https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.5/';
+  const files='https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.5/';
   assert.equal(linux.querySelector('a').href,files+'ultimo-livro_0.4.0-alpha5_amd64.deb');
   for(const mac of cards.slice(1,3))assert.match(mac.querySelector('.download-requisitos').textContent,/macOS 13\.3 ou posterior/);
   assert.match(cards[1].textContent,/Apple Silicon/);assert.match(cards[2].textContent,/Intel/);
@@ -90,9 +90,9 @@ test('downloads apresentam plataformas, requisitos e apenas links de pacotes pub
   assert.match(cards[3].querySelector('.download-instrucoes').textContent,/WebView2/);
   assert.equal(cards[1].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha5_macos-arm64.dmg');
   assert.equal(cards[2].querySelector('a').href,files+'ultimo-livro_0.4.0-alpha5_macos-x64.dmg');
-  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5');
-  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/blob/main/docs/brasil/INSTALACAO-DESKTOP.md"]'));
-  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/lastbook/tree/v0.4.0-alpha.5"]'));
+  assert.equal(cards[3].querySelector('a').href,'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.5');
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/blob/main/docs/brasil/INSTALACAO-DESKTOP.md"]'));
+  assert.ok(section.querySelector('a[href="https://github.com/Moises-mfg/o-ultimo-livro/tree/v0.4.0-alpha.5"]'));
   const scripts=[...d.querySelectorAll('script[src]')].map(s=>s.getAttribute('src'));
   assert.ok(scripts.indexOf('downloads.js')<scripts.indexOf('app.js'));
   dom.window.close();

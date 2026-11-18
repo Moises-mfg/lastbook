@@ -17,7 +17,7 @@ ESTADOS = {'AC':'Acre','AL':'Alagoas','AP':'Amapá','AM':'Amazonas','BA':'Bahia'
            'RS':'Rio Grande do Sul','RO':'Rondônia','RR':'Roraima','SC':'Santa Catarina','SP':'São Paulo','SE':'Sergipe','TO':'Tocantins'}
 WIKIS = {'pt-mini':'Português · introduções', 'pt-nopic':'Português · sem imagens', 'pt-maxi':'Português · completa',
          'en-mini':'Inglês · introduções', 'es-mini':'Espanhol · introduções'}
-MAPAS = {'municipio':'Município e entorno', 'estado':'Um estado', 'brasil':'Brasil'}
+MAPAS = {'municipio':'Município e entorno', 'estado':'Um estado', 'brasil':'Brasil', 'sem-mapas':'Não baixar mapas agora'}
 GUIAS = [
     {'id':'primeiros-passos','titulo':'Prepare sua casa aos poucos','categoria':'Planejamento',
      'texto':'Comece pelos riscos da sua região: apagões, falta de água, enchentes ou necessidade de sair de casa. Faça uma lista das pessoas, dos animais e das necessidades de cada um. Combine contatos e um ponto de encontro. Registre o que já tem antes de comprar. Revise o plano com a família e teste a consulta deste aplicativo sem internet.',

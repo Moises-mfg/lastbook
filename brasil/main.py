@@ -16,6 +16,7 @@ ABI=f'cp{sys.version_info.major}{sys.version_info.minor}'
 sys.path.insert(0,str(ROOT/'lib'/ABI))
 sys.path.insert(0,str(ROOT/'brasil/vendor'/ABI))
 from brasil.core import Store
+from brasil import guias_pdf
 from engine.setup.api import SetupHandler, _send_json
 
 WEB = Path(__file__).parent / 'web'
@@ -52,7 +53,12 @@ class Handler(SetupHandler):
                 return _send_json(self,STORE.vector_tile(*(int(q[k][0]) for k in ('z','x','y'))))
             except (ValueError,KeyError,IndexError,sqlite3.Error,zlib.error):return _send_json(self,{'error':'Mapa não disponível.'},400)
         if path == '/api/brasil/state':
-            return _send_json(self, STORE.state())
+            state = STORE.state()
+            state['guias_pdf'] = guias_pdf.catalog()
+            state['hardware']['processadores_logicos'] = os.cpu_count()
+            return _send_json(self, state)
+        if path == '/api/brasil/chat':
+            return _send_json(self, {'history': STORE.chat_history()})
         if path == '/api/brasil/job':
             with STORE.lock:
                 return _send_json(self, dict(STORE.job))
@@ -71,7 +77,9 @@ class Handler(SetupHandler):
             if not isinstance(body, dict):
                 raise ValueError('Pedido inválido.')
             routes = {'/api/brasil/open-resource':lambda b:OPEN_RESOURCE(b.get('id')), '/api/brasil/map-catalog': STORE.map_catalog_search, '/api/brasil/select-map': STORE.select_map, '/api/brasil/map-search': STORE.search_map, '/api/brasil/install-selected': STORE.install_selected, '/api/brasil/install-package': lambda b: STORE.install_packages([b.get('id')]), '/api/brasil/resume': STORE.resume_install, '/api/brasil/pause': STORE.pause_install, '/api/brasil/import': lambda b: PICK_FILE(b.get('tipo')), '/api/brasil/search-zim': STORE.search_zim, '/api/brasil/article-zim': STORE.article_zim, '/api/brasil/choices': STORE.save_choices, '/api/brasil/check': STORE.check,
-                      '/api/brasil/ask': STORE.ask, '/api/brasil/download-model': lambda b: STORE.download_model()}
+                      '/api/brasil/ask': STORE.ask, '/api/brasil/clear-chat': lambda b: STORE.clear_chat(),
+                      '/api/brasil/open-pdf': lambda b: guias_pdf.open_pdf(b.get('id')),
+                      '/api/brasil/download-model': lambda b: STORE.download_model()}
             fn = routes.get(self._path())
             if not fn:
                 return _send_json(self, {'error': 'Operação não encontrada.'}, 404)

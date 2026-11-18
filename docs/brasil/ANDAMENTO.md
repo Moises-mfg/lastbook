@@ -98,10 +98,10 @@ pendentes. Nenhum modelo ou arquivo de enciclopédia foi enviado ao Git.
 
 ## Entrega 0.3 — 17/11/2026
 
-- PR [#6](https://github.com/Moises-mfg/lastbook/pull/6) integrado ao `main`.
-- [Instalador 0.3 alpha](https://github.com/Moises-mfg/lastbook/releases/tag/v0.3.0-alpha.3),
+- PR [#6](https://github.com/Moises-mfg/o-ultimo-livro/pull/6) integrado ao `main`.
+- [Instalador 0.3 alpha](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.3.0-alpha.3),
   cerca de 32 MB, produzido no Ubuntu 24.04 pelo CI e conferido por SHA-256.
-- [Dados dos mapas](https://github.com/Moises-mfg/lastbook/releases/tag/mapas-br-2026-11-16):
+- [Dados dos mapas](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/mapas-br-2026-11-16):
   5.571 municípios, 27 UFs, visão geral e Brasil detalhado; créditos, licença e
   proveniência incluídos. Os sete volumes foram comparados aos digests do GitHub.
 - Downloads reais de visão geral, Campinas e Boa Esperança do Norte, com pausa,
@@ -128,7 +128,7 @@ das escolhas e cadastros pessoais do proprietário; há instruções em
 
 ## Validação 0.4 — aplicativos para três sistemas
 
-Implementação em revisão no PR [#7](https://github.com/Moises-mfg/lastbook/pull/7).
+Implementação em revisão no PR [#7](https://github.com/Moises-mfg/o-ultimo-livro/pull/7).
 As janelas macOS/WebKit e Windows/WebView2 reutilizam o transporte local sem porta;
 Python, leitor ZIM e motor CPU são incluídos no pacote. Os dados permanecem locais
 e o download dos conteúdos depende de uma ação explícita.
@@ -153,7 +153,7 @@ Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTO
 
 ### Verificações adicionais da 0.4
 
-- Windows x64: o run [44131108762](https://github.com/Moises-mfg/lastbook/actions/runs/44131108762)
+- Windows x64: o run [44131108762](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44131108762)
   passou no motor, na cópia empacotada e na cópia instalada em pasta com acentos.
   As 15 etapas da janela, a pergunta pelo formulário, a resposta real com Brasília,
   a abertura da referência ZIM e o retorno ao mapa passaram. A correção do CRT
@@ -161,7 +161,7 @@ Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTO
 - A captura da cópia instalada foi conferida e está em `imagens/windows-alpha.png`.
   O pico do processo do motor foi 943.079.424 bytes numa pergunta curta; não é
   medição de RAM total nem benchmark do i3 alvo.
-- Linux: o run [44134607804](https://github.com/Moises-mfg/lastbook/actions/runs/44134607804)
+- Linux: o run [44134607804](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44134607804)
   passou também no teste repetível `tools/testar_linux.py`, com pacote extraído,
   IA, referência e captura obrigatórias. O CI agora inclui o conversor GI/Cairo.
 - Os jobs macOS da rodada Windows acima foram cancelados antes de iniciar, com
@@ -172,14 +172,14 @@ Requisitos, locais de dados e limites de assinatura estão em `INSTALACAO-DESKTO
   textos de licença e fontes das versões efetivamente incorporadas. A aprovação
   funcional do Windows não equivale à conclusão dessa revisão da distribuição.
 
-O run [44136068914](https://github.com/Moises-mfg/lastbook/actions/runs/44136068914)
+O run [44136068914](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44136068914)
 confirmou o novo empacotamento no Windows x64 e no Mac Intel. O Windows passou
 na cópia instalada em caminho com acentos. O aplicativo Intel foi executado
 diretamente no DMG montado somente para leitura. Em ambos, a janela enviou uma
 pergunta ao motor local, apresentou a resposta e abriu a referência no leitor ZIM.
 O GitHub cancelou o job Apple Silicon antes de executar etapas por falta de runner.
 O commit posterior de tradução dos alertas está em validação no
-[run 44190095078](https://github.com/Moises-mfg/lastbook/actions/runs/44190095078).
+[run 44190095078](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44190095078).
 
 O site recebeu a seção de downloads por sistema, com requisitos e estados reais,
 e passou nos sete testes DOM. Publicação privada confirmada; fonte da hospedagem
@@ -194,9 +194,9 @@ de cerca de 1,44 GiB no mesmo runner. A alpha 5 reduz de 3 para 2,5 GiB a
 exigência de memória disponível só do modelo Qwen3 0.6B. A recomendação de
 8 GB de RAM instalada continua, e o teste em um i3 físico segue na issue #3.
 
-O [job Apple Silicon da alpha 5](https://github.com/Moises-mfg/lastbook/actions/runs/44197109394/job/134441324708)
+O [job Apple Silicon da alpha 5](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44197109394/job/134441324708)
 passou com o DMG montado somente para leitura. A janela do pacote enviou a
 pergunta à IA local e abriu a referência ZIM. O pico medido do motor foi de
 1.542.193.152 bytes. Os checksums do DMG e do ZIP de fontes foram conferidos.
-O [teste Linux da alpha 5](https://github.com/Moises-mfg/lastbook/actions/runs/44197166750)
+O [teste Linux da alpha 5](https://github.com/Moises-mfg/o-ultimo-livro/actions/runs/44197166750)
 também passou na janela do pacote extraído.

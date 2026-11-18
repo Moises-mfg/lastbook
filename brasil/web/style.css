@@ -2,3 +2,11 @@
 .mapa-quadro{position:relative;height:550px;max-width:768px;overflow:hidden;border:1px solid var(--linha);background:#dce1d2}.mapa-imagens{display:grid;grid-template-columns:repeat(3,256px);grid-template-rows:repeat(3,256px);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}.mapa-imagens img{background:#dde3d8;font-size:0}
 
 #mapaCanvas{display:block;width:100%;height:550px;border:1px solid var(--linha);background:#d8e7e9;touch-action:none;cursor:grab}#mapaCanvas:active{cursor:grabbing}.mapa-camadas{display:flex;gap:18px;flex-wrap:wrap;margin:15px 0}.mapa-camadas label{display:flex;align-items:center;gap:8px}#mapaBusca{margin-top:20px}#mapaBusca button{margin:10px 0}#mapaResultados{max-height:180px;overflow:auto}
+
+.paginas-pdf { margin-block: 1.25rem; }
+.paginas-pdf figure { margin: 0 0 1.5rem; max-width: 54rem; }
+.paginas-pdf figcaption { margin-bottom: .4rem; }
+.paginas-pdf img { display: block; width: 100%; height: auto; background: white; }
+.turno-chat { margin-block: 1rem; }
+.mensagem-chat { white-space: pre-wrap; overflow-wrap: anywhere; }
+.referencias-chat { margin-top: .7rem; }

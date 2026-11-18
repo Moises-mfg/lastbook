@@ -2,7 +2,7 @@
 (() => {
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let S, draft, timer;
+  let S, draft, timer, chatPending = '', chatBusy = false;
   const size = n => n >= 1e9 ? (n/1e9).toLocaleString('pt-BR',{maximumFractionDigits:2})+' GB' : (n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB';
   async function api(path, body) {
     const r = await fetch('/api/brasil/' + path, body === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -14,12 +14,14 @@
   function route() {
     if (!S) return;
     window.ULMapas?.close();
-    const page = location.hash.slice(1) || 'biblioteca';
+    const page = location.hash.slice(1) || (S.escolhas ? 'biblioteca' : 'instalacao');
     document.querySelectorAll('nav a').forEach(a => { a.removeAttribute('aria-current'); if (a.hash === '#' + page) a.setAttribute('aria-current','page'); });
     if (page === 'downloads') downloads(); else if (page === 'enciclopedias') enciclopedias(); else if (page === 'mapas') mapas(); else if (page === 'compras') compras(); else if (page === 'instalacao') instalacao(); else if (page === 'fontes') fontes(); else if (page === 'ia') ia(); else biblioteca();
   }
   function biblioteca() {
-    $('#conteudo').innerHTML = '<p class="tag">Sua base de conhecimento</p><h1>O essencial, mesmo<br>sem conexão.</h1><p class="intro">Guias curtos para começar a preparação da sua casa. Consulte a fonte e adapte o plano às necessidades da sua família.</p><label for="busca">Buscar nos guias locais</label><input id="busca" type="search" placeholder="Água, energia, comunicação…"><div class="cards" id="guias"></div>';
+    const pdfs = S.guias_pdf || [];
+    $('#conteudo').innerHTML = `<p class="tag">Sua base de conhecimento</p><h1>O essencial, mesmo<br>sem conexão.</h1><p class="intro">Os guias desta biblioteca já vêm com o aplicativo. Você pode consultá-los sem internet.</p>${pdfs.length ? `<section aria-label="Guias em PDF"><h2>Guias em PDF</h2><div class="cards">${pdfs.map(g => `<article class="card"><h3>${esc(g.titulo)}</h3><p>${esc(g.descricao)}</p><button data-pdf="${esc(g.id)}">Ler PDF offline</button></article>`).join('')}</div></section>` : ''}<h2>Guias rápidos</h2><label for="busca">Buscar nos guias locais</label><input id="busca" type="search" placeholder="Água, energia, comunicação…"><div class="cards" id="guias"></div>`;
+    document.querySelectorAll('[data-pdf]').forEach(button => button.onclick = () => pdfGuide(button.dataset.pdf));
     const draw = () => {
       const norm = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
       const q = norm($('#busca').value);
@@ -27,6 +29,13 @@
       $('#guias').innerHTML = found.length ? found.map(g => `<div class="card"><p class="tag">${esc(g.categoria)}</p><h2>${esc(g.titulo)}</h2><button data-guide="${esc(g.id)}">Ler guia →</button></div>`).join('') : '<p>Nenhum guia encontrado. Tente outra palavra. Consulte também a seção Enciclopédias para pesquisar seus arquivos ZIM.</p>';
       document.querySelectorAll('[data-guide]').forEach(b => b.onclick = () => guide(b.dataset.guide));
     }; $('#busca').oninput = draw; draw();
+  }
+  function pdfGuide(id) {
+    const guide = (S.guias_pdf || []).find(item => item.id === id);
+    if (!guide) return;
+    $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button><h1>${esc(guide.titulo)}</h1><p>${esc(guide.descricao)}</p><button id="abrirPdf">Abrir arquivo PDF no leitor do sistema</button><div class="paginas-pdf">${guide.paginas.map((page, i) => `<figure><figcaption>Página ${i+1} de ${guide.paginas.length}</figcaption><img src="${esc(page)}" alt="Página ${i+1} de ${esc(guide.titulo)}" loading="lazy"></figure>`).join('')}</div>`;
+    $('#voltar').onclick = biblioteca;
+    $('#abrirPdf').onclick = () => api('open-pdf',{id}).then(r => notice(r.mensagem)).catch(failure);
   }
   function guide(id) {
     const g = S.guias.find(x => x.id === id); if (!g) return;
@@ -53,14 +62,26 @@
     });
   }
   function instalacao() {
-    draft = S.escolhas ? structuredClone(S.escolhas) : {perfil:S.recomendado,modelo:S.perfis[S.recomendado].modelo,wikis:[S.perfis[S.recomendado].wiki],mapa:S.perfis[S.recomendado].mapa,estados:[],municipios:[]};
+    const first = !S.escolhas, hardware = S.hardware, recommended = S.perfis[S.recomendado];
+    const ram = hardware.ram_bytes ? (hardware.ram_bytes/2**30).toLocaleString('pt-BR',{maximumFractionDigits:1})+' GiB de RAM detectada' : 'RAM não identificada';
+    const cpu = hardware.processadores_logicos ? ' · '+hardware.processadores_logicos+' processadores lógicos' : '';
+    const weak = !hardware.ram_bytes || hardware.ram_bytes < 7*2**30;
+    draft = S.escolhas ? structuredClone(S.escolhas) : {perfil:S.recomendado,modelo:weak?'sem-ia':S.perfis[S.recomendado].modelo,wikis:[S.perfis[S.recomendado].wiki],mapa:S.perfis[S.recomendado].mapa,estados:[],municipios:[]};
     const selected=new Set(draft.municipios||[]),mapItems=new Map();let request=0,offset=0,total=0;
-    $('#conteudo').innerHTML = `<p class="tag">Brasil inteiro, escolhas locais</p><h1>Uma biblioteca do<br>tamanho da sua vida.</h1><p class="intro">Escolha modelos, idiomas e regiões. Salvar guarda suas preferências; o download começa quando você pedir. Para um i3 com 8 GB, comece pelo Leve.</p><button id="importarPlano" class="secundario">Importar plano do site (.json)</button><form id="escolhas"><div class="cards">${Object.entries(S.perfis).map(([id,p]) => `<label class="card perfil"><input type="radio" name="perfil" value="${id}"${draft.perfil === id ? ' checked' : ''}><h2>${p.nome}</h2><p>${p.ram_gib ? p.ram_gib + ' GB de RAM como alvo' : 'Você escolhe os componentes'}${S.recomendado === id ? ' · sugerido' : ''}</p></label>`).join('')}</div><fieldset><legend>IA local</legend><label for="modelo">Modelo</label><select id="modelo">${options(S.modelos,draft.modelo)}</select><p>O menor modelo ocupa cerca de 640 MB. O desempenho depende do processador; os modelos maiores exigem mais memória.</p></fieldset><fieldset><legend>Enciclopédias</legend>${Object.entries(S.wikis).map(([id,title]) => `<label class="linha"><input type="checkbox" name="wiki" value="${id}"${draft.wikis.includes(id) ? ' checked' : ''}><span>${esc(title)}<br><small>${size(S.catalogo[id].size)} · edição ${esc(S.catalogo[id].edition)}</small></span></label>`).join('')}<p>Mini: introduções e quadros. Sem imagens: artigos completos em texto. Completa: arquivo com imagens; o leitor atual exibe os artigos em texto.</p></fieldset><fieldset><legend>Mapas offline</legend><label for="mapa">Abrangência</label><select id="mapa">${options(S.mapas,draft.mapa)}</select><p>Ruas, água, localidades e serviços para consulta. Recortes por município e estado incluem o entorno delimitado pelo retângulo da região. Sem rotas automáticas, relevo ou informações em tempo real.</p><div id="mapaMunicipios"><label for="ufMunicipio">Estado para buscar municípios</label><select id="ufMunicipio"><option value="">Todo o Brasil</option>${options(S.estados,'')}</select><label for="buscaMunicipio">Nome do município</label><input id="buscaMunicipio" type="search" maxlength="100" placeholder="Ex.: Campinas"><p id="municipiosStatus" role="status"></p><div id="municipiosResultados" class="selecao"></div><button type="button" id="maisMunicipios" class="secundario">Próximos municípios</button><h3>Municípios escolhidos</h3><div id="municipiosSelecionados"></div></div><div id="mapaEstados" class="selecao">${Object.entries(S.estados).map(([id,title]) => `<label class="linha"><input type="checkbox" name="estado" value="${id}"${draft.estados.includes(id) ? ' checked' : ''}>${esc(title)} (${id})</label>`).join('')}</div><p id="mapaNacional">O mapa detalhado nacional inclui todos os estados e exige mais espaço, inclusive durante a montagem do arquivo.</p><p>Visão geral do Brasil incluída nas opções municipais e estaduais. Créditos: © contribuidores do OpenStreetMap, Geofabrik e IBGE. Licença ODbL 1.0.</p></fieldset><div class="aviso" id="estimativa" aria-live="polite"></div><div class="acoes"><button>Salvar escolhas</button><button type="button" id="instalar">Baixar seleção</button></div></form>`;
+    $('#conteudo').innerHTML = `<p class="tag">Brasil inteiro, escolhas locais</p><h1>${first?'Escolha o que baixar':'Minha instalação'}</h1><p class="intro">Escolha agora os conteúdos que quer consultar sem internet. Os arquivos começam a baixar quando você confirmar.</p><div class="painel" id="recomendacaoInstalacao"><h2>${weak?'Comece pela biblioteca':'Perfil sugerido: '+esc(recommended.nome)}</h2><p>${esc(ram+cpu)} · ${esc(hardware.arch)} · ${size(hardware.livre_bytes)} livres no disco.</p><p>${weak?'Comece pelos guias, enciclopédias e mapas. Você ainda pode selecionar o modelo Leve se houver memória suficiente.':'A sugestão usa a RAM detectada. Para notebooks com cerca de 8 GB, o perfil Leve é o ponto de partida. A velocidade da IA depende do processador.'}</p>${first?'<button id="somenteGuias" type="button" class="secundario">Abrir biblioteca sem baixar agora</button>':''}</div><button id="importarPlano" class="secundario">Importar plano do site (.json)</button><form id="escolhas"><div class="cards">${Object.entries(S.perfis).map(([id,p]) => `<label class="card perfil"><input type="radio" name="perfil" value="${id}"${draft.perfil === id ? ' checked' : ''}><h2>${p.nome}</h2><p>${p.ram_gib ? p.ram_gib + ' GB de RAM como alvo' : 'Você escolhe os componentes'}${S.recomendado === id ? ' · sugerido' : ''}</p></label>`).join('')}</div><fieldset><legend>IA local</legend><label for="modelo">Modelo</label><select id="modelo">${options(S.modelos,draft.modelo)}</select><p>O menor modelo ocupa cerca de 640 MB. O desempenho depende do processador; os modelos maiores exigem mais memória.</p></fieldset><fieldset><legend>Enciclopédias</legend>${Object.entries(S.wikis).map(([id,title]) => `<label class="linha"><input type="checkbox" name="wiki" value="${id}"${draft.wikis.includes(id) ? ' checked' : ''}><span>${esc(title)}<br><small>${size(S.catalogo[id].size)} · edição ${esc(S.catalogo[id].edition)}</small></span></label>`).join('')}<p>Mini: introduções e quadros. Sem imagens: artigos completos em texto. Completa: arquivo com imagens; o leitor atual exibe os artigos em texto.</p></fieldset><fieldset><legend>Mapas offline</legend><label for="mapa">Abrangência</label><select id="mapa">${options(S.mapas,draft.mapa)}</select><p>Ruas, água, localidades e serviços para consulta. Recortes por município e estado incluem o entorno delimitado pelo retângulo da região. Sem rotas automáticas, relevo ou informações em tempo real.</p><div id="mapaMunicipios"><label for="ufMunicipio">Estado para buscar municípios</label><select id="ufMunicipio"><option value="">Todo o Brasil</option>${options(S.estados,'')}</select><label for="buscaMunicipio">Nome do município</label><input id="buscaMunicipio" type="search" maxlength="100" placeholder="Ex.: Campinas"><p id="municipiosStatus" role="status"></p><div id="municipiosResultados" class="selecao"></div><button type="button" id="maisMunicipios" class="secundario">Próximos municípios</button><h3>Municípios escolhidos</h3><div id="municipiosSelecionados"></div></div><div id="mapaEstados" class="selecao">${Object.entries(S.estados).map(([id,title]) => `<label class="linha"><input type="checkbox" name="estado" value="${id}"${draft.estados.includes(id) ? ' checked' : ''}>${esc(title)} (${id})</label>`).join('')}</div><p id="mapaNacional">O mapa detalhado nacional inclui todos os estados e exige mais espaço, inclusive durante a montagem do arquivo.</p><p>Visão geral do Brasil incluída nas opções municipais e estaduais. Créditos: © contribuidores do OpenStreetMap, Geofabrik e IBGE. Licença ODbL 1.0.</p></fieldset><div class="aviso" id="estimativa" aria-live="polite"></div><div class="acoes"><button>Salvar escolhas</button><button type="button" id="instalar">Baixar seleção</button><a class="botao" href="#biblioteca">Abrir biblioteca</a></div></form>`;
+    if ($('#somenteGuias')) $('#somenteGuias').onclick = async () => {
+      try {
+        await api('choices',{perfil:'personalizada',modelo:'sem-ia',wikis:[],mapa:'sem-mapas'});
+        S=await api('state');
+        location.hash='biblioteca';
+        notice('Os guias já estão disponíveis. Você pode alterar suas escolhas em Minha instalação.');
+      } catch(e) { failure(e); }
+    };
     $('#importarPlano').onclick=()=>importar('plano').catch(failure);
     function values(){return {perfil:$('[name=perfil]:checked').value,modelo:$('#modelo').value,mapa:$('#mapa').value,wikis:[...document.querySelectorAll('[name=wiki]:checked')].map(e=>e.value),estados:[...document.querySelectorAll('[name=estado]:checked')].map(e=>e.value),municipios:[...selected]};}
     function estimate(){
       const c=values(),ids=[...c.wikis,...(c.modelo==='sem-ia'?[]:[c.modelo])];
-      if(S.mapas_disponiveis){if(c.mapa==='brasil')ids.push('map-br-full');else{ids.push('map-br-base');ids.push(...(c.mapa==='estado'?c.estados.map(uf=>'map-uf-'+uf):c.municipios.map(id=>'map-city-'+id)));}}
+      if(S.mapas_disponiveis && c.mapa!=='sem-mapas'){if(c.mapa==='brasil')ids.push('map-br-full');else{ids.push('map-br-base');ids.push(...(c.mapa==='estado'?c.estados.map(uf=>'map-uf-'+uf):c.municipios.map(id=>'map-city-'+id)));}}
       let bytes=0,extra=0,unknown=false;
       for(const id of ids){const p=S.catalogo[id]||mapItems.get(id);if(!p){unknown=true;continue;}if(!p.instalado){bytes+=Math.max(0,p.size-(p.parcial_bytes||0));if(p.parts)extra+=p.size;}}
       const model=S.modelos[c.modelo],warning=model.ram_gib && S.hardware.ram_bytes && S.hardware.ram_bytes<model.ram_gib*2**30*.94;
@@ -147,30 +168,87 @@
       window.ULMapas.open(info,{api,notice});
     }catch(e){failure(e);}
   }
+  function chatControls() {
+    const send = $('#enviar');
+    if (!send) return;
+    const enabled = ((S.escolhas || {}).modelo || 'qwen3-0.6b') !== 'sem-ia';
+    send.disabled = chatBusy || !enabled || !S.ia.motor || !S.ia.modelo;
+    const reset = $('#novaConversa');
+    reset.disabled = chatBusy || !$('#turnosChat').querySelector('.turno-chat');
+    $('#chatPendente').textContent = chatPending ? 'Processando: ' + chatPending : '';
+  }
+  async function refreshChat() {
+    const container = $('#turnosChat');
+    if (!container) return;
+    const {history} = await api('chat');
+    if (!container.isConnected) return;
+    container.replaceChildren();
+    for (const item of history) {
+      const turn = document.createElement('article');
+      turn.className = 'turno-chat';
+      turn.innerHTML = `<h3>Você</h3><p class="mensagem-chat">${esc(item.pergunta)}</p><h3>Assistente local</h3><p class="resposta mensagem-chat">${esc(item.resposta)}</p>`;
+      const sources = document.createElement('div');
+      sources.className = 'referencias-chat acoes';
+      for (const source of item.fontes) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'secundario';
+        button.textContent = source.ref + ' · ' + source.titulo;
+        button.onclick = () => {
+          if (source.tipo === 'zim') openArticle(source).catch(failure);
+          else if (source.tipo === 'guia') guide(source.id);
+        };
+        sources.append(button);
+      }
+      if (!item.fontes.length) sources.textContent = 'Sem referência local nesta resposta.';
+      turn.append(sources); container.append(turn);
+    }
+    chatControls();
+  }
   function ia(){
     const selected=(S.escolhas || {}).modelo || 'qwen3-0.6b',enabled=selected!=='sem-ia',spec=S.catalogo[selected];
-    $('#conteudo').innerHTML=`<p class="tag">Assistente local · experimental</p><h1>Pergunte à<br>sua biblioteca.</h1><p class="intro">O modelo roda neste computador. Respostas podem conter erros: confira as referências, principalmente em situações de emergência.</p><div class="painel"><p>Motor: <b>${S.ia.motor?'disponível':'não instalado'}</b> · Modelo: <b>${enabled?esc(S.modelos[selected].nome):'desativado'}</b></p>${enabled?`<p>${size(spec.size)} · contexto de ${spec.context.toLocaleString('pt-BR')} tokens · ${spec.ram_gib} GB RAM como alvo.</p><button id="baixar" class="secundario">Baixar ou verificar modelo selecionado</button>`:'<p>Escolha um modelo em Minha instalação para ativar o assistente.</p>'}<p>O download é opcional. As perguntas e os trechos usados na resposta permanecem neste computador.</p></div><form id="pergunta"><label for="texto">Sua pergunta</label><textarea id="texto" maxlength="1500" required placeholder="Como começar a organizar minha preparação?"></textarea><div class="acoes"><button id="enviar"${!enabled || !S.ia.motor || !S.ia.modelo?' disabled':''}>Perguntar à IA</button><button type="button" class="secundario" id="buscar">Consultar guias sem IA</button></div></form><div id="resposta" class="resposta" aria-live="polite"></div><div id="fontesResposta"></div>`;
-    $('#buscar').onclick=()=>{location.hash='biblioteca';};
-    if($('#baixar'))$('#baixar').onclick=()=>begin('install-package',{id:selected},`Baixar/verificar o modelo selecionado (${size(spec.size)})?`).catch(failure);
-    $('#pergunta').onsubmit=async e=>{e.preventDefault();try{await api('ask',{pergunta:$('#texto').value});$('#enviar').disabled=true;poll();}catch(e){failure(e);}};
-    api('job').then(j=>{if(['executando','baixando'].includes(j.estado))poll();}).catch(failure);
+    $('#conteudo').innerHTML=`<p class="tag">Assistente local · experimental</p><h1>Converse com sua biblioteca</h1><p class="intro">Faça perguntas de seguimento. O assistente usa os turnos recentes, e suas conversas ficam neste computador. Confira as referências antes de agir.</p><div class="painel"><p>Motor: <b>${S.ia.motor?'disponível':'não instalado'}</b> · Modelo: <b>${enabled?esc(S.modelos[selected].nome):'desativado'}</b></p>${enabled?`<p>${size(spec.size)} · contexto de ${spec.context.toLocaleString('pt-BR')} tokens · ${spec.ram_gib} GB RAM como alvo.</p><button id="baixar" class="secundario">Baixar ou verificar modelo selecionado</button>`:'<p>Escolha um modelo em Minha instalação para ativar o assistente.</p>'}</div><div class="acoes"><button type="button" class="secundario" id="novaConversa" disabled>Nova conversa</button><a class="botao" href="#biblioteca">Consultar guias</a></div><section id="turnosChat" aria-label="Histórico da conversa" aria-live="polite"></section><p id="chatPendente" class="mensagem-chat" role="status"></p><form id="pergunta"><label for="texto">Sua mensagem</label><textarea id="texto" maxlength="1500" required placeholder="O que você quer perguntar?"></textarea><div class="acoes"><button id="enviar" disabled>Enviar</button></div></form>`;
+    if($('#baixar'))$('#baixar').onclick=()=>begin('install-package',{id:selected},`Baixar ou verificar o modelo selecionado (${size(spec.size)})?`).catch(failure);
+    $('#novaConversa').onclick=async()=>{
+      if(!confirm('Apagar o histórico desta conversa e começar outra?'))return;
+      try {
+        chatBusy=true;chatControls();
+        await api('clear-chat',{});
+        await refreshChat();notice('Nova conversa iniciada.');
+      } catch(e){failure(e);}
+      finally{chatBusy=false;chatControls();}
+    };
+    const form=$('#pergunta'), input=$('#texto');
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      if(chatBusy || !input.value.trim())return;
+      chatBusy=true;chatPending=input.value.trim();chatControls();
+      try {
+        await api('ask',{pergunta:chatPending});
+        input.value='';poll();
+      } catch(e) {chatBusy=false;chatPending='';chatControls();failure(e);}
+    };
+    refreshChat().catch(failure);
+    api('job').then(j=>{
+      if(['executando','baixando'].includes(j.estado)){chatBusy=true;chatControls();poll();}
+      else if(!chatPending){chatBusy=false;chatControls();}
+    }).catch(failure);
   }
   async function poll(){
     clearTimeout(timer);
     try{
       const j=await api('job');jobLine(j);
       if(['executando','baixando'].includes(j.estado)){
+        chatBusy=true;chatControls();
         notice(j.estado==='baixando'?`${j.fase}: ${j.nome || ''} · ${Math.round(100*j.feito/j.total)}%`:'Processando neste computador…');timer=setTimeout(poll,1000);return;
       }
-      notice(j.estado==='erro'?j.mensagem:j.mensagem || 'Resposta concluída. Confira as referências.');S=await api('state');
-      if($('#resposta') && j.resposta){
-        $('#resposta').textContent=j.resposta;
-        $('#fontesResposta').innerHTML=(j.fontes || []).map((f,i)=>`<p><button class="secundario" data-source="${i}">${esc(typeof f==='string'?f:f.ref+' · '+f.titulo)}</button></p>`).join('');
-        document.querySelectorAll('[data-source]').forEach(b=>b.onclick=()=>{const f=j.fontes[Number(b.dataset.source)];if(f.tipo==='zim')openArticle(f).catch(failure);else if(f.tipo==='guia')guide(f.id);});
-      }
-      if($('#enviar'))$('#enviar').disabled=!S.ia.motor || !S.ia.modelo || ((S.escolhas || {}).modelo || 'qwen3-0.6b')==='sem-ia';
+      if(j.estado==='erro' && chatPending && $('#texto') && !$('#texto').value)$('#texto').value=chatPending;
+      chatPending='';chatBusy=false;
+      S=await api('state');
+      chatControls();
+      notice(j.estado==='erro'?j.mensagem:j.mensagem || 'Resposta concluída. Confira as referências.');
+      if($('#turnosChat'))await refreshChat();
       if(location.hash==='#downloads')downloads();
-    }catch(e){failure(e);}
+    }catch(e){failure(e);if(chatBusy)timer=setTimeout(poll,1500);}
   }
   window.addEventListener('hashchange',route);
   api('state').then(s => { S=s; $('#hardware').textContent = `${s.hardware.ram_bytes ? (s.hardware.ram_bytes/2**30).toFixed(1) + ' GB RAM' : 'RAM não identificada'} · ${s.hardware.arch} · consulta local`; route(); }).catch(failure);

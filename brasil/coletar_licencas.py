@@ -202,7 +202,7 @@ class Collector:
     def application(self):
         self.archive('llama.cpp', LLAMA_REV, f'https://codeload.github.com/ggml-org/llama.cpp/tar.gz/{LLAMA_REV}', f'llama.cpp-{LLAMA_REV}.tar.gz')
         revision = os.environ.get('GITHUB_SHA', '')
-        repository = os.environ.get('GITHUB_REPOSITORY', 'Moises-mfg/lastbook')
+        repository = os.environ.get('GITHUB_REPOSITORY', 'Moises-mfg/o-ultimo-livro')
         if not re.fullmatch(r'[0-9a-f]{40}', revision):
             raise ValueError('GITHUB_SHA deve identificar o código-fonte exato da entrega.')
         self.archive('O-Ultimo-Livro', revision, f'https://codeload.github.com/{repository}/tar.gz/{revision}', f'ultimo-livro-fonte-{revision}.tar.gz')

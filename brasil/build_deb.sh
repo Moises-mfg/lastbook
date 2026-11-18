@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION=0.4.0~alpha5
-FILE_VERSION=0.4.0-alpha5
+VERSION=0.4.0~alpha6
+FILE_VERSION=0.4.0-alpha6
 OUT="$ROOT/derived/brasil-build"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
@@ -37,7 +37,7 @@ Maintainer: Comunidade O Último Livro
 Depends: python3 (>= 3.12), python3 (<< 3.15), libc6 (>= 2.39), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, gir1.2-soup-3.0, libgomp1, libstdc++6, libzstd1, zlib1g
 Section: education
 Priority: optional
-Homepage: https://github.com/Moises-mfg/lastbook
+Homepage: https://github.com/Moises-mfg/o-ultimo-livro
 Description: Biblioteca e preparação offline em português brasileiro
  Aplicativo experimental baseado no LastBook. Guias locais, busca,
  checklist persistente e assistente opcional em CPU. Sem conta ou telemetria.

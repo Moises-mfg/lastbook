@@ -1,12 +1,12 @@
 #ifndef Version
-#define Version "0.4.0-alpha5"
+#define Version "0.4.0-alpha6"
 #endif
 [Setup]
 AppId={{4A9BBFE6-A72F-4D48-9BBE-852F62733423}
 AppName=O Último Livro
 AppVersion={#Version}
 AppPublisher=Projeto O Último Livro
-AppPublisherURL=https://github.com/Moises-mfg/lastbook
+AppPublisherURL=https://github.com/Moises-mfg/o-ultimo-livro
 DefaultDirName={localappdata}\Programs\UltimoLivro
 DefaultGroupName=O Último Livro
 PrivilegesRequired=lowest

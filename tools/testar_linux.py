@@ -154,7 +154,7 @@ def main():
         if not REPORT.exists():
             raise RuntimeError('O aplicativo não produziu relatório.')
         result = json.loads(REPORT.read_text(encoding='utf-8'))
-        required = ('ok', 'ia_pela_interface', 'referencia_abrivel', 'captura_da_janela')
+        required = ('ok', 'ia_pela_interface', 'referencia_abrivel', 'chat_contextual', 'captura_da_janela')
         if not all(result.get(field) is True for field in required) or not result.get('ia'):
             raise RuntimeError('A janela, IA, referência ou captura não passou na validação.')
         if not REPORT.with_suffix('.png').is_file():

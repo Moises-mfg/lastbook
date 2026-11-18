@@ -1,7 +1,7 @@
 'use strict';
 // Habilite uma plataforma somente após validar o pacote e publicar uma URL real.
-const release05 = 'https://github.com/Moises-mfg/lastbook/releases/tag/v0.4.0-alpha.5';
-const files05 = 'https://github.com/Moises-mfg/lastbook/releases/download/v0.4.0-alpha.5';
+const release05 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.5';
+const files05 = 'https://github.com/Moises-mfg/o-ultimo-livro/releases/download/v0.4.0-alpha.5';
 window.ULTIMO_LIVRO_DOWNLOADS = [
   {
     id: 'linux', name: 'Linux', architecture: 'Intel / AMD x86_64',
