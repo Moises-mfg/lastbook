@@ -110,3 +110,17 @@ test('disponibilidade exige URL publicada e ignora links de plataforma ainda em 
   assert.match(d.querySelector('[data-platform=macos-arm64] .download-status').textContent,/Em validação/);
   dom.window.close();
 });
+
+test('guia civil mostra comparações e identifica links de loja sem comissão', () => {
+  const dom = start(), document = dom.window.document;
+  const guide = document.querySelector('#preparacao');
+  assert.equal(guide.querySelector('h2').textContent, 'Se prepare enquanto há tempo');
+  assert.equal(guide.querySelectorAll('#energia-emergencia .preparacao-cards article').length, 4);
+  assert.match(guide.querySelector('#divulgacao-comercial').textContent, /nenhuma compra gera comissão/);
+  assert.match(guide.querySelector('#agua-primeiros-socorros').textContent, /evitar água de enchente/);
+  const links = [...guide.querySelectorAll('a[data-loja]')];
+  assert.ok(links.some(link => link.dataset.loja === 'mercado-livre'));
+  assert.ok(links.some(link => link.dataset.loja === 'magalu'));
+  for (const link of links) assert.equal(new URL(link.href).protocol, 'https:');
+  dom.window.close();
+});
