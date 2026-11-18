@@ -3,11 +3,11 @@
 Aplicativo de preparação e biblioteca offline em português, baseado no LastBook.
 Alpha 0.4 disponível para Linux, Windows e macOS, com pacotes separados para Mac Intel e Apple Silicon.
 
-**[Baixar a 0.4 alpha 8](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8)** ·
+**[Baixar a 0.4 alpha 9](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.9)** ·
 [Documentação em português](README.pt-BR.md) · [Projeto original](README.upstream.md)
 
 IA local em CPU com histórico de conversa, edições da Wikipedia (enciclopédia) à escolha, mapas de todos
-os 5.571 municípios brasileiros e 27 unidades federativas, guias PDF offline,
+os 5.571 municípios brasileiros e 27 unidades federativas, guias PDF offline com texto selecionável,
 checklist e diretório de fontes e comunidades. Na primeira abertura, Minha
 instalação mostra o hardware detectado, sugere um dos quatro perfis e permite
 escolher os downloads.

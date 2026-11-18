@@ -45,7 +45,8 @@ def seed(server):
 
 STEPS=[
     ("document.querySelector('#somenteGuias')&&document.querySelector('#resumoPacotes')?.textContent.includes('Mini')&&document.querySelector('#recomendacaoInstalacao')&&document.querySelectorAll('[name=perfil]').length===4&&document.querySelectorAll('[name=wiki]').length===5","document.querySelector('#somenteGuias').click()",'primeira abertura em Minha instalação'),
-    ("location.hash==='#biblioteca'&&document.querySelectorAll('[data-guide]').length===5&&document.querySelectorAll('[data-pdf]').length===3","document.querySelector('[data-pdf=offline]').click()",'biblioteca sem baixar'),
+    ("location.hash==='#biblioteca'&&document.querySelectorAll('[data-guide]').length===5&&document.querySelectorAll('[data-pdf]').length===3&&document.querySelectorAll('[data-situacao]').length===5","document.querySelector('[data-pdf=offline]').click()",'biblioteca sem baixar'),
+    ("document.querySelectorAll('.texto-pdf article').length===2&&document.querySelector('.texto-pdf p')?.textContent.length>0","document.querySelector('.paginas-pdf').open=true;document.querySelector('.paginas-pdf').scrollIntoView({block:'start'})",'texto selecionável das páginas do PDF'),
     ("document.querySelectorAll('.paginas-pdf img').length===2&&document.querySelector('.paginas-pdf img')?.naturalWidth>0","location.hash='instalacao'",'página do guia PDF incluída no pacote'),
     ("document.querySelector('#escolhas')&&document.querySelector('#modelo')?.value==='sem-ia'","const mapa=document.querySelector('#mapa');mapa.value='municipio';mapa.dispatchEvent(new Event('change',{bubbles:true}));const busca=document.querySelector('#buscaMunicipio');busca.value='Campinas';busca.dispatchEvent(new Event('input'))",'configuração sem IA'),
     ("document.querySelector('[data-city=\\\"3509502\\\"]')","document.querySelector('[data-city=\\\"3509502\\\"]').click();document.querySelector('#escolhas').requestSubmit()",'seleção de município'),
@@ -56,7 +57,7 @@ STEPS=[
     ("document.querySelector('#mapaEstado')?.textContent.includes('consulta local')&&(()=>{const c=document.querySelector('#mapaCanvas'),p=c.getContext('2d').getImageData(c.width/2,c.height/2,1,1).data;return p[3]===255&&!(p[0]===216&&p[1]===231&&p[2]===233)})()","document.querySelector('#mapaTermo').value='Hospital';document.querySelector('#mapaBusca').requestSubmit()",'desenho de mapa'),
     ("document.querySelector('#mapaResultados button')?.textContent==='Hospital de Teste'","document.querySelector('#mapaResultados button').click();document.querySelector('#mapaMais').click()",'busca no mapa'),
     ("document.querySelector('#mapaEstado')?.textContent.includes('Nível 16')","document.querySelector('[data-map-layer=water]').click();location.hash='compras'",'zoom e camadas'),
-    ("document.querySelectorAll('[data-item]').length===10","document.querySelector('[data-item=luz]').click()",'checklist'),
+    ("document.querySelectorAll('[data-item]').length===10&&document.querySelector('[data-open-resource=ultimo-livro-preparacao]')","document.querySelector('[data-item=luz]').click()",'checklist'),
     ("document.querySelector('[data-item=luz]')?.checked===true","location.hash='fontes'",'gravação do checklist'),
     ("document.querySelectorAll('[data-resource]').length===11","document.querySelector('#buscaFonte').value='MeshCore';document.querySelector('#buscaFonte').dispatchEvent(new Event('input'))",'diretório de fontes'),
     ("document.querySelectorAll('[data-resource]').length===1&&document.querySelector('[data-resource]')?.dataset.resource==='meshcore-docs'","location.hash='downloads'",'busca de comunidades'),

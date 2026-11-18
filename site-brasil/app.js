@@ -28,7 +28,27 @@
       link.textContent = platform.downloadUrl ? `Baixar para ${platform.name} ↗` : `Ver pacotes para ${platform.name} no GitHub ↗`;
       card.append(link);
     }
+    if (href) {
+      const links = document.createElement('div');
+      links.className = 'download-evidencias';
+      for (const [url, label] of [[platform.checksumUrl, 'Conferir SHA-256 ↗'], [platform.evidenceUrl, 'Evidências na release ↗']]) {
+        if (!url) continue;
+        const link = document.createElement('a');link.href = url;link.textContent = label;links.append(link);
+      }
+      card.append(links);
+    }
     $('#downloads-lista').append(card);
+  }
+  const acervo = window.ULTIMO_LIVRO_ACERVO;
+  if (acervo) {
+    for (const [target, items] of [['#acervo-pdfs', acervo.pdfs], ['#acervo-guias', acervo.guias], ['#acervo-situacoes', acervo.situacoes]]) {
+      for (const item of items) {
+        const li = document.createElement('li');li.dataset.content = item.id;li.textContent = item.titulo;
+        if (item.descricao || item.resumo) {const text = document.createElement('span');text.textContent = item.descricao || item.resumo;li.append(text);}
+        $(target).append(li);
+      }
+    }
+    $('#acervo-checklist').textContent = `Checklist com ${acervo.checklist} itens de preparação para organizar o que você já tem. As marcações do aplicativo ficam no seu computador.`;
   }
   const profiles = {leve:{nome:'Leve',modelo:'Qwen3 0.6B experimental',wiki:'Português mini',ram:8},moderada:{nome:'Moderada',modelo:'Qwen3 4B',wiki:'Português sem imagens',ram:16},parruda:{nome:'Parruda',modelo:'Qwen3 14B',wiki:'Português completo',ram:32},personalizada:{nome:'Personalizada',modelo:'Você escolhe',wiki:'Você escolhe',ram:0}};
   let selected='leve';

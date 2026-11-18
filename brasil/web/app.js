@@ -27,11 +27,16 @@
       <form id="buscaBiblioteca"><label for="busca">Buscar na biblioteca offline</label>
       <input id="busca" type="search" required maxlength="160" value="${esc(libraryQuery)}"><button>Buscar</button></form>
       <div id="buscaResultados" aria-live="polite"></div>
+      ${situacoesHtml(pdfs)}
       <section aria-label="Guias em PDF"><h2>Guias em PDF</h2><div class="cards">
       ${pdfs.map(g => `<article><h3>${esc(g.titulo)}</h3><button data-pdf="${esc(g.id)}">Ler PDF</button></article>`).join('')}
       </div></section><section aria-label="Guias em texto"><h2>Guias em texto</h2><div class="cards" id="guias">
       ${S.guias.map(g => `<article><h3>${esc(g.titulo)}</h3><button data-guide="${esc(g.id)}">Ler guia</button></article>`).join('')}
       </div></section>`;
+    document.querySelectorAll('[data-pdf-situacao]').forEach(button => {
+      button.onclick = () => pdfGuide(button.dataset.pdfSituacao, Number(button.dataset.pagina));
+    });
+    bindResources();
     document.querySelectorAll('[data-pdf]').forEach(button => button.onclick = () => pdfGuide(button.dataset.pdf));
     document.querySelectorAll('[data-guide]').forEach(button => button.onclick = () => guide(button.dataset.guide));
     const form = $('#buscaBiblioteca'), target = $('#buscaResultados');
@@ -92,14 +97,53 @@
     location.hash = 'mapas';
   }
 
+  function situacoesHtml(pdfs) {
+    const situations = S.situacoes || [];
+    if (!situations.length) return '';
+    return `<section aria-labelledby="situacoes-titulo"><h2 id="situacoes-titulo">Guias por situação</h2>
+      <p>Leia o resumo e os guias deste computador sem internet. Os botões de referência abrem o navegador.</p>
+      <div class="cards">${situations.map(situation => `<article data-situacao="${esc(situation.id)}">
+        <h3>${esc(situation.titulo)}</h3><p>${esc(situation.resumo)}</p>
+        <p><small>Revisão editorial em <time datetime="${esc(situation.revisado)}">${esc(situation.revisado.split('-').reverse().join('/'))}</time></small></p>
+        <ul>${situation.leituras.map(ref => {
+          const guide = pdfs.find(item => item.id === ref.id);
+          return guide ? `<li><button class="secundario" data-pdf-situacao="${esc(ref.id)}" data-pagina="${esc(ref.pagina)}">${esc(guide.titulo)} · página ${esc(ref.pagina)}</button></li>` : '';
+        }).join('')}
+        ${situation.fontes.map(source => `<li><button class="secundario" data-open-resource="${esc(source.id)}">${esc(source.titulo)} · internet</button></li>`).join('')}</ul>
+      </article>`).join('')}</div></section>`;
+  }
+
+  function bindResources() {
+    document.querySelectorAll('[data-open-resource]').forEach(button => {
+      button.onclick = () => api('open-resource', {id:button.dataset.openResource})
+        .then(result => notice(result.mensagem)).catch(failure);
+    });
+  }
+
   function pdfGuide(id, page) {
     const guide = (S.guias_pdf || []).find(item => item.id === id);
     if (!guide) return;
-    $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button><h1>${esc(guide.titulo)}</h1><p>${esc(guide.descricao)}</p><button id="abrirPdf">Abrir arquivo PDF no leitor do sistema</button><div class="paginas-pdf">${guide.paginas.map((page, i) => `<figure><figcaption>Página ${i+1} de ${guide.paginas.length}</figcaption><img src="${esc(page)}" alt="Página ${i+1} de ${esc(guide.titulo)}" loading="lazy"></figure>`).join('')}</div>`;
+    const texts = guide.texto_paginas || [];
+    $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button>
+      <h1>${esc(guide.titulo)}</h1><p>${esc(guide.descricao)}</p>
+      <button id="abrirPdf">Abrir arquivo PDF no leitor do sistema</button>
+      ${texts.length ? `<section class="texto-pdf" aria-label="Texto selecionável">
+        ${texts.map((text, i) => `<article tabindex="-1"><h2>Página ${i + 1} de ${texts.length}</h2>
+          ${text.split('\n\n').map(paragraph => `<p>${esc(paragraph)}</p>`).join('')}</article>`).join('')}
+      </section>` : ''}
+      <details class="paginas-pdf"${texts.length ? '' : ' open'}>
+        <summary>Ver imagens das páginas</summary>
+        ${guide.paginas.map((image, i) => `<figure><figcaption>Página ${i + 1} de ${guide.paginas.length}</figcaption>
+        <img src="${esc(image)}" alt="Página ${i + 1} de ${esc(guide.titulo)}" loading="lazy"></figure>`).join('')}
+      </details>`;
     $('#voltar').onclick = biblioteca;
-    if (page) document.querySelectorAll('.paginas-pdf figure')[page - 1]?.scrollIntoView({block:'start'});
-    $('#abrirPdf').onclick = () => api('open-pdf',{id}).then(r => notice(r.mensagem)).catch(failure);
+    if (page) {
+      const target = document.querySelectorAll('.texto-pdf article')[page - 1];
+      if (target) { target.focus({preventScroll:true}); target.scrollIntoView({block:'start'}); }
+    }
+    $('#abrirPdf').onclick = () => api('open-pdf', {id}).then(result => notice(result.mensagem)).catch(failure);
   }
+
   function guide(id) {
     const g = S.guias.find(x => x.id === id); if (!g) return;
     $('#conteudo').innerHTML = `<button class="secundario" id="voltar">← Biblioteca</button><p class="tag">${esc(g.categoria)}</p><h1>${esc(g.titulo)}</h1><article><p>${esc(g.texto)}</p><p class="fonte">Referência: ${esc(g.fonte)}<br>Endereço para consultar enquanto houver internet:<code>${esc(g.url)}</code></p></article>`;
@@ -112,12 +156,13 @@
       const fold=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),query=fold($('#buscaFonte').value),category=$('#categoriaFonte').value;
       const hits=resources.filter(r=>(!category||r.categoria===category)&&fold(r.nome+' '+r.resumo+' '+r.categoria).includes(query));
       $('#listaFontes').innerHTML=hits.length?hits.map(r=>`<article data-resource="${esc(r.id)}"><p class="tag">${esc(r.tipo)}</p><h2>${esc(r.nome)}</h2><p>${esc(r.resumo)}</p><p>${esc(r.observacao)}</p><p class="fonte">Verificado em ${esc(r.revisado)}<br><code>${esc(r.url)}</code></p><button data-open-resource="${esc(r.id)}">Abrir no navegador · internet</button></article>`).join(''):'<p>Nenhuma referência encontrada.</p>';
-      document.querySelectorAll('[data-open-resource]').forEach(b=>b.onclick=()=>api('open-resource',{id:b.dataset.openResource}).then(r=>notice(r.mensagem)).catch(failure));
+      bindResources();
     }
     $('#buscaFonte').oninput=draw;$('#categoriaFonte').onchange=draw;draw();
   }
   function compras() {
-    $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><p class="aviso">Sem anúncios ou links de afiliado nesta versão. A prioridade é a utilidade para sua casa.</p>`;
+    $('#conteudo').innerHTML = `<p class="tag">Minha preparação</p><h1>Comece pelo que<br>você já tem.</h1><p class="intro">Marque os itens disponíveis em casa. Suas escolhas são salvas neste computador. Quantidades dependem das pessoas, dos dias e dos riscos da sua região.</p><div class="painel">${S.compras.map(i => `<label class="linha${i.feito ? ' feito' : ''}"><input type="checkbox" data-item="${i.id}"${i.feito ? ' checked' : ''}><span><b>${esc(i.titulo)}</b><br><small>${esc(i.grupo)}</small></span></label>`).join('')}</div><section class="painel"><h2>Se prepare enquanto há tempo</h2><p>Compare opções de energia, água e primeiros socorros no site. O guia abre no navegador e pode pedir acesso.</p><button data-open-resource="ultimo-livro-preparacao">Abrir guia no navegador · internet</button></section>`;
+    bindResources();
     document.querySelectorAll('[data-item]').forEach(input => input.onchange = async () => {
       input.disabled = true;
       try { S.compras = await api('check',{id:input.dataset.item,feito:input.checked}); input.closest('label').classList.toggle('feito',input.checked); }

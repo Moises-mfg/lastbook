@@ -1,6 +1,8 @@
 """Diretório editorial local. Nenhum vídeo, página ou conversa é copiado."""
 from urllib.parse import urlsplit
 
+from .situacoes import SOURCES
+
 RECURSOS = [
     {'id':'defesa-kit','nome':'Defesa Civil do Paraná · kit de emergência','categoria':'Preparação','tipo':'Fonte oficial','url':'https://www.defesacivil.pr.gov.br/Pagina/Kit-de-Emergencia-pessoal','resumo':'Lista de referência para organizar documentos, água, alimentação e itens pessoais. Adapte às pessoas e aos riscos da sua região.','observacao':'Orientação estadual; confira também a Defesa Civil do seu município.'},
     {'id':'midr-alertas','nome':'MIDR · alertas da Defesa Civil','categoria':'Preparação','tipo':'Fonte oficial','url':'https://www.gov.br/mdr/pt-br/acesso-a-informacao/perguntas-frequentes/perguntas-frequentes-defesa-civil/alertas','resumo':'Informações sobre recebimento de alertas. Conheça os canais e faça os cadastros enquanto houver conexão.','observacao':'O aplicativo offline não recebe nem atualiza alertas de risco.'},
@@ -23,7 +25,8 @@ for recurso in RECURSOS:
 def resource_url(ident):
     if not isinstance(ident,str):raise ValueError('Selecione uma referência válida.')
     item=next((r for r in RECURSOS if r['id']==ident),None)
-    if item is None:raise ValueError('Referência não encontrada.')
-    url=item['url'];parsed=urlsplit(url)
+    if item is None and ident not in SOURCES:raise ValueError('Referência não encontrada.')
+    url = item['url'] if item is not None else SOURCES[ident][1]
+    parsed = urlsplit(url)
     if parsed.scheme!='https' or not parsed.hostname or parsed.username or parsed.password:raise ValueError('Endereço da referência inválido.')
     return url

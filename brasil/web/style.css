@@ -13,3 +13,9 @@
 
 /* Mantém a navegação alcançável em janelas baixas. */
 @media (min-width: 721px) { aside { overflow-y: auto; } }
+
+.texto-pdf article { max-width: 74ch; margin-block: 1.25rem; }
+.texto-pdf h2 { font-size: 1.25rem; }
+.paginas-pdf > summary { cursor: pointer; }
+[data-situacao] ul { padding-left: 1.2rem; }
+[data-situacao] li { margin-block: .4rem; }
