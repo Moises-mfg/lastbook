@@ -95,7 +95,7 @@ class Handler(SetupHandler):
                 return _send_json(self, STORE.start_job(lambda: check(STORE)))
             if self._path() == '/api/brasil/backup':
                 if BACKUP_FILE is None:
-                    raise ValueError('O backup pela interface está disponível no Linux.')
+                    raise ValueError('O seletor de arquivos para backup está indisponível.')
                 return _send_json(self, BACKUP_FILE(body))
             fn = routes.get(self._path())
             if not fn:
@@ -158,20 +158,9 @@ def main():
             return {'cancelado': True}
         return STORE.import_plan(path) if kind == 'plano' else STORE.import_file(kind, path)
 
-    def backup_file(body):
-        from brasil.backup import export_backup, restore_backup
-        action = body.get('acao')
-        include_chat = body.get('incluir_chat', False)
-        if action not in ('exportar', 'restaurar') or type(include_chat) is not bool:
-            raise ValueError('Operação de backup inválida.')
-        saving = action == 'exportar'
-        path = choose_path('Salvar backup do O Último Livro' if saving else 'Abrir backup do O Último Livro', saving)
-        if not path:
-            return {'cancelado': True}
-        return export_backup(STORE, path, include_chat) if saving else restore_backup(STORE, path)
-
+    from brasil.backup import transfer
     PICK_FILE = pick_file
-    BACKUP_FILE = backup_file
+    BACKUP_FILE = lambda body: transfer(STORE, body, choose_path)
     def open_resource(ident):
         from brasil.fontes import resource_url
         url=resource_url(ident);event=threading.Event();result={}

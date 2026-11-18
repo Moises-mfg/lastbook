@@ -2,7 +2,7 @@
 
 ## Estado e requisitos
 
-A [alpha 6](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.6)
+A [alpha 8](https://github.com/Moises-mfg/o-ultimo-livro/releases/tag/v0.4.0-alpha.8)
 está disponível para Linux x86_64 (Ubuntu 24.04–26.04), Mac Intel e Apple Silicon
 (macOS 13.3 ou posterior) e Windows x64 (Windows 10 versão 1809 ou posterior).
 
@@ -27,7 +27,7 @@ ou abra o PDF no leitor do sistema. O **Assistente local** retoma os turnos rece
 para responder a perguntas de seguimento. As conversas e as referências ficam no
 computador. Use **Nova conversa** para limpar o histórico.
 
-Na alpha 7 para Linux, **Minha instalação** mostra os componentes da seleção,
+Na alpha 8, **Minha instalação** mostra os componentes da seleção,
 seus tamanhos, o que já está instalado e o espaço necessário antes de baixar.
 A **Biblioteca** reúne a busca em guias, PDFs, Wikipedia (enciclopédia) e lugares
 dos mapas vetoriais instalados. Em **Verificar uso offline**, o aplicativo testa
@@ -40,7 +40,7 @@ para interromper a geração e recuperar a pergunta sem gravar uma resposta parc
 
 Os dados ficam em `~/Library/Application Support/UltimoLivro` no macOS, `%LOCALAPPDATA%\UltimoLivro` no Windows e, no Linux, em `$XDG_DATA_HOME/ultimo-livro` (ou `~/.local/share/ultimo-livro` se `XDG_DATA_HOME` não estiver definido). Se `ULTIMO_LIVRO_DATA` estiver definida, ela substitui o diretório padrão em qualquer sistema. Para fazer backup, feche o aplicativo e copie essa pasta para um local seguro; para restaurar, feche o aplicativo e recoloque os dados na pasta correspondente. Preserve os arquivos GGUF, Wikis e mapas se quiser manter os downloads locais. Arquivos importados permanecem na pasta ou no disco de origem: copie-os também e, se o caminho mudar, importe-os novamente no aplicativo.
 
-No Linux, abra **Verificar uso offline → Backup e recuperação**. Escolha
+Abra **Verificar uso offline → Backup e recuperação**. Escolha
 **Exportar backup** e selecione a pasta do pendrive ou outro destino. O arquivo
 inclui o checklist e as escolhas de instalação. A opção de incluir o chat
 também grava perguntas e respostas. Ao restaurar, um backup com chat substitui

@@ -135,7 +135,7 @@ class Store(MapSupport):
 
     def state(self):
         h = hardware.detect([str(self.folder)])
-        return {'versao': '0.4.0-alpha.7', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
+        return {'versao': '0.4.0-alpha.8', 'hardware': {'ram_bytes': h.get('ram_bytes'), 'arch': h['arch'], 'os': h['os'],
                  'livre_bytes': shutil.disk_usage(self.folder).free,
                  'ram_disponivel_bytes': plataforma.available_memory()}, 'recomendado': recommend(h.get('ram_bytes')),
                 'escolhas': self.choices(), 'perfis': PERFIS, 'modelos': MODELOS, 'wikis': WIKIS, 'estados': ESTADOS,

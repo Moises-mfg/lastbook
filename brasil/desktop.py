@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import threading
 import webbrowser
+from .backup import transfer
 from .fontes import resource_url
 
 TITLE='O Último Livro'
@@ -18,6 +19,15 @@ def run(server,base):
 def finish_import(server,kind,path):
     if not path:return {'cancelado':True}
     return server.STORE.import_plan(path) if kind=='plano' else server.STORE.import_file(kind,path)
+
+
+def register_backup(server, choose_path):
+    if '--autoteste' in sys.argv:
+        # O autoteste controla apenas a seleção do arquivo, em dados descartáveis.
+        path = server.STORE.folder / 'Backup de teste.json'
+        os.environ['ULTIMO_LIVRO_TEST_BACKUP'] = str(path)
+        choose_path = lambda title, save: path
+    server.BACKUP_FILE = lambda body: transfer(server.STORE, body, choose_path)
 
 
 def run_mac(server,base):
@@ -49,6 +59,23 @@ def run_mac(server,base):
             return str(panel.URL().path()) if panel.runModal()==AppKit.NSModalResponseOK else None
         return finish_import(server,kind,on_ui(choose))
     server.PICK_FILE=pick
+    def choose_backup(title, saving):
+        def choose():
+            if saving:
+                panel = AppKit.NSSavePanel.savePanel()
+                panel.setNameFieldStringValue_('ultimo-livro-backup.json')
+                panel.setPrompt_('Salvar')
+            else:
+                panel = AppKit.NSOpenPanel.openPanel()
+                panel.setCanChooseDirectories_(False)
+                panel.setCanChooseFiles_(True)
+                panel.setAllowsMultipleSelection_(False)
+                panel.setPrompt_('Abrir')
+            panel.setTitle_(title)
+            return str(panel.URL().path()) if panel.runModal() == AppKit.NSModalResponseOK else None
+        return on_ui(choose)
+
+    register_backup(server, choose_backup)
     def external(ident):
         url=resource_url(ident)
         if not on_ui(lambda:AppKit.NSWorkspace.sharedWorkspace().openURL_(Foundation.NSURL.URLWithString_(url)),15):raise ValueError('Não foi possível abrir o navegador.')
@@ -113,6 +140,24 @@ def run_windows(server,base):
             finally:dialog.Dispose()
         return finish_import(server,kind,on_ui(choose))
     server.PICK_FILE=pick
+    def choose_backup(title, saving):
+        def choose():
+            forms = shell.net().Forms
+            dialog = forms.SaveFileDialog() if saving else forms.OpenFileDialog()
+            try:
+                dialog.Title = title
+                dialog.Filter = 'Backup JSON|*.json'
+                if saving:
+                    dialog.DefaultExt = 'json'
+                    dialog.AddExtension = True
+                    dialog.OverwritePrompt = True
+                    dialog.FileName = 'ultimo-livro-backup.json'
+                return str(dialog.FileName) if dialog.ShowDialog(current['shell'].form) == forms.DialogResult.OK else None
+            finally:
+                dialog.Dispose()
+        return on_ui(choose)
+
+    register_backup(server, choose_backup)
     def external(ident):
         os.startfile(resource_url(ident))
         return {'mensagem':'Endereço aberto no navegador. A página externa precisa de conexão.'}
