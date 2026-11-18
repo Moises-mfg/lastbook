@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from brasil import mapa_vetor,pacotes
 from brasil.core import Store
+from brasil.sqlite_local import Connection
 from brasil.tests.test_pacotes import wait
 
 class Maps(unittest.TestCase):
@@ -53,7 +54,7 @@ class Maps(unittest.TestCase):
     def test_map_at_uses_registered_raster_bounds(self):
         def create_map(name,bounds):
             path = self.root / (name + '.mbtiles')
-            with sqlite3.connect(path) as db:
+            with sqlite3.connect(path, factory=Connection) as db:
                 db.execute('CREATE TABLE metadata (name,value)')
                 db.executemany('INSERT INTO metadata VALUES (?,?)',[('format','png'),('bounds',bounds)])
                 db.execute('CREATE TABLE tiles (zoom_level,tile_column,tile_row,tile_data)')
